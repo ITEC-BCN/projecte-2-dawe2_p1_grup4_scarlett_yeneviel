@@ -5,7 +5,7 @@
 
 # Sprint 1 Daylies
 
-## 2- 12/01/2026
+## Dia 1 - 12/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**

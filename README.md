@@ -10,5 +10,5 @@
 
 **Temas tratados**
 - Organización de backlog 
-- Inicio dle pirmer Sprint
+- Inicio del primer sprint
 - Montar el entorno de desarrollo

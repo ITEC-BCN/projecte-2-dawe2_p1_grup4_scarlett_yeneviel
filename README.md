@@ -2,3 +2,13 @@
 
 ### ProofHub 
 [LINK](https://itecbcn.proofhub.com/bappswift/#app/todos/project-9456273367/list-270377886463)
+
+# Sprint 1 Daylies
+
+## 2- 12/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+
+**Temas tratados**
+- Organización de backlog 
+- Inicio dle pirmer Sprint
+- Montar el entorno de desarrollo

@@ -12,3 +12,11 @@
 - Organización de backlog 
 - Inicio del primer sprint
 - Montar el entorno de desarrollo
+
+## Dia 2 - 13/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+
+**Temas tratados**
+- finalización del backlog 
+- Inicio del primer sprint
+- Montar el entorno de desarrollo

@@ -10,13 +10,16 @@
 
 **Temas tratados**
 - Organización de backlog 
-- Inicio del primer sprint
-- Montar el entorno de desarrollo
-
+---
 ## Dia 2 - 13/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**
-- finalización del backlog 
+- Finalización del backlog MVP 
+---
+## Dia 3 - 19/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+
+**Temas tratados**
+- Mejoras en el desarollo de Backlog
 - Inicio del primer sprint
-- Montar el entorno de desarrollo

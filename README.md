@@ -9,13 +9,16 @@
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**
-- Organización de backlog 
+- Organización de backlog
+- Acotacion de funciones 
 ---
 ## Dia 2 - 13/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**
-- Finalización del backlog MVP  
+- Finalización del backlog MVP
+- Inicio de fitchero de maquetación de la web
+- MockUp
 ---
 
 ## Dia 3 - 19/01/2026
@@ -23,15 +26,16 @@
 
 **Temas tratados**
 - Mejoras en el desarollo de Backlog
-- Inicio del primer sprint
+- MockUp
+
 ---
 
-## Dia 3 - 19/01/2026
+## Dia 3 - 20/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**
 - Mejoras en el desarollo de Backlog
-- Inicio del primer sprint
+- Definir la estructura de la base de datos 
 
 
 

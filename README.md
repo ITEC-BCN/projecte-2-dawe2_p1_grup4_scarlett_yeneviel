@@ -15,11 +15,23 @@
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**
-- Finalización del backlog MVP 
+- Finalización del backlog MVP  
 ---
+
 ## Dia 3 - 19/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 
 **Temas tratados**
 - Mejoras en el desarollo de Backlog
 - Inicio del primer sprint
+---
+
+## Dia 3 - 19/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+
+**Temas tratados**
+- Mejoras en el desarollo de Backlog
+- Inicio del primer sprint
+
+
+

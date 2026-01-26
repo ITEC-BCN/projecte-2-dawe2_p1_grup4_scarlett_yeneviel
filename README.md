@@ -30,12 +30,21 @@
 
 ---
 
-## Dia 3 - 20/01/2026
-**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+## Dia 4 - 20/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts 
 
 **Temas tratados**
 - Mejoras en el desarollo de Backlog
 - Definir la estructura de la base de datos 
+
+---
+# Sprint 2 Daylies 
+
+## Dia 5 - 20/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts 
+**Temas tratados**
+- Finalización de la difinición de la base de datos
+- Inicio del Sprint 2.
 
 
 

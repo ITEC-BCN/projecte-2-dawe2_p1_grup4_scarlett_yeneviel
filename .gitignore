@@ -1,0 +1,71 @@
+#######################################
+# Node.js / Backend
+#######################################
+backend/node_modules/
+backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.production
+
+#######################################
+# Frontend Vue
+#######################################
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+
+#######################################
+# General Node
+#######################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+#######################################
+# OS / Editor junk
+#######################################
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+#######################################
+# Logs
+#######################################
+logs
+*.log
+
+#######################################
+# Build / Coverage
+#######################################
+coverage/
+*.tgz
+
+#######################################
+# Firebase
+#######################################
+.firebase/
+firebase-debug.log
+.firebaserc
+firebase.json
+
+#######################################
+# Vercel
+#######################################
+.vercel/
+
+#######################################
+# Docker (opcional)
+#######################################
+docker-data/
+*.pid
+
+#######################################
+# PostgreSQL local data (si usas Docker)
+#######################################
+pgdata/

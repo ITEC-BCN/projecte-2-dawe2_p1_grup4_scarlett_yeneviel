@@ -40,11 +40,17 @@
 ---
 # Sprint 2 Daylies 
 
-## Dia 5 - 20/01/2026
+## Dia 5 - 26/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts 
 **Temas tratados**
 - Finalización de la difinición de la base de datos
 - Inicio del Sprint 2.
+
+## Dia 6 - 27/01/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+- Creación de la base de datos
+- Elección de tareas para el Sprint 2
 
 
 

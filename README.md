@@ -3,6 +3,8 @@
 ### ProofHub 
 [LINK](https://itecbcn.proofhub.com/bappswift/#app/todos/project-9456273367/list-270377886463)
 
+[Calendario](Calendario.txt)
+
 # Sprint 1 Daylies
 
 ## Dia 1 - 12/01/2026

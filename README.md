@@ -51,8 +51,10 @@
 ## Dia 6 - 27/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
 **Temas tratados**
+- Definición de calendario
 - Creación de la base de datos
 - Elección de tareas para el Sprint 2
+
 
 
 

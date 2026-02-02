@@ -42,6 +42,12 @@
 ---
 # Sprint 2 Daylies 
 
+**Planificación del sprint:**
+ - Creación de la base de datos
+ - Lista de ofertas
+ - Detalle de oferta
+
+
 ## Dia 5 - 26/01/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts 
 **Temas tratados**

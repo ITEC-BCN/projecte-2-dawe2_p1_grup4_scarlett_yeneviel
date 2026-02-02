@@ -1,15 +1,33 @@
 <script setup>
-import api from '@/services/api';
+import { ref, onMounted } from 'vue'
 
-const { data } = await api.get('/users');
+const ofertas = ref([])
+const error = ref(null)
+const API_URL = 'https://expert-space-robot-97j5v99r4575cr64-3000.app.github.dev/ofertas'
 
+const cargarOfertas = async () => {
+  try {
+    const res = await fetch(`${API_URL}`)
+    if (!res.ok) throw new Error('Error al cargar ofertas')
+
+    const data = await res.json()
+    ofertas.value = data
+    console.log('JSON:', data)
+  } catch (err) {
+    error.value = err.message
+    console.error(err)
+  }
+}
+
+onMounted(cargarOfertas)
 </script>
 
 <template>
-  <h1>Pruebas</h1>
-  
+  <div>
+    <h2>Ofertas</h2>
+
+    <p v-if="error" style="color:red">{{ error }}</p>
+
+    <pre>{{ ofertas }}</pre>
+  </div>
 </template>
-
-<style scoped>
-
-</style>

@@ -7,8 +7,15 @@ app.listen(PORT, () => {
 });*/
 
 import express from 'express';
+import cors from 'cors'
+
+
 import { obtenerOfertas, crearOferta } from './supabaseClient.js'
 const app = express();
+
+// Permitir cualquier origen (para desarrollo)
+app.use(cors())
+
 app.use(express.json());
 
 app.post('/ofertas', async (req, res) => {
@@ -30,4 +37,10 @@ app.get('/ofertas', async (req, res) => {
   }
 });
 
+// O, si quieres restringir a tu frontend:
+app.use(cors({
+  origin: 'https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev'
+}))
+
+app.use(express.json())
 app.listen(3000, () => console.log('Servidor en http://localhost:3000'));

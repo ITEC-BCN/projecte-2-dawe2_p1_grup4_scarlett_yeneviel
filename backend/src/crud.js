@@ -1,0 +1,46 @@
+import { supabase } from './supabaseClient.js'; // El archivo que creamos antes
+
+// 1. CREAR una oferta (CREATE)
+export const crearOferta = async (nombre, fecha) => {
+  const { data, error } = await supabase
+    .from('oferta')
+    .insert([{ nombre_empresa: nombre, fecha_publicacion: fecha }])
+    .select(); // .select() devuelve el objeto creado
+
+  if (error) throw error;
+  return data;
+};
+
+// 2. LEER todas las ofertas (READ)
+export const obtenerOfertas = async () => {
+  const { data, error } = await supabase
+    .from('oferta')
+    .select('*')
+    .order('fecha_publicacion', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+// 3. ACTUALIZAR una oferta (UPDATE)
+export const actualizarOferta = async (id, nuevosDatos) => {
+  const { data, error } = await supabase
+    .from('oferta')
+    .update(nuevosDatos)
+    .eq('id', id) // Filtra por el ID de la oferta
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+// 4. ELIMINAR una oferta (DELETE)
+export const eliminarOferta = async (id) => {
+  const { error } = await supabase
+    .from('oferta')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return { message: 'Oferta eliminada correctamente' };
+};

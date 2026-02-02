@@ -1,4 +1,4 @@
-<script setup>
+<script setup> 
 
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
@@ -12,7 +12,7 @@ import Footer from './components/Footer.vue';
     </main>
     <Footer />
   </div>
-</template>
+  </template>
 
 <style>
 .app-layout {

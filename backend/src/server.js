@@ -7,6 +7,7 @@ app.listen(PORT, () => {
 });*/
 
 import express from 'express';
+import { obtenerOfertas, crearOferta } from './supabaseClient.js'
 const app = express();
 app.use(express.json());
 

@@ -61,6 +61,10 @@
 - Creación de la base de datos
 - Elección de tareas para el Sprint 2
 
+## Dia 7 - 02/02/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+- Asignación de tareas
 
 
 

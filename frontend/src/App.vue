@@ -2,7 +2,6 @@
 
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
-import CardOferta from './components/cardOferta.vue';
 </script>
 
 <template>
@@ -11,7 +10,6 @@ import CardOferta from './components/cardOferta.vue';
     <main class="main-content">
       <router-view />
     </main>
-    <CardOferta />
     <Footer />
   </div>
   </template>

@@ -1,9 +1,9 @@
 <script setup>
 
+<<<<<<< HEAD
 const props=defineProps({
     oferta:Object
 })
-
 
 const emit=defineEmits(["verDetalleOferta"])
 

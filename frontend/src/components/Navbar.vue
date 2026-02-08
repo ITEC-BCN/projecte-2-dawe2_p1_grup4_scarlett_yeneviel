@@ -6,7 +6,7 @@
   <nav class="navbar">
     <div class="nav-container">
       <div class="brand" @click="$router.push('/')">
-        <img src="/internia.png" class="logo" alt="Logo" />
+        <img src="/Internia.webp" class="logo" alt="Logo" />
         <h2 class="brand-text">Internia</h2>
       </div>
 

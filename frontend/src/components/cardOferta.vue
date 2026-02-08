@@ -1,6 +1,5 @@
 <script setup>
 
-<<<<<<< HEAD
 const props=defineProps({
     oferta:Object
 })

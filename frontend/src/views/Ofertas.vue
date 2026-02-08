@@ -7,7 +7,7 @@ const url= ref(`http://localhost:3000/ofertas`)
 const {data, error,loading, fetchData}=useFetch(url);
 const emit=defineEmits(["verDetalleOferta"])
 
-const verDetale=()=>{
+const verDetalle=()=>{
     emit("verDetalleOferta")
 }
 </script>
@@ -26,7 +26,7 @@ const verDetale=()=>{
     <div  v-if="data && data" class="grid-ofertas">
         <CardOferta v-for="oferta in data" :key="oferta.id"
         :oferta="oferta"
-        @verDetalleOferta="verDetale"
+        @verDetalleOferta="verDetalle"
         />
 
     </div>

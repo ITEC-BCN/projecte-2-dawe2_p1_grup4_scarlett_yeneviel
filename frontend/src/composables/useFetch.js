@@ -8,11 +8,11 @@ export function useFetch(url){
 
     const fetchData= async()=>{
 
+        loading.value=true
+        error.value=null
+
         try {
             const res= await fetch(url.value);
-
-            loading.value=true
-            error.value=null
 
             if(!res.ok){
                 throw new Error('Error a la petició: '+res.status)
@@ -23,7 +23,6 @@ export function useFetch(url){
         } catch (err) {
             error.value=err.message
         }finally{
-
             loading.value=false
         }
     }

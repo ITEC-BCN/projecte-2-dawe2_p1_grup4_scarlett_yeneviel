@@ -5,6 +5,11 @@ const currentYear = new Date().getFullYear();
 <template>
   <footer class="basic-footer">
     <div class="copyright">
+      <picture>
+        <source srcset="../../public/logos/InterniaBlanco.webp" type="image/webp">
+        <img class="footer-logo" src="../../public/logos/InterniaBlanco.png" alt="Logo de la empresa">
+      </picture>
+      
       <p>&copy; {{ currentYear }} Internia. Todos los derechos reservados.</p>
     </div>
   </footer>
@@ -38,4 +43,13 @@ const currentYear = new Date().getFullYear();
   font-size: 0.9rem;
   color: #95a5a6;
 }
+
+/*Logo*/
+.footer-logo {
+  width: 120px; /* ajusta el tamaño como quieras */
+  height: auto; /* mantiene la proporción */
+  display: block;
+  margin: 0 auto 10px auto; /* centra el logo y agrega un poco de espacio abajo */
+}
+
 </style>

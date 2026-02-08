@@ -164,6 +164,7 @@ const volver = () => router.back();
   color: #4B5563;
   line-height: 1.8;
   white-space: pre-line;
+  text-align: start;
 }
 
 /* Sidebar */

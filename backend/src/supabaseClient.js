@@ -32,6 +32,18 @@ export const obtenerOfertas = async () => {
   return data;
 };
 
+// LEER una oferta (READ ONE)
+export const obtenerOfertaPorId = async (id) => {
+  const { data, error } = await supabase
+    .from('oferta')
+    .select('*')
+    .eq('id', id)
+    .single(); // .single() asegura que devuelva un objeto {}, no un array []
+
+  if (error) throw error;
+  return data;
+};
+
 // 3. ACTUALIZAR una oferta (UPDATE)
 export const actualizarOferta = async (id, nuevosDatos) => {
   const { data, error } = await supabase

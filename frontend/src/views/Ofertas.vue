@@ -1,40 +1,45 @@
 <script setup>
-import {ref} from 'vue'
-import { useFetch } from '../composables/useFetch';
-import CardOferta from '../components/cardOferta.vue';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useFetch } from "../composables/useFetch";
+import CardOferta from "../components/cardOferta.vue";
 
-const url= ref(`http://localhost:3000/ofertas`)
-const {data, error,loading, fetchData}=useFetch(url);
-const emit=defineEmits(["verDetalleOferta"])
+const router = useRouter();
+const url = ref(`http://localhost:3000/ofertas`); // Aquí poner la URL de tu API (se coge del .env)
+const { data, error, loading, fetchData } = useFetch(url);
+/*const emit=defineEmits(["verDetalleOferta"])
 
 const verDetalle=()=>{
     emit("verDetalleOferta")
 }
+*/
+const verDetalle = (id) => {
+  router.push({ name: "OfertaDetalle", params: { id: id } });
+};
 </script>
 
 <template>
-    <div v-if="loading">
-      <p>Loading...</p>
+  <div v-if="loading">
+    <p>Loading...</p>
   </div>
   <div v-else-if="error">
     <p>Error: {{ error }}</p>
   </div>
 
   <section v-else class="container-ofertas">
-      <!--Aquí ya se cargó los datos de la api-->
+    <!--Aquí ya se cargó los datos de la api-->
     <h1 class="main-title">Ofertas Públicas de Prácticas</h1>
-    <div  v-if="data && data" class="grid-ofertas">
-        <CardOferta v-for="oferta in data" :key="oferta.id"
+    <div v-if="data && data" class="grid-ofertas">
+      <CardOferta
+        v-for="oferta in data"
+        :key="oferta.id"
         :oferta="oferta"
-        @verDetalleOferta="verDetalle"
-        />
-
+        @verDetalleOferta="verDetalle(oferta.id)"
+      />
     </div>
-</section>
+  </section>
 
-    <div>
-        
-    </div>
+  <div></div>
 </template>
 
 <style scoped>
@@ -43,7 +48,7 @@ const verDetalle=()=>{
   max-width: 1200px;
   margin: 40px auto;
   padding: 0 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Título principal alineado a la izquierda */
@@ -64,10 +69,13 @@ const verDetalle=()=>{
 
 /* Responsive: si la pantalla es pequeña, baja a 1 o 2 columnas */
 @media (max-width: 1024px) {
-  .grid-ofertas { grid-template-columns: repeat(2, 1fr); }
+  .grid-ofertas {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 768px) {
-  .grid-ofertas { grid-template-columns: 1fr; }
+  .grid-ofertas {
+    grid-template-columns: 1fr;
+  }
 }
-
 </style>

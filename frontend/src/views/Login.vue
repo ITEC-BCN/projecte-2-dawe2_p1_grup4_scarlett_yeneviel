@@ -3,7 +3,7 @@
 </script>
 
 <template>
- <h1>Hola</h1>
+ <h1>Esto es el Login.vue</h1>
   
 </template>
 

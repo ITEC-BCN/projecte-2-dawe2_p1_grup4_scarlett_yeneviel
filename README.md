@@ -66,5 +66,28 @@
 **Temas tratados**
 - Asignación de tareas
 
+## Dia 8 - 03/02/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+- Lista de ofertas
+- Ver el detalle de las ofertas
+
+# Sprint 3 Daylies 
+
+**Planificación del sprint:**
+ - Crear ofertas
+ - Actualizar ofertas
+ - Borrar ofertas
+
+## Dia 9 - 09/02/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+
+- Planificación del sprint 3
+- Asignación de tareas
+
+
+
+
 
 

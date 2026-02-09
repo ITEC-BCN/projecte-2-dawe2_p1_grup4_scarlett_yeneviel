@@ -20,10 +20,19 @@ app.use(express.json());
 
 //Rutas
 
-app.post('/ofertas', async (req, res) => {
+app.post("/ofertas", async (req, res) => {
   try {
-    const { nombre_empresa, fecha_publicacion } = req.body;
-    const nuevaOferta = await crearOferta(nombre_empresa, fecha_publicacion);
+    const nuevaOferta = await crearOferta({
+      nombre_empresa: req.body.nombre_empresa,
+      tipo_puesto: req.body.tipo_puesto,
+      fecha_expiracion: req.body.fecha_expiracion,
+      descripcion: req.body.descripcion,
+      funciones: req.body.funciones,
+      requisitos: req.body.requisitos,
+      beneficios: req.body.beneficios,
+      contenido_extra: req.body.contenido_extra || null,
+    });
+
     res.status(201).json(nuevaOferta);
   } catch (err) {
     res.status(400).json({ error: err.message });

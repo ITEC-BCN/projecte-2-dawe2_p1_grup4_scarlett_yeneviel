@@ -14,7 +14,14 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 export const crearOferta = async (nombre, fecha) => {
   const { data, error } = await supabase
     .from('oferta')
-    .insert([{ nombre_empresa: nombre, fecha_publicacion: fecha }])
+    .insert([{
+      nombre_empresa,
+      tipo_puesto,
+      descripcion,
+      funciones,
+      requisitos,
+      beneficios,
+    }])
     .select(); // .select() devuelve el objeto creado
 
   if (error) throw error;

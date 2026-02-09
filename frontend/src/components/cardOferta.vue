@@ -14,7 +14,7 @@ const verDetale=()=>{
 <template>
     <article class="card">
         <span class="tag">{{ oferta.etiqueta }}</span>
-        <h2 class="titulo-puesto">{{ oferta.nombre_empresa }}</h2>
+        <h2 class="titulo-puesto">{{ oferta.tipo_puesto }}</h2>
         <p class="nombre-empresa">{{ oferta.nombre_empresa }}</p>
         <p class="descripcion-card">{{ oferta.descripcion }}</p>
 

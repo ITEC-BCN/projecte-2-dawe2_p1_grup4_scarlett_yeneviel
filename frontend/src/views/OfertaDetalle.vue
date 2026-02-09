@@ -11,6 +11,10 @@ const url = ref(`http://localhost:3000/ofertas/${route.params.id}`);
 const { data: oferta, error, loading } = useFetch(url);
 
 const volver = () => router.back();
+
+const ActualizarOferta = (id) => {
+  router.push({ name: "ActualizarOferta", params: { id: id } });
+};
 </script>
 
 <template>
@@ -83,6 +87,8 @@ const volver = () => router.back();
           </aside>
 
         </div>
+
+        <button @click="ActualizarOferta(oferta.id)">Actualizar</button>
       </article>
 
     </div>

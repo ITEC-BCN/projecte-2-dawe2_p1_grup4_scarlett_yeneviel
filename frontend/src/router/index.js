@@ -37,6 +37,12 @@ const router = createRouter({
       component: () => import('@/views/Dasboard.vue'),
       props: true
     },
+             {
+      path: "/oferta/actualizar/:id",
+      name: "ActualizarOferta",
+      component: () => import('@/views/ActualizarOferta.vue'),
+      props: true
+    },
   ],
 })
 

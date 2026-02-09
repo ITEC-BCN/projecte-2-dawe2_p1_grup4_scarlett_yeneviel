@@ -43,6 +43,13 @@ const router = createRouter({
       component: () => import('@/views/ActualizarOferta.vue'),
       props: true
     },
+    {
+    path: "/crear",
+    name: "CrearOferta",
+    component: () => import('@/views/AfegirOferta.vue'),
+    props: true
+  }
+
   ],
 })
 

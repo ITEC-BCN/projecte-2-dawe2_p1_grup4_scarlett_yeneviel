@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 
 const ofertas = ref([])
 const error = ref(null)
-const API_URL = 'https://expert-space-robot-97j5v99r4575cr64-3000.app.github.dev/ofertas'
+const API_URL = 'https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev/'
 
 const cargarOfertas = async () => {
   try {

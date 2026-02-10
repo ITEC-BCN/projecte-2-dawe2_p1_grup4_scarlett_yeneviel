@@ -13,6 +13,18 @@ const funciones = ref("");
 const requisitos = ref("");
 const beneficios = ref("");
 
+//Ha accedido al input
+const touched = ref({
+  nombre_empresa: false,
+  tipo_puesto: false,
+  fecha_expiracion: false,
+  descripcion: false,
+  funciones: false,
+  requisitos: false,
+  beneficios: false,
+});
+
+
 // ESTADO
 const loading = ref(false);
 const error = ref(null);
@@ -20,28 +32,66 @@ const erroresValidacion = ref({});
 
 // VALIDACIÓN
 const validarFormulario = () => {
-const errores = {};
+  const errores = {};
 
-// Validación de fecha expiración
-    if (fecha_expiracion.value) {
+  // EMPRESA
+  if (!nombre_empresa.value || nombre_empresa.value.trim().length < 1) {
+    errores.nombre_empresa =
+      "El nombre de la empresa debe tener al menos 1 caracteres";
+  }
+
+  // TIPO DE PUESTO
+  if (!tipo_puesto.value || tipo_puesto.value.trim().length < 3) {
+    errores.tipo_puesto =
+      "El tipo de puesto es obligatorio";
+  }
+
+  // FUNCIONES
+  if (!funciones.value || funciones.value.trim().length < 5) {
+    errores.funciones =
+      "Las funciones son obligatorias";
+  }
+
+  // REQUISITOS
+  if (!requisitos.value || requisitos.value.trim().length < 5) {
+    errores.requisitos =
+      "Los requisitos son obligatorios";
+  }
+
+  // BENEFICIOS
+  if (!beneficios.value || beneficios.value.trim().length < 5) {
+    errores.beneficios =
+      "Los beneficios son obligatorios";
+  }
+
+  // Validación de fecha expiración
+  // * controla que sea mayor que hoy y que la fehca de expiración se mayor de 29 días
+  if (fecha_expiracion.value) {
     const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
     const exp = new Date(fecha_expiracion.value);
 
     if (exp < hoy) {
-        errores.fecha_expiracion = "La fecha de expiración no puede ser menor a hoy";
+      errores.fecha_expiracion =
+        "La fecha NO puede ser menor a hoy";
     } else {
-        // Solo si la fecha es >= hoy, chequeamos los 30 días
-        const diffDias = Math.ceil((exp - hoy) / (1000 * 60 * 60 * 24));
-        if (diffDias < 30) {
-        errores.fecha_expiracion = "La expiración debe ser al menos 30 días desde hoy";
-        }
-    }
-    }
+      const diffDias = Math.ceil(
+        (exp - hoy) / (1000 * 60 * 60 * 24)
+      );
 
-    // Descripción: mínimo 1 
-    if (!descripcion.value || descripcion.value.trim().split(/\s+/).length < 2) {
-        errores.descripcion = "La descripción debe tener al menos uan palabra";
+      if (diffDias < 28) {
+        errores.fecha_expiracion =
+          "La expiración debe ser al menos 30 días desde hoy";
+      }
     }
+  }
+
+
+  // Descripción: mínimo 1 
+  if (!descripcion.value || descripcion.value.trim().split(/\s+/).length < 2) {
+    errores.descripcion = "Debe tener al menos una frase";
+  }
 
   erroresValidacion.value = errores;
 
@@ -50,7 +100,7 @@ const errores = {};
 };
 
 // Observa cambios en fecha_expiracion y valida en tiempo real
-watch([fecha_expiracion, descripcion], () => {
+watch([fecha_expiracion, descripcion,nombre_empresa,tipo_puesto, funciones, requisitos, beneficios], () => {
   validarFormulario();
 });
 
@@ -95,17 +145,23 @@ const submitFormulario = async () => {
       <form @submit.prevent="submitFormulario" class="form">
         <div class="input-group">
           <label>Empresa</label>
-          <input v-model="nombre_empresa" placeholder="Nombre de la empresa" required />
+          <input v-model="nombre_empresa" placeholder="Nombre de la empresa" required  @blur="touched.nombre_empresa = true"/>
+          <p v-if="erroresValidacion.nombre_empresa" class="error">
+            {{ erroresValidacion.nombre_empresa }}
+          </p>
         </div>
 
         <div class="input-group">
           <label>Tipo de puesto</label>
-          <input v-model="tipo_puesto" placeholder="Ej. Desarrollador Web" />
+          <input v-model="tipo_puesto" placeholder="Ej. Desarrollador Web"  @blur="touched.tipo_puesto = true" />
+          <p v-if="erroresValidacion.tipo_puesto" class="error">
+            {{ erroresValidacion.tipo_puesto }}
+          </p>
         </div>
 
         <div class="input-group">
           <label>Fecha de expiración</label>
-          <input v-model="fecha_expiracion" type="date" />
+          <input v-model="fecha_expiracion" type="date"  @blur="touched.fecha_expiracion = true"/>
           <p v-if="erroresValidacion.fecha_expiracion" class="error">
             {{ erroresValidacion.fecha_expiracion }}
           </p>
@@ -113,25 +169,34 @@ const submitFormulario = async () => {
 
         <div class="input-group">
           <label>Descripción general</label>
-          <textarea v-model="descripcion" placeholder="Describe el puesto"></textarea>
-           <p v-if="erroresValidacion.descripcion" class="error">
+          <textarea v-model="descripcion" placeholder="Describe el puesto"  @blur="touched.descripcion = true"></textarea>
+          <p v-if="erroresValidacion.descripcion" class="error">
             {{ erroresValidacion.descripcion }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Funciones del puesto</label>
-          <textarea v-model="funciones" placeholder="Responsabilidades"></textarea>
+          <textarea v-model="funciones" placeholder="Responsabilidades"  @blur="touched.funciones = true"></textarea>
+          <p v-if="erroresValidacion.funciones" class="error">
+            {{ erroresValidacion.funciones }}
+          </p>
         </div>
 
         <div class="input-group">
           <label>Requisitos / conocimientos</label>
-          <textarea v-model="requisitos" placeholder="Habilidades y conocimientos necesarios"></textarea>
+          <textarea v-model="requisitos" placeholder="Habilidades y conocimientos necesarios"  @blur="touched.requisitos = true"></textarea>
+          <p v-if="erroresValidacion.requisitos" class="error">
+            {{ erroresValidacion.requisitos }}
+          </p>
         </div>
 
         <div class="input-group">
           <label>Beneficios</label>
-          <textarea v-model="beneficios" placeholder="Beneficios que ofrece la empresa"></textarea>
+          <textarea v-model="beneficios" placeholder="Beneficios que ofrece la empresa"  @blur="touched.beneficios = true"></textarea>
+          <p v-if="erroresValidacion.beneficios" class="error">
+            {{ erroresValidacion.beneficios }}
+          </p>
         </div>
 
         <button type="submit" class="btn" :disabled="loading || Object.keys(erroresValidacion).length > 0">
@@ -162,7 +227,7 @@ const submitFormulario = async () => {
   background: #fff;
   padding: 40px 30px;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   max-width: 700px;
   width: 100%;
 }
@@ -198,7 +263,8 @@ const submitFormulario = async () => {
 }
 
 /* Inputs y textarea */
-input, textarea {
+input,
+textarea {
   padding: 12px 15px;
   border: 1px solid #d1d5db;
   border-radius: 10px;
@@ -210,9 +276,10 @@ input, textarea {
 }
 
 /* Focus en inputs */
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
 /* Textarea más grande */

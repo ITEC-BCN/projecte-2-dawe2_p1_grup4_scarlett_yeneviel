@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-// CAMPOS del formulario
+// CAMPOS del formulario FALTAN MÁS LAS FK (id_ubicación, id_tipo_jornada, contenido_extra )
 const nombre_empresa = ref("");
 const tipo_puesto = ref("");
 const fecha_expiracion = ref("");
@@ -35,9 +35,8 @@ const validarFormulario = () => {
   const errores = {};
 
   // EMPRESA
-  if (!nombre_empresa.value || nombre_empresa.value.trim().length < 1) {
-    errores.nombre_empresa =
-      "El nombre de la empresa debe tener al menos 1 caracteres";
+  if (!nombre_empresa.value.trim()) {
+    errores.nombre_empresa = "El nombre de la empresa es obligatorio";
   }
 
   // TIPO DE PUESTO
@@ -100,21 +99,26 @@ const validarFormulario = () => {
 };
 
 // Observa cambios en fecha_expiracion y valida en tiempo real
-watch([fecha_expiracion, descripcion,nombre_empresa,tipo_puesto, funciones, requisitos, beneficios], () => {
+watch([fecha_expiracion, descripcion, nombre_empresa, tipo_puesto, funciones, requisitos, beneficios], () => {
   validarFormulario();
 });
 
 // Enviar formulario
 const submitFormulario = async () => {
-  if (!validarFormulario()) return; // detiene envío si hay errores
+
+  console.log("🚀 submitFormulario EJECUTADO");
+
+  if (!validarFormulario()) return;
 
   loading.value = true;
   error.value = null;
 
   try {
-    const res = await fetch("http://localhost:3000/ofertas", {
+    const res = await fetch("https://expert-space-robot-97j5v99r4575cr64-3000.app.github.dev/ofertas", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         nombre_empresa: nombre_empresa.value,
         tipo_puesto: tipo_puesto.value,
@@ -126,14 +130,31 @@ const submitFormulario = async () => {
       }),
     });
 
-    if (!res.ok) throw new Error("Error al crear la oferta");
-    router.push("/");
+    const data = await res.json().catch(() => null);
+
+    if (!validarFormulario()) {
+      console.log("❌ Validación falló", erroresValidacion.value);
+      return;
+    }
+
+    console.log("✅ Validación OK, enviando POST...");
+
+    if (!res.ok) {
+      console.error("Error response body:", data);
+      throw new Error(data?.error || data?.message || "Error del servidor");
+    }
+
+    router.push("/ofertas");
   } catch (err) {
+    console.error(err);
     error.value = err.message;
   } finally {
     loading.value = false;
   }
 };
+
+
+
 </script>
 
 
@@ -145,56 +166,60 @@ const submitFormulario = async () => {
       <form @submit.prevent="submitFormulario" class="form">
         <div class="input-group">
           <label>Empresa</label>
-          <input v-model="nombre_empresa" placeholder="Nombre de la empresa" required  @blur="touched.nombre_empresa = true"/>
-          <p v-if="erroresValidacion.nombre_empresa" class="error">
+          <input v-model="nombre_empresa" placeholder="Nombre de la empresa" required
+            @blur="touched.nombre_empresa = true" />
+          <p v-if="touched.nombre_empresa && erroresValidacion.nombre_empresa" class="error">
             {{ erroresValidacion.nombre_empresa }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Tipo de puesto</label>
-          <input v-model="tipo_puesto" placeholder="Ej. Desarrollador Web"  @blur="touched.tipo_puesto = true" />
-          <p v-if="erroresValidacion.tipo_puesto" class="error">
+          <input v-model="tipo_puesto" placeholder="Ej. Desarrollador Web" @blur="touched.tipo_puesto = true" />
+          <p v-if="touched.tipo_puesto && erroresValidacion.tipo_puesto" class="error">
             {{ erroresValidacion.tipo_puesto }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Fecha de expiración</label>
-          <input v-model="fecha_expiracion" type="date"  @blur="touched.fecha_expiracion = true"/>
-          <p v-if="erroresValidacion.fecha_expiracion" class="error">
+          <input v-model="fecha_expiracion" type="date" @blur="touched.fecha_expiracion = true" />
+          <p v-if="touched.fecha_expiracion && erroresValidacion.fecha_expiracion" class="error">
             {{ erroresValidacion.fecha_expiracion }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Descripción general</label>
-          <textarea v-model="descripcion" placeholder="Describe el puesto"  @blur="touched.descripcion = true"></textarea>
-          <p v-if="erroresValidacion.descripcion" class="error">
+          <textarea v-model="descripcion" placeholder="Describe el puesto"
+            @blur="touched.descripcion = true"></textarea>
+          <p v-if="touched.descripcion && erroresValidacion.descripcion" class="error">
             {{ erroresValidacion.descripcion }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Funciones del puesto</label>
-          <textarea v-model="funciones" placeholder="Responsabilidades"  @blur="touched.funciones = true"></textarea>
-          <p v-if="erroresValidacion.funciones" class="error">
+          <textarea v-model="funciones" placeholder="Responsabilidades" @blur="touched.funciones = true"></textarea>
+          <p v-if="touched.funciones && erroresValidacion.funciones" class="error">
             {{ erroresValidacion.funciones }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Requisitos / conocimientos</label>
-          <textarea v-model="requisitos" placeholder="Habilidades y conocimientos necesarios"  @blur="touched.requisitos = true"></textarea>
-          <p v-if="erroresValidacion.requisitos" class="error">
+          <textarea v-model="requisitos" placeholder="Habilidades y conocimientos necesarios"
+            @blur="touched.requisitos = true"></textarea>
+          <p v-if="touched.requisitos && erroresValidacion.requisitos" class="error">
             {{ erroresValidacion.requisitos }}
           </p>
         </div>
 
         <div class="input-group">
           <label>Beneficios</label>
-          <textarea v-model="beneficios" placeholder="Beneficios que ofrece la empresa"  @blur="touched.beneficios = true"></textarea>
-          <p v-if="erroresValidacion.beneficios" class="error">
+          <textarea v-model="beneficios" placeholder="Beneficios que ofrece la empresa"
+            @blur="touched.beneficios = true"></textarea>
+          <p v-if="touched.beneficios && erroresValidacion.beneficios" class="error">
             {{ erroresValidacion.beneficios }}
           </p>
         </div>

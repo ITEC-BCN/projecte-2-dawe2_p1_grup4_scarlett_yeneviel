@@ -22,6 +22,9 @@ app.use(express.json());
 
 app.post("/ofertas", async (req, res) => {
   try {
+
+    console.log("Body", req.body)
+
     const nuevaOferta = await crearOferta({
       nombre_empresa: req.body.nombre_empresa,
       tipo_puesto: req.body.tipo_puesto,
@@ -29,9 +32,9 @@ app.post("/ofertas", async (req, res) => {
       descripcion: req.body.descripcion,
       funciones: req.body.funciones,
       requisitos: req.body.requisitos,
-      beneficios: req.body.beneficios,
-      contenido_extra: req.body.contenido_extra || null,
+      beneficios: req.body.beneficios || null,
     });
+      console.log("BODY:", req.body); // 👈 prueba esto
 
     res.status(201).json(nuevaOferta);
   } catch (err) {

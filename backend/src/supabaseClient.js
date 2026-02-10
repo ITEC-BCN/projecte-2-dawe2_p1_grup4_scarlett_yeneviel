@@ -11,16 +11,18 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 //Funciones del crud
 
 // 1. CREAR una oferta (CREATE)
-export const crearOferta = async (nombre, fecha) => {
+export const crearOferta = async (nuevaOferta) => {
+   console.log("OFERTA RECIBIDA:", nuevaOferta); // 👈 DEBUG
   const { data, error } = await supabase
-    .from('oferta')
+    .from('oferta') //nombre de la tabla
     .insert([{
-      nombre_empresa,
-      tipo_puesto,
-      descripcion,
-      funciones,
-      requisitos,
-      beneficios,
+      nombre_empresa: nuevaOferta.nombre_empresa,
+      tipo_puesto: nuevaOferta.tipo_puesto,
+      fecha_expiracion: nuevaOferta.fecha_expiracion,
+      descripcion: nuevaOferta.descripcion,
+      funciones: nuevaOferta.funciones,
+      requisitos: nuevaOferta.requisitos,
+      beneficios: nuevaOferta.beneficios,
     }])
     .select(); // .select() devuelve el objeto creado
 

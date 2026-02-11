@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetch';
 import { URL_BACK } from '../../../config';
+import ModalEliminar from '../components/Modal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,7 +19,21 @@ const ActualizarOferta = (id) => {
   router.push({ name: "ActualizarOferta", params: { id: id } });
 };
 
-const EliminarOferta = async (id) => {
+//Funciones para el modal de eliminar
+const modalEliminar = ref(null);
+
+const abrirModal = (id) => {
+  // Actualizamos el id de la oferta en el modal
+  modalEliminar.value.ofertaId = id;
+  modalEliminar.value.openModal();
+};
+
+const ofertaEliminada = () => {
+  console.log("La oferta fue eliminada");
+};
+
+// CODIGO QUE FUNCIONA
+/* const EliminarOferta = async (id) => {
   const confirmacion = confirm("¿Estás seguro de que quieres eliminar esta oferta?");
 
   if (!confirmacion) return;
@@ -39,7 +54,7 @@ const EliminarOferta = async (id) => {
     console.error(err);
     alert("Hubo un error al eliminar la oferta");
   }
-};
+}; */
 
 
 </script>
@@ -71,7 +86,7 @@ const EliminarOferta = async (id) => {
               {{ oferta.tipo_puesto }}
             </span>
             <span class="badge">
-               {{ oferta.contenido_extra }} 
+              {{ oferta.contenido_extra }}
             </span>
 
           </div>
@@ -116,8 +131,15 @@ const EliminarOferta = async (id) => {
         </div>
 
         <button @click="ActualizarOferta(oferta.id)">Actualizar</button>
+        <!--button @click="EliminarOferta(oferta.id)">Eliminar</button-->
 
-         <button @click="EliminarOferta(oferta.id)">Eliminar</button>
+        <div>
+          <button @click="abrirModal(oferta.id)" class="btn-delete">Eliminar</button>
+
+          <!-- Componente del modal -->
+          <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id" @eliminado="ofertaEliminada" />
+        </div>
+
       </article>
 
     </div>
@@ -125,7 +147,6 @@ const EliminarOferta = async (id) => {
 </template>
 
 <style scoped>
-
 /* Página base*/
 .detalle-page {
   background: #F3F4F6;
@@ -144,7 +165,7 @@ const EliminarOferta = async (id) => {
   border-radius: 16px;
   padding: 40px;
   border: 1px solid #E5E7EB;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
 }
 
 /* Header */
@@ -155,7 +176,7 @@ const EliminarOferta = async (id) => {
 .header-meta {
   display: flex;
   justify-content: flex-start;
-  gap: 10px;                   
+  gap: 10px;
   align-items: center;
   margin-bottom: 8px;
 }
@@ -297,5 +318,4 @@ const EliminarOferta = async (id) => {
   }
 
 }
-
 </style>

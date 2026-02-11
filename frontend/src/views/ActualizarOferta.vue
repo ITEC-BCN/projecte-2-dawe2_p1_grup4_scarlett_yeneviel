@@ -3,16 +3,59 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetch';
 import { URL_BACK } from '../../../config';
+import { watch } from 'vue';
+
 
 const route = useRoute();
 const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
+
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
-const { data: oferta, error, loading } = useFetch(url);
+const { data: ofertaOriginal, error, loading, actualizarOferta } = useFetch(url);
+
+//Estado para los datos que el usuario edita
+const form=ref({})
+
+// Cuando los datos cargan, creamos una copia para el formulario, cuando 'ofertaOriginal' deje de ser null
+watch(ofertaOriginal, (newData) => {
+    if (newData) {
+        form.value = { ...newData };
+    }
+}, { immediate: true });
+
+
+const actualizar = async () => {
+    // Calculamos solo lo que cambió (PUT PARCIAL)
+    const datosCambiados = {};
+    for (const key in form.value) {
+        if (form.value[key] !== ofertaOriginal.value[key]) {
+            datosCambiados[key] = form.value[key];
+        }
+    }
+
+    if (Object.keys(datosCambiados).length === 0) return alert("Sin cambios");
+
+    // Usamos la función del composable
+    try {
+      const urlPut=`http://localhost:3000/oferta/${route.params.id}`;
+
+     
+        await actualizarOferta(datosCambiados, urlPut);
+        alert("Actualizado correctamente");
+        router.push('/ofertas');
+        
+    } catch (err) {
+      console.error("Fallo en la actualización:",err);
+        
+    }
+};
+
 
 const volver = () => router.back();
 </script>
+
+
 
 <template>
     <!--Contenedor Principal-->
@@ -31,34 +74,34 @@ const volver = () => router.back();
       </div>
 
       <!--Formulario-->
-      <div v-else-if="oferta">
+      <div v-else-if="ofertaOriginal">
 
-      
-        <form id="formPutOferta">
+      <!--Evito que se envie el formulario y llamo a la función actualizar-->
+        <form id="formPutOferta" @submit.prevent="actualizar">
             <label for="puesto">Nombre del puesto:</label>
-            <input  type="text" id="puesto" name="puesto" :value="oferta.tipo_puesto" />
+            <input  type="text" id="puesto" name="puesto" v-model="form.tipo_puesto"/>
 
             <label for="nombre_empresa">Nombre de la empresa:</label>
-            <input  type="text" id="empresa" name="nombre_empresa" :value="oferta.nombre_empresa" />
+            <input  type="text" id="empresa" name="nombre_empresa" v-model="form.nombre_empresa" />
 
             <label for="funciones_puesto">funciones del puesto:</label>
-            <textarea id="funciones" name="funciones_puesto" > 
-                {{ oferta.funciones }}
+            <textarea id="funciones" name="funciones_puesto" v-model="form.funciones" > 
+               
             </textarea>
 
 
             <label for="beneficios">Beneficios:</label>
-            <textarea   id="beneficios" name="beneficios"> 
-                {{ oferta.beneficios }}
+            <textarea   id="beneficios" name="beneficios" v-model="form.beneficios" > 
+                
             </textarea>
 
-            <label for="beneficios">Requisitos:</label>
-            <textarea  id="requisitos" name="beneficios" >
-                {{ oferta.beneficios }}
+            <label for="requisitos">Requisitos:</label>
+            <textarea  id="requisitos" name="requisitos" v-model="form.requisitos" >
+                
             </textarea>
 
             <label for="fecha_expiracion">Fecha de expiración</label>
-            <input type="date" id="fecha_expiracion" name="fecha_expiracion" :value="oferta.fecha_expiracion"/>
+            <input type="date" id="fecha_expiracion" name="fecha_expiracion" v-model="form.fecha_expiracion" />
 
             <button class="btn-submit ">Actualizar oferta</button>
         </form>

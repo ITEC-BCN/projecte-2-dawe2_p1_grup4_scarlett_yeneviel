@@ -66,6 +66,32 @@ app.get('/ofertas/:id', async (req, res) => {
   }
 });
 
+//Actualiza las ofertas
+app.put('/oferta/:id',async (req, res)=>{
+
+  try{
+
+    const body=req.body;
+    const id=req.params.id;
+    const oferta=await actualizarOferta (id, body)
+
+    //Valido que exista la oferta
+    // Supabase devuelve un array vacío [] si no encuentra el ID al usar .select()
+    if (!oferta || oferta.length === 0) {
+      return res.status(404).json({ error: "Oferta no encontrada" });
+    }
+
+    //  Respuesta exitosa
+    res.status(200).json({
+      message: "Oferta actualizada con éxito",
+      data: oferta[0] // Devolvemos el registro actualizado
+    });
+
+  }catch (err){
+    res.status(500).json({error:err.message})
+  }
+})
+
 //delete
 
 app.delete('/ofertas/:id', async (req, res) => {
@@ -79,7 +105,6 @@ app.delete('/ofertas/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 // O, si quieres restringir a tu frontend:
 /* Esta parte está duplicada

@@ -3,9 +3,10 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useFetch } from "../composables/useFetch";
 import CardOferta from "../components/cardOferta.vue";
+import { URL_BACK } from "../../../config";
 
 const router = useRouter();
-const url = ref(`https://expert-space-robot-97j5v99r4575cr64-3000.app.github.dev/ofertas`); // Aquí poner la URL de tu API (se coge del .env)
+const url = ref(`${URL_BACK}/ofertas`); // Aquí poner la URL de tu API (se coge del .env)
 const { data, error, loading, fetchData } = useFetch(url);
 /*const emit=defineEmits(["verDetalleOferta"])
 

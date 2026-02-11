@@ -2,12 +2,13 @@
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetch';
+import { URL_BACK } from '../../../config';
 
 const route = useRoute();
 const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
-const url = ref(`http://localhost:3000/ofertas/${route.params.id}`);
+const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
 const { data: oferta, error, loading } = useFetch(url);
 
 const volver = () => router.back();

@@ -106,8 +106,6 @@ watch([fecha_expiracion, descripcion, nombre_empresa, tipo_puesto, funciones, re
 // Enviar formulario
 const submitFormulario = async () => {
 
-  console.log("🚀 submitFormulario EJECUTADO");
-
   if (!validarFormulario()) return;
 
   loading.value = true;
@@ -133,11 +131,11 @@ const submitFormulario = async () => {
     const data = await res.json().catch(() => null);
 
     if (!validarFormulario()) {
-      console.log("❌ Validación falló", erroresValidacion.value);
+      console.log(" Validación falló", erroresValidacion.value);
       return;
     }
 
-    console.log("✅ Validación OK, enviando POST...");
+    console.log(" Validación OK, enviando POST...");
 
     if (!res.ok) {
       console.error("Error response body:", data);

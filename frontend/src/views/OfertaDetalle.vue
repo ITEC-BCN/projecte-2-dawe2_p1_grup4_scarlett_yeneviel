@@ -2,13 +2,14 @@
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetch';
+import { URL_BACK } from '../../../config';
 
 const route = useRoute();
 const router = useRouter();
 
 
 // Construimos la URL usando el ID que viene en la ruta
-const url = ref(`http://localhost:3000/ofertas/${route.params.id}`);
+const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
 const { data: oferta, error, loading } = useFetch(url);
 
 const volver = () => router.back();
@@ -16,6 +17,31 @@ const volver = () => router.back();
 const ActualizarOferta = (id) => {
   router.push({ name: "ActualizarOferta", params: { id: id } });
 };
+
+const EliminarOferta = async (id) => {
+  const confirmacion = confirm("¿Estás seguro de que quieres eliminar esta oferta?");
+
+  if (!confirmacion) return;
+
+  try {
+    const response = await fetch(`${URL_BACK}/ofertas/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al eliminar la oferta");
+    }
+
+    alert("Oferta eliminada correctamente");
+
+    router.push({ name: "ListadoOfertas" }); // cambia por el nombre real de tu ruta
+  } catch (err) {
+    console.error(err);
+    alert("Hubo un error al eliminar la oferta");
+  }
+};
+
+
 </script>
 
 <template>
@@ -90,6 +116,8 @@ const ActualizarOferta = (id) => {
         </div>
 
         <button @click="ActualizarOferta(oferta.id)">Actualizar</button>
+
+         <button @click="EliminarOferta(oferta.id)">Eliminar</button>
       </article>
 
     </div>

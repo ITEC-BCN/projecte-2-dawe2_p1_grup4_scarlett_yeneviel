@@ -10,7 +10,7 @@ import express from 'express';
 import cors from 'cors'
 
 
-import { obtenerOfertas, crearOferta, obtenerOfertaPorId } from './supabaseClient.js'
+import { obtenerOfertas, crearOferta, obtenerOfertaPorId, eliminarOferta } from './supabaseClient.js'
 const app = express();
 
 // Permitir cualquier origen (para desarrollo)
@@ -65,6 +65,21 @@ app.get('/ofertas/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+//delete
+
+app.delete('/ofertas/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const resultado = await eliminarOferta(id);
+
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // O, si quieres restringir a tu frontend:
 /* Esta parte está duplicada

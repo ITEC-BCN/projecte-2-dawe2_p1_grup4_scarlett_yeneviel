@@ -12,7 +12,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // 1. CREAR una oferta (CREATE)
 export const crearOferta = async (nuevaOferta) => {
-   console.log("OFERTA RECIBIDA:", nuevaOferta); // 👈 DEBUG
+   console.log("OFERTA RECIBIDA:", nuevaOferta); //  DEBUG
   const { data, error } = await supabase
     .from('oferta') //nombre de la tabla
     .insert([{

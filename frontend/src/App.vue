@@ -19,6 +19,7 @@ import Footer from './components/Footer.vue';
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%; /* Asegura que el layout no exceda la pantalla */
 }
 main {
   flex: 1; /* Esto estira el contenido central y empuja el footer al fondo */
@@ -27,6 +28,6 @@ main {
 .main-content {
   flex: 1;
   overflow-y: auto; 
-  padding: 2rem;
+
 }
 </style>

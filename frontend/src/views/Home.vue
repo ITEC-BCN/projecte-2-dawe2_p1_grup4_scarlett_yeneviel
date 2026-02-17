@@ -12,22 +12,25 @@
         innovadoras y centros educativos para una formación dual.
       </p>
       <div class="botonera">
-        <button>Empezar ahora</button>
-        <button>Ver ofertas</button>
+        <router-link to="/login" class="btn-link">
+          <button class="btn-primary">Empezar ahora</button>
+        </router-link>
+        <router-link to="/ofertas" class="btn-link">
+          <button class="btn-secondary">Ver ofertas</button>
+        </router-link>
       </div>
     </section>
     <img src="/img/home1_img.jpg" alt="Home Image" />
   </main>
-  <section class="info_extra">
+  <div class="info_extra">
     <div class="avatarGroup">
-        <img src="/img/avatarGroup.png" alt="Avatar Group" />
-        <p>+5.000 Estudiantes ya confían en nosotros</p>
-      </div>
-  </section>
+      <img src="/img/avatarGroup.png" alt="Avatar Group" />
+      <p>+5.000 Estudiantes ya confían en nosotros</p>
+    </div>
+  </div>
   <section>
     <div>
-      <h3>Perfiles para cada necesidad</h3>
-      <p>Nuestra plataforma se adapta a todos los actores de FP</p>
+      <h1>Perfiles para cada <strong class="resaltar">Necesidad</strong></h1>
     </div>
     <div>
       <article class="card">
@@ -55,18 +58,13 @@
 </template>
 
 <style scoped>
-
 /* Main */
 main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2rem;
+  padding: 1.5rem;
   gap: 2rem;
-}
-
-main section {
-  flex: 1;
 }
 
 main img {
@@ -78,11 +76,11 @@ main img {
 /* H1 principal */
 h1 {
   font-size: 2.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .resaltar {
-  color:#10b981;
+  color: #10b981;
 }
 
 /* Párrafo principal */
@@ -92,15 +90,20 @@ main p {
   line-height: 1.5;
 }
 
-/* Botonera */
+/* Botonera contenedor */
 .botonera {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-right: 1.5rem;
+}
+
+/* Ajuste para que el link no rompa el diseño */
+.btn-link {
+  flex: 1; /* Esto hace que ambos botones ocupen el mismo espacio */
+  text-decoration: none;
 }
 
 .botonera button {
-  width: 100%;
+  width: 100%; /* Ahora sí ocupará el 100% de su router-link */
   padding: 14px;
   border-radius: 10px;
   font-weight: 700;
@@ -108,51 +111,53 @@ main p {
   transition: all 0.2s ease;
 }
 
-/* Botón "Empezar ahora" */
-.botonera button:first-child {
+/* Botón "Empezar ahora" (Clase específica) */
+.btn-primary {
   background: #4C1D95;
   color: white;
   border: none;
 }
 
-/* Botón "Ver ofertas" */
-.botonera button:last-child {
+.btn-primary:hover {
+  background: #3b1675;
+}
+
+/* Botón "Ver ofertas" (Clase específica) */
+.btn-secondary {
   background: white;
-  color: var(--accent-green);
-  border: 2px solid var(--accent-green);
+  color: #10b981; 
+  border: 2px solid #10b981;
+}
+
+.btn-secondary:hover {
+  background: #f0fdf4;
 }
 
 .avatarGroup {
   display: flex;
   align-items: center; /* Centra el texto con la imagen */
-  gap: 0.6rem;        /* Espacio entre imagen y texto */
+  gap: 0.6rem; /* Espacio entre imagen y texto */
   width: max-content; /* Que solo ocupe el tamaño necesario */
-  margin-top: 1rem;   /* Separación de contenido anterior */
+  margin-top: 1rem; /* Separación de contenido anterior */
 }
 
 .avatarGroup img {
-  width: 200px;        /* Tamaño pequeño */
+  width: 200px; /* Tamaño pequeño */
   height: auto;
-  object-fit: cover;  /* Que no se deforme */
+  object-fit: cover; /* Que no se deforme */
 }
 
 .avatarGroup p {
   margin: 0;
-  font-size: 0.9rem;  /* Texto más discreto */
+  font-size: 0.9rem; /* Texto más discreto */
   color: #555;
   white-space: nowrap; /* Evita que se divida en varias líneas */
-}
-
-
-/* Segunda sección */
-section {
-  padding: 1rem 2rem;
 }
 
 /* Título y párrafo */
 section {
   text-align: left;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 section h3 {
@@ -165,41 +170,47 @@ section p {
   color: #555;
 }
 
-/* Cards container */
+/* Cards container - Ajustamos el espaciado entre cards */
 section > div:last-child {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem; /* Reducimos el espacio entre ellas */
   flex-wrap: wrap;
 }
 
-/* Individual card */
+/* Individual card - Reducimos el ancho base y el padding */
 .card {
   background: #f9f9f9;
   border-radius: 10px;
-  padding: 1.5rem;
-  flex: 1 1 200px;
+  padding: 1rem; /* Relleno interno más pequeño */
+  flex: 1 1 150px; /* Bajamos de 200px a 150px para que sean más estrechas */
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Card images */
+/* Card images - Tamaño de iconos más contenido */
 .card img {
-  width: 60px;
-  height: 60px;
+  width: 45px; /* Bajamos de 60px a 45px */
+  height: 45px;
   object-fit: contain;
-  margin-bottom: 1rem;
-}
-
-/* Card titles */
-.card h4 {
-  font-size: 1.2rem;
   margin-bottom: 0.5rem;
 }
 
-/* Card paragraphs */
+/* Card titles - Fuente más pequeña */
+.card h4 {
+  font-size: 1rem; /* Bajamos de 1.2rem a 1rem */
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+/* Card paragraphs - Texto más compacto */
 .card p {
-  font-size: 1rem;
-  color: #555;
+  font-size: 0.85rem; /* Bajamos de 1rem a 0.85rem */
+  color: #666;
+  line-height: 1.3;
+}
+
+.info_extra {
+  margin-top: -30px;
+  margin-bottom: 50px;
 }
 </style>
-

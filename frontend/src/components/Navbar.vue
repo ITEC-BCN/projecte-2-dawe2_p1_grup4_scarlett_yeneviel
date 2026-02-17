@@ -25,16 +25,15 @@
 </template>
 
 <style scoped>
+/* Navbar.vue */
 .navbar {
+  background-color: white;
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   z-index: 40;
-  width: 100vw;
-  left: 0;
-  right: 0;
-  margin-left: calc(-50vw + 50%);
-  /* Truco para romper contenedores padres con max-width */
+  width: 100%; 
+  
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -44,7 +43,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 40px;
+  height: 50px;
 }
 
 /* Sección Logo */

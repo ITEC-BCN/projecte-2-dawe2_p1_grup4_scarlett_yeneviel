@@ -19,7 +19,7 @@ const currentYear = new Date().getFullYear();
 .basic-footer {
   background-color: #2c3e50;
   color: white;
-  padding: 20px 0; /* Padding vertical, el horizontal lo maneja el container */
+  padding: 10px 0; /* Padding vertical, el horizontal lo maneja el container */
   margin-top: auto; 
   
   /* ESTO ASEGURA EL ANCHO TOTAL */

@@ -118,9 +118,26 @@ Poder crear ofertas, actualizar y borrar estas mismas desde la página web
 ## Dia 10 - 10/02/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts 
 **Temas tratados**
-- 
+-
 
+# Sprint 4 Daylies 
 
+**Planificación del sprint:**
+Crear los usuarios (coordinador y estudiante), y poder hacer funcionalidades de iniciar sesión, cerrar sesión, Registro de usuarios(aprobación por el superusuario), recuperar contraseña. 
+
+ - **HU07-Crear Usuarios**
+1. HU07.1 Añadir contenido a la base de datos
+2. HU07.2 Realizar formulario de inicio de sesión
+3. HU07.3 Cambiamos la vista al perfil
+      
+ - **HU10-Registrar usuarios**
+1. HU10.1 Realizar el formulario de alta
+2. HU10.2 Mensaje de información
+3. HU10.3 Superusario aprueba o rechaza la solicitud
+      
+ - **HU14-Vista Perfil**
+1. HU014.1 Código que accede a la base de datos
+2. HU014.2 Mostrar contenido en el frontend sobre el usuario 
 
 
 

@@ -118,7 +118,7 @@ Poder crear ofertas, actualizar y borrar estas mismas desde la página web
 ## Dia 10 - 10/02/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts 
 **Temas tratados**
-- Mejoras en Crear, modificar y eliminar de las ofertas.
+- Mejoras en crear, modificar y eliminar de las ofertas.
 
 # Sprint 4 Daylies 
 

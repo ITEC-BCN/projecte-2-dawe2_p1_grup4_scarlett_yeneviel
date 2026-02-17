@@ -10,7 +10,7 @@ import express from 'express';
 import cors from 'cors'
 
 
-import { obtenerOfertas, crearOferta, obtenerOfertaPorId, eliminarOferta } from './supabaseClient.js'
+import { obtenerOfertas, crearOferta, obtenerOfertaPorId, actualizarOferta, eliminarOferta } from './supabaseClient.js'
 const app = express();
 
 // Permitir cualquier origen (para desarrollo)

@@ -1,32 +1,34 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useFetch } from '../composables/useFetch';
+import { useFetch } from '../composables/useFetchOfertas';
 import { URL_BACK } from '../../../config';
-import { watch } from 'vue';
 
+// watch para observar cambios en nuestras variables reactivas
+import { watch } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
-
-// Construimos la URL usando el ID que viene en la ruta
-
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+
+// Aquí pedimos los datos y también obtenemos la función para actualizar
 const { data: ofertaOriginal, error, loading, actualizarOferta } = useFetch(url);
 
 //Estado para los datos que el usuario edita
 const form=ref({})
 
 // Cuando los datos cargan, creamos una copia para el formulario, cuando 'ofertaOriginal' deje de ser null
+// Nota: esto evita que al escribir se sobreescriban los cambios.
 watch(ofertaOriginal, (newData) => {
     if (newData) {
         form.value = { ...newData };
     }
 }, { immediate: true });
 
-
+// Función para actualizar la oferta
 const actualizar = async () => {
     // Calculamos solo lo que cambió (PUT PARCIAL)
+    // comparamos el formulario con los datos originales y solo mandamos los campos que han cambiado para no enviar cosas inútiles.
     const datosCambiados = {};
     for (const key in form.value) {
         if (form.value[key] !== ofertaOriginal.value[key]) {
@@ -34,24 +36,27 @@ const actualizar = async () => {
         }
     }
 
+    // Si no hay cambios, mostramos un mensaje y salimos de la función
     if (Object.keys(datosCambiados).length === 0) return alert("Sin cambios");
 
     // Usamos la función del composable
     try {
       const urlPut=`http://localhost:3000/oferta/${route.params.id}`;
 
-     
+        // Llamamos a la función que envía los cambios al servidor
         await actualizarOferta(datosCambiados, urlPut);
         alert("Actualizado correctamente");
-        router.push('/ofertas');
+        // Volvemos al detalle de la oferta para ver los cambios
+        router.push(`/oferta/${route.params.id}`); // Volver al detalle después de actualizar
         
     } catch (err) {
+      // Si falla, lo mostramos en consola para poder ver el motivo
       console.error("Fallo en la actualización:",err);
         
     }
 };
 
-
+// Función para volver a la página anterior
 const volver = () => router.back();
 </script>
 

@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useFetch } from '../composables/useFetch';
+import { useFetch } from '../composables/useFetchOfertas';
 import { URL_BACK } from '../../../config';
 import ModalEliminar from '../components/Modal.vue';
 
@@ -13,7 +13,7 @@ const router = useRouter();
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
 const { data: oferta, error, loading } = useFetch(url);
 
-const volver = () => router.back();
+const volver = () => router.push({ name: "ofertas" });
 
 const ActualizarOferta = (id) => {
   router.push({ name: "ActualizarOferta", params: { id: id } });

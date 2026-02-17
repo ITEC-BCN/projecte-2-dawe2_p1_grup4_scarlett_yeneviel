@@ -139,6 +139,13 @@ Crear los usuarios (coordinador y estudiante), y poder hacer funcionalidades de 
 1. HU014.1 Código que accede a la base de datos
 2. HU014.2 Mostrar contenido en el frontend sobre el usuario 
 
+## Dia 11 - 17/02/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+- Planificación del backlog
+- Arreglos de Modificar ofertas
+- Mejoras del Home
+
 
 
 

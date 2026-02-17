@@ -18,7 +18,7 @@ const { data: ofertaOriginal, error, loading, actualizarOferta } = useFetch(url)
 const form=ref({})
 
 // Cuando los datos cargan, creamos una copia para el formulario, cuando 'ofertaOriginal' deje de ser null
-// Nota: esto evita que al escribir se sobreescriban los cambios.
+// esto evita que al escribir se sobreescriban los cambios.
 watch(ofertaOriginal, (newData) => {
     if (newData) {
         form.value = { ...newData };

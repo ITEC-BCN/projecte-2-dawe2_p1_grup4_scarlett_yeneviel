@@ -1,13 +1,15 @@
 <script setup>
-
+// Props: recibimos la oferta que quiere mostrar la tarjeta
 const props=defineProps({
     oferta:Object
 })
 
+// Evento: vamos a emitir cuando el usuario pulse ver detalle
 const emit=defineEmits(["verDetalleOferta"])
 
-const verDetale=()=>{
-    emit("verDetalleOferta", props.oferta)
+// Corregido: función se llamará verDetalle y emitirá solo el id (más sencillo y consistente)
+const verDetalle=()=>{
+    emit("verDetalleOferta", props.oferta.id)
 }
 </script>
 
@@ -19,7 +21,8 @@ const verDetale=()=>{
         <p class="descripcion-card">{{ oferta.descripcion }}</p>
 
         <div class="footer-card">
-            <button @click="verDetale" class="btn-detalle">Ver detalle</button>
+            <!-- Llamamos a la función corregida -->
+            <button @click="verDetalle" class="btn-detalle">Ver detalle</button>
         </div>
     </article>
 

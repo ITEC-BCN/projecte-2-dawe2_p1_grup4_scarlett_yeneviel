@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useFetch } from "../composables/useFetch";
+import { useFetch } from "../composables/useFetchOfertas";
 import CardOferta from "../components/cardOferta.vue";
 import { URL_BACK } from "../../../config";
 

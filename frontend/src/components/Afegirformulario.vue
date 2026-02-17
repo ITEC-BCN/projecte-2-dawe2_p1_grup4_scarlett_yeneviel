@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import { URL_BACK } from '../../../config';
 
 const router = useRouter();
 
@@ -112,7 +113,7 @@ const submitFormulario = async () => {
   error.value = null;
 
   try {
-    const res = await fetch("https://expert-space-robot-97j5v99r4575cr64-3000.app.github.dev/ofertas", {
+    const res = await fetch(`${URL_BACK}/ofertas/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

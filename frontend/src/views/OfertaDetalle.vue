@@ -130,10 +130,9 @@ const ofertaEliminada = () => {
 
         </div>
 
-        <button @click="ActualizarOferta(oferta.id)">Actualizar</button>
-        <!--button @click="EliminarOferta(oferta.id)">Eliminar</button-->
-
-        <div>
+        <!-- Botones juntos en una fila -->
+        <div class="actions">
+          <button class="btn-update" @click="ActualizarOferta(oferta.id)">Actualizar</button>
           <button @click="abrirModal(oferta.id)" class="btn-delete">Eliminar</button>
 
           <!-- Componente del modal -->
@@ -258,7 +257,6 @@ const ofertaEliminada = () => {
 }
 
 /* Botones */
-
 .btn-apply {
   width: 100%;
   margin-top: 10px;
@@ -285,6 +283,41 @@ const ofertaEliminada = () => {
   cursor: pointer;
 }
 
+/* Estilo para el botón de actualizar */
+.btn-update {
+  background: #6b46c1; /* morado suave */
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-update:hover {
+  background: #5a38a8;
+  transform: translateY(-2px);
+}
+
+/* Estilo para el botón de eliminar */
+.btn-delete {
+  background: #dc2626; /* rojo */
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-delete:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+}
+
 /* Estados*/
 .state-msg {
   padding: 30px;
@@ -294,6 +327,14 @@ const ofertaEliminada = () => {
 
 .state-msg.error {
   color: #DC2626;
+}
+
+/* Estilo para la fila de acciones (botones) */
+.actions {
+  display: flex;
+  gap: 12px; /* espacio entre botones */
+  align-items: center;
+  margin-top: 18px;
 }
 
 /*  Responsive */

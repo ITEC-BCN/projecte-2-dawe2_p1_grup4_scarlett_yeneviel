@@ -33,7 +33,6 @@
   top: 0;
   z-index: 40;
   width: 100%; 
-  
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -76,8 +75,8 @@
 
 .nav-links a {
   text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #6b7280;
   transition: color 0.2s;
 }

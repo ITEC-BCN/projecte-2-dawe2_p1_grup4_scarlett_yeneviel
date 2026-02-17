@@ -158,6 +158,7 @@ main p {
 section {
   text-align: left;
   margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 section h3 {

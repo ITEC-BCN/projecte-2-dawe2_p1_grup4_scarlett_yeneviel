@@ -28,3 +28,10 @@
   overflow-x: hidden; /* Seguridad extra contra scroll horizontal */
 }
 }
+
+@media (max-width: 768px) {
+  main {
+    flex-direction: column; /* Esto hace que la imagen baje debajo del texto */
+    text-align: center;    /* Centra el texto en móvil */
+  }
+}

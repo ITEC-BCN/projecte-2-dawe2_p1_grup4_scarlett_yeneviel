@@ -116,7 +116,6 @@ app.delete('/ofertas/:id', async (req, res) => {
   }
 });
 
-
 //====================== Usuario Estudiante =======================
 
 // POST: Registrar un nuevo estudiante

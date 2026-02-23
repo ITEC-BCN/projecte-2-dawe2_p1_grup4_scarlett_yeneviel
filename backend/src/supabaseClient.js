@@ -79,7 +79,7 @@ export const eliminarOferta = async (id) => {
 };
 
 
-// =============== USUARIOS =============================
+// ================== USUARIOS =======================
 
 export const crearEstudiante = async (nuevoEstudiante) => {
   const { data, error } = await supabase
@@ -93,7 +93,8 @@ export const crearEstudiante = async (nuevoEstudiante) => {
       idiomas: nuevoEstudiante.idiomas,
       foto_perfil: nuevoEstudiante.foto_perfil,
       otra_informacion: nuevoEstudiante.otra_informacion,
-      estado: nuevoEstudiante.estado || 'pendiente'
+      estado: nuevoEstudiante.estado || 'pendiente',
+      password_hash: nuevoEstudiante.password_hash
     }])
     .select();
 
@@ -111,7 +112,7 @@ export const obtenerEstudiantes = async () => {
   return data;
 };
 
-//Un solo estudiante
+//Obtener 1 usuario 
 export const obtenerEstudiantePorId = async (id) => {
   const { data, error } = await supabase
     .from('usuario_estudiante')

@@ -19,7 +19,12 @@ import {
   crearEstudiante, 
   obtenerEstudiantes, 
   obtenerEstudiantePorId, 
-  actualizarEstudiante
+  actualizarEstudiante,
+  crearAdmin, 
+  obtenerAdmins, 
+  obtenerAdminPorId,
+  actualizarAdmin
+
 } from './supabaseClient.js'
 const app = express();
 
@@ -44,7 +49,7 @@ app.post("/ofertas", async (req, res) => {
       requisitos: req.body.requisitos,
       beneficios: req.body.beneficios || null,
     });
-      console.log("BODY:", req.body); // 👈 prueba esto
+      console.log("BODY:", req.body); // prueba esto
 
     res.status(201).json(nuevaOferta);
   } catch (err) {
@@ -156,6 +161,64 @@ app.put("/estudiantes/:id", async (req, res) => {
   try {
     const actualizado = await actualizarEstudiante(req.params.id, req.body);
     res.json(actualizado);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+//================ Adminsitrador ====================
+
+// --- RUTAS PARA ADMINISTRADORES ---
+
+// POST: Registrar un nuevo administrador
+app.post("/admins", async (req, res) => {
+  try {
+    // Aquí podrías hashear la contraseña antes de enviarla
+    // const { password, ...datos } = req.body;
+    // const hash = await bcrypt.hash(password, 10);
+    // const nuevo = await crearAdmin({ ...datos, password_hash: hash });
+
+    const nuevo = await crearAdmin(req.body);
+    res.status(201).json({
+      message: "Registro de administrador exitoso",
+      data: nuevo[0]
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET: Listar todos los administradores
+app.get("/admins", async (req, res) => {
+  try {
+    const lista = await obtenerAdmins();
+    res.json(lista);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET: Obtener un administrador por ID
+app.get("/admins/:id", async (req, res) => {
+  try {
+    const admin = await obtenerAdminPorId(req.params.id);
+    res.json(admin);
+  } catch (err) {
+    res.status(404).json({ error: "Administrador no encontrado" });
+  }
+});
+
+// PUT: Actualizar datos del administrador
+app.put("/admins/:id", async (req, res) => {
+  try {
+    const actualizado = await actualizarAdmin(req.params.id, req.body);
+    if (!actualizado || actualizado.length === 0) {
+        return res.status(404).json({ error: "Administrador no encontrado" });
+    }
+    res.json({
+        message: "Administrador actualizado con éxito",
+        data: actualizado[0]
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

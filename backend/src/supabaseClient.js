@@ -135,3 +135,58 @@ export const actualizarEstudiante = async (id, datosActualizados) => {
   if (error) throw error;
   return data;
 };
+
+// ====================== Adminsitrador ==========================
+// --- FUNCIONES PARA USUARIO_ADMI ---
+
+// 1. Crear Administrador
+export const crearAdmin = async (nuevoAdmin) => {
+  const { data, error } = await supabase
+    .from('usuario_admi')
+    .insert([{
+      nombre_centro: nuevoAdmin.nombre_centro,
+      nombre_admi: nuevoAdmin.nombre,
+      apellido_admin: nuevoAdmin.apellido,
+      telefono: nuevoAdmin.telefono,
+      email: nuevoAdmin.email,
+      password_hash: nuevoAdmin.password_hash // Ya debe venir hasheada desde el app.js
+    }])
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+// 2. Obtener todos los Administradores
+export const obtenerAdmins = async () => {
+  const { data, error } = await supabase
+    .from('usuario_admi')
+    .select('*');
+  
+  if (error) throw error;
+  return data;
+};
+
+// 3. Obtener un Administrador por ID
+export const obtenerAdminPorId = async (id) => {
+  const { data, error } = await supabase
+    .from('usuario_admi')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+// 4. Actualizar Administrador
+export const actualizarAdmin = async (id, datosActualizados) => {
+  const { data, error } = await supabase
+    .from('usuario_admi')
+    .update(datosActualizados)
+    .eq('id', id)
+    .select();
+
+  if (error) throw error;
+  return data;
+};

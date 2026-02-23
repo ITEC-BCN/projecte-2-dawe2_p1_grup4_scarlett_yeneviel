@@ -120,6 +120,13 @@ Poder crear ofertas, actualizar y borrar estas mismas desde la página web
 **Temas tratados**
 - Mejoras en crear, modificar y eliminar de las ofertas.
 
+## 23/02/2025 Retrospective
+**Asistencia:** Scarlett Toala y Yeneviel Roberts
+
+| Qué ha ido bien | Qué hace falta mejorar | Qué he aprendido | Dificultat |
+|-----------------|------------------------|------------------|------------|
+| La planificación del proyecto| Aprender más sobre Supabase |Alojar una base de datos en Supabase | Entender el funcionamiento de Supabase|
+
 # Sprint 4 Daylies 
 
 **Planificación del sprint:**
@@ -146,6 +153,12 @@ Crear los usuarios (coordinador y estudiante), y poder hacer funcionalidades de 
 - Arreglos de Modificar ofertas
 - Mejoras del Home
 
+## Dia 11 - 17/02/2026 
+**Asistencia:** Scarlett Toala, Yeneviel Roberts
+
+**Temas tratados**
+- Funcionalidad de inicio de sesión
+- Hacer funcionalidad de registro de usuario
 
 
 

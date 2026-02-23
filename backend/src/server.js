@@ -10,7 +10,17 @@ import express from 'express';
 import cors from 'cors'
 
 
-import { obtenerOfertas, crearOferta, obtenerOfertaPorId, actualizarOferta, eliminarOferta } from './supabaseClient.js'
+import { 
+  obtenerOfertas, 
+  crearOferta, 
+  obtenerOfertaPorId, 
+  actualizarOferta, 
+  eliminarOferta,
+  crearEstudiante, 
+  obtenerEstudiantes, 
+  obtenerEstudiantePorId, 
+  actualizarEstudiante
+} from './supabaseClient.js'
 const app = express();
 
 // Permitir cualquier origen (para desarrollo)
@@ -106,12 +116,50 @@ app.delete('/ofertas/:id', async (req, res) => {
   }
 });
 
-// O, si quieres restringir a tu frontend:
-/* Esta parte está duplicada
-app.use(cors({
-  origin: 'https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev'
-}))
 
-app.use(express.json())
-*/
+//====================== Usuario Estudiante =======================
+
+// POST: Registrar un nuevo estudiante
+app.post("/estudiantes", async (req, res) => {
+  try {
+    const nuevo = await crearEstudiante(req.body);
+    res.status(201).json({
+      message: "Registro exitoso",
+      data: nuevo[0]
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET: Listar todos los estudiantes
+app.get("/estudiantes", async (req, res) => {
+  try {
+    const lista = await obtenerEstudiantes();
+    res.json(lista);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET: Obtener un estudiante por ID
+app.get("/estudiantes/:id", async (req, res) => {
+  try {
+    const estudiante = await obtenerEstudiantePorId(req.params.id);
+    res.json(estudiante);
+  } catch (err) {
+    res.status(404).json({ error: "Estudiante no encontrado" });
+  }
+});
+
+// PUT: Actualizar datos (por ejemplo, cambiar el estado de 'pendiente' a 'aprobado')
+app.put("/estudiantes/:id", async (req, res) => {
+  try {
+    const actualizado = await actualizarEstudiante(req.params.id, req.body);
+    res.json(actualizado);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.listen(3000, () => console.log('Servidor en http://localhost:3000'));

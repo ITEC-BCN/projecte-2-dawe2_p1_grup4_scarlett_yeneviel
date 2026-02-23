@@ -8,6 +8,8 @@ const supabaseKey = process.env.SUPABASE_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
+// ================== OFERTAS ==========================
+
 //Funciones del crud
 
 // 1. CREAR una oferta (CREATE)
@@ -74,4 +76,61 @@ export const eliminarOferta = async (id) => {
 
   if (error) throw error;
   return { message: 'Oferta eliminada correctamente' };
+};
+
+
+// =============== USUARIOS =============================
+
+export const crearEstudiante = async (nuevoEstudiante) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .insert([{
+      nombre: nuevoEstudiante.nombre,
+      apellido: nuevoEstudiante.apellido,
+      telefono: nuevoEstudiante.telefono,
+      email: nuevoEstudiante.email,
+      eduacion: nuevoEstudiante.eduacion, // Respetando el nombre de tu tabla
+      idiomas: nuevoEstudiante.idiomas,
+      foto_perfil: nuevoEstudiante.foto_perfil,
+      otra_informacion: nuevoEstudiante.otra_informacion,
+      estado: nuevoEstudiante.estado || 'pendiente'
+    }])
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+//Obtener todos los usuarios 
+export const obtenerEstudiantes = async () => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .select('*');
+  
+  if (error) throw error;
+  return data;
+};
+
+//Un solo estudiante
+export const obtenerEstudiantePorId = async (id) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+//Modificar Usuario
+export const actualizarEstudiante = async (id, datosActualizados) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .update(datosActualizados)
+    .eq('id', id)
+    .select();
+
+  if (error) throw error;
+  return data;
 };

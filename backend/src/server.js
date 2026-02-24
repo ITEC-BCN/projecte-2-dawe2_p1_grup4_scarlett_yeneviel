@@ -23,7 +23,9 @@ import {
   crearAdmin, 
   obtenerAdmins, 
   obtenerAdminPorId,
-  actualizarAdmin
+  actualizarAdmin,
+  obtenerEstudiantePorEmail,
+  obtenerAdminPorEmail
 
 } from './supabaseClient.js'
 const app = express();
@@ -221,6 +223,85 @@ app.put("/admins/:id", async (req, res) => {
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+//================ LOGIN ====================
+
+// POST: Login de estudiante
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email y contraseña requeridos" });
+    }
+
+    // Buscar estudiante por email
+    const estudiante = await obtenerEstudiantePorEmail(email);
+
+    if (!estudiante) {
+      return res.status(401).json({ error: "Email o contraseña incorrectos" });
+    }
+
+    // Comparar contraseñas (en producción usar bcrypt)
+    // Por ahora comparamos directamente. IMPORTANTE: en producción debe ser hasheada
+    if (estudiante.password_hash !== password) {
+      return res.status(401).json({ error: "Email o contraseña incorrectos" });
+    }
+
+    // Login exitoso
+    res.status(200).json({
+      message: "Login exitoso",
+      token: "tu-token-jwt-aqui", // Implementar JWT en el futuro
+      data: {
+        id: estudiante.id,
+        nombre: estudiante.nombre,
+        apellido: estudiante.apellido,
+        email: estudiante.email,
+        tipo: "estudiante"
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST: Login de admin
+app.post("/login-admin", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email y contraseña requeridos" });
+    }
+
+    // Buscar admin por email
+    const admin = await obtenerAdminPorEmail(email);
+
+    if (!admin) {
+      return res.status(401).json({ error: "Email o contraseña incorrectos" });
+    }
+
+    // Comparar contraseñas
+    if (admin.password_hash !== password) {
+      return res.status(401).json({ error: "Email o contraseña incorrectos" });
+    }
+
+    // Login exitoso
+    res.status(200).json({
+      message: "Login de admin exitoso",
+      token: "tu-token-jwt-aqui",
+      data: {
+        id: admin.id,
+        nombre: admin.nombre_admi,
+        apellido: admin.apellido_admin,
+        email: admin.email,
+        tipo: "admin"
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

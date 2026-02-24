@@ -190,3 +190,29 @@ export const actualizarAdmin = async (id, datosActualizados) => {
   if (error) throw error;
   return data;
 };
+
+// ====================== LOGIN ==========================
+
+// Obtener estudiante por EMAIL
+export const obtenerEstudiantePorEmail = async (email) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+// Obtener admin por EMAIL
+export const obtenerAdminPorEmail = async (email) => {
+  const { data, error } = await supabase
+    .from('usuario_admi')
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (error) throw error;
+  return data;
+};

@@ -1,5 +1,52 @@
 <script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+
+const email = ref('')
+const password = ref('')
+const remember = ref(false)
+const loading = ref(false)
+const error = ref('')
+
+const handleLogin = async (e) => {
+  e.preventDefault()
+  loading.value = true
+  error.value = ''
+
+  try {
+    const response = await fetch('http://localhost:3000/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      error.value = data.error || 'Error al iniciar sesión'
+      return
+    }
+
+    // Guardar datos del usuario
+    localStorage.setItem('usuario', JSON.stringify(data.data))
+    localStorage.setItem('token', data.token || '')
+
+    // Redirigir al dashboard
+    router.push('/dashboard')
+  } catch (err) {
+    error.value = 'Error de conexión con el servidor'
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -7,27 +54,46 @@
     <div class="login-card">
       <h1>Iniciar sesión</h1>
 
-      <!-- Formulario: solo HTML, sin lógica JS -->
-      <form class="login-form" action="#" method="post" novalidate>
+      <!-- Mostrar errores -->
+      <div v-if="error" class="error-message">{{ error }}</div>
+
+      <!-- Formulario conectado al backend -->
+      <form class="login-form" @submit="handleLogin" novalidate>
         <label for="email">Correo electrónico</label>
-        <input id="email" name="email" type="email" placeholder="tu@ejemplo.com" required />
+        <input 
+          id="email" 
+          v-model="email"
+          type="email" 
+          placeholder="tu@ejemplo.com" 
+          required 
+          :disabled="loading"
+        />
 
         <label for="password">Contraseña</label>
-        <input id="password" name="password" type="password" placeholder="••••••••" required />
+        <input 
+          id="password" 
+          v-model="password"
+          type="password" 
+          placeholder="••••••••" 
+          required 
+          :disabled="loading"
+        />
 
         <div class="form-row">
           <label class="checkbox">
-            <input type="checkbox" name="remember" />
+            <input v-model="remember" type="checkbox" :disabled="loading" />
             <span>Recordarme</span>
           </label>
 
           <a href="#" class="forgot">¿Olvidaste la contraseña?</a>
         </div>
 
-        <button type="submit" class="btn-submit">Entrar</button>
+        <button type="submit" class="btn-submit" :disabled="loading">
+          {{ loading ? 'Entrando...' : 'Entrar' }}
+        </button>
       </form>
 
-      <p class="signup">¿No tienes cuenta? <a href="/crear">Regístrate</a></p>
+      <p class="signup">¿No tienes cuenta? <router-link to="/registro">Regístrate</router-link></p>
     </div>
   </div>
 </template>
@@ -57,6 +123,16 @@
   color: #0d1b2a;
 }
 
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  border-left: 3px solid #c33;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;
@@ -79,6 +155,12 @@ input[type="password"] {
   background: #fcfcff;
   font-size: 14px;
   color: #111827;
+}
+
+input:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .form-row {
@@ -113,9 +195,14 @@ input[type="password"] {
   cursor: pointer;
 }
 
-.btn-submit:hover {
+.btn-submit:hover:not(:disabled) {
   opacity: 0.95;
   transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .signup {

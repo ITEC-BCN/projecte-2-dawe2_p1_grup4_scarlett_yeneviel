@@ -14,7 +14,7 @@ const form={}
 const password=ref(null)
 const password2=ref(null)
 
-const InsertNewStudent=async()=>{
+ const InsertNewStudent=async()=>{
 
     try {
 
@@ -22,8 +22,8 @@ const InsertNewStudent=async()=>{
             throw new Error('Las contraseñas no coinciden')
         }
 
-        const hashedPassword = bcrypt.hash(password.value, SALT_ROUNDS);
-        form.password=hashedPassword
+        form.password_hash =  bcrypt.hashSync(password.value, SALT_ROUNDS);
+        
         await userFetch.NewStudent(form, urlNewStudent.value);
 
         router.push('/perfil')

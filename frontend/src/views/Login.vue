@@ -1,11 +1,14 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import bcrypt from 'bcryptjs';
+import { SALT_ROUNDS, URL_BACK } from '../../../config'
 
 const router = useRouter()
 
 const email = ref('')
 const password = ref('')
+const hashedPassword = bcrypt.hashSync(password.value, SALT_ROUNDS)
 const remember = ref(false)
 const loading = ref(false)
 const error = ref('')
@@ -16,14 +19,14 @@ const handleLogin = async (e) => {
   error.value = ''
 
   try {
-    const response = await fetch('http://localhost:3000/login', {
+    const response = await fetch(`${URL_BACK}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         email: email.value,
-        password: password.value
+        password: hashedPassword
       })
     })
 

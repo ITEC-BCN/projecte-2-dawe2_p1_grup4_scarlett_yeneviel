@@ -254,12 +254,9 @@ app.post("/login", async (req, res) => {
     res.status(200).json({
       message: "Login exitoso",
       token: "tu-token-jwt-aqui", // Implementar JWT en el futuro
+      //pasamos el id del estudiante para que el frontend pueda usarlo en futuras peticiones
       data: {
         id: estudiante.id,
-        nombre: estudiante.nombre,
-        apellido: estudiante.apellido,
-        email: estudiante.email,
-        tipo: "estudiante"
       }
     });
   } catch (err) {

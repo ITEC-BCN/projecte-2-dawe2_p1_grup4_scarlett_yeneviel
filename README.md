@@ -148,17 +148,24 @@ Crear los usuarios (coordinador y estudiante), y poder hacer funcionalidades de 
 
 ## Dia 11 - 17/02/2026
 **Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+
 **Temas tratados**
 - Planificación del backlog
 - Arreglos de Modificar ofertas
 - Mejoras del Home
 
-## Dia 11 - 17/02/2026 
+## Dia 12 - 17/02/2026 
 **Asistencia:** Scarlett Toala, Yeneviel Roberts
 
 **Temas tratados**
 - Funcionalidad de inicio de sesión
 - Hacer funcionalidad de registro de usuario
+
+  ## Dia 13 - 02/03/2026 
+**Asistencia:** Yeneviel Roberts
+
+**Temas tratados**
+- Realización del perfil usuario (Estudiante)
 
 
 

@@ -248,8 +248,9 @@ app.post("/login", async (req, res) => {
     }
 
     // Comparar contraseñas (en producción usar bcrypt)
-    // Por ahora comparamos directamente. IMPORTANTE: en producción debe ser hasheada
-    if (estudiante.password_hash !== password) {
+    
+    const password_hash=bcrypt.hashSync(password, 12)
+    if (estudiante.password_hash !== password_hash) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 

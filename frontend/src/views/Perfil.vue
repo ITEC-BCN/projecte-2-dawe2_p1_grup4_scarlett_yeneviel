@@ -129,10 +129,6 @@ function removeLanguage(i) { languages.value.splice(i, 1) }
           <span class="label">Habilidades</span>
         </div>
         <div class="stat">
-          <div class="num">{{ languages.length }}</div>
-          <span class="label">Idiomas</span>
-        </div>
-        <div class="stat">
           <div class="num">{{ documents.length }}</div>
           <span class="label">Documentos</span>
         </div>
@@ -149,13 +145,6 @@ function removeLanguage(i) { languages.value.splice(i, 1) }
           <div class="small">✉️ <a :href="`mailto:${contact.email}`">{{ contact.email }}</a></div>
           <div class="small">📞 {{ contact.phone }}</div>
           <div class="small">📍 {{ contact.location }}</div>
-        </div>
-      </div>
-
-      <div style="margin-top:1rem;" class="small">
-        <strong>Idiomas</strong>
-        <div class="skill-list" style="margin-top:0.5rem;">
-          <span v-for="lang in languages" :key="lang.id" class="skill-chip">{{ lang.name }} · {{ lang.level }}</span>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ app.listen(PORT, () => {
 
 import express from 'express';
 import cors from 'cors'
+import bcrypt from 'bcryptjs';
 
 
 import { 
@@ -128,6 +129,8 @@ app.delete('/ofertas/:id', async (req, res) => {
 // POST: Registrar un nuevo estudiante
 app.post("/estudiantes", async (req, res) => {
   try {
+    const newPassword_hash =  bcrypt.hashSync(req.body.password_hash, 12);
+    req.body.password_hash=newPassword_hash
     const nuevo = await crearEstudiante(req.body);
     res.status(201).json({
       message: "Registro exitoso",

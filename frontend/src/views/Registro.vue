@@ -1,9 +1,9 @@
 <script setup>
 import { useFetchUser } from '../composables/userFetchUser';
-import { URL_BACK, SALT_ROUNDS } from '../../../config';
+import { URL_BACK } from '../../../config';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import bcrypt from 'bcryptjs';
+
 
 
 const urlNewStudent=ref (`${URL_BACK}/estudiantes`)
@@ -11,18 +11,15 @@ const router=useRouter()
 const userFetch=useFetchUser(URL_BACK)
 
 const form={}
-const password=ref(null)
 const password2=ref(null)
 
  const InsertNewStudent=async()=>{
 
     try {
 
-        if(password.value != password2.value){
+        if(form.password_hash!= password2.value){
             throw new Error('Las contraseñas no coinciden')
         }
-
-        form.password_hash =  bcrypt.hashSync(password.value, SALT_ROUNDS);
         
         await userFetch.NewStudent(form, urlNewStudent.value);
 
@@ -52,7 +49,7 @@ const password2=ref(null)
         <input id="email" name="email" type="email" placeholder="ej: juanitoPepe@gmail.com" required v-model="form.email"/>
 
         <label for="password">Contraseña</label>
-        <input id="password" name="password" type="password" placeholder="••••••••" required v-model="password"/>
+        <input id="password" name="password" type="password" placeholder="••••••••" required v-model="form.password_hash"/>
 
         <label for="password2">confirmar contraseña</label>
         <input id="password2" name="password2" type="password" placeholder="••••••••" required v-model="password2" />

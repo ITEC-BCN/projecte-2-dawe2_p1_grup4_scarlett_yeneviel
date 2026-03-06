@@ -4,45 +4,65 @@
       <div class="footer-content">
         <div class="footer-brand">
           <picture>
-            <source srcset="../../public/logos/InterniaBlanco.webp" type="image/webp" />
-            <img class="footer-logo" src="../../public/logos/InterniaBlanco.png" alt="Logo de la empresa" />
+            <source
+              srcset="../../public/logos/InterniaBlanco.webp"
+              type="image/webp"
+            />
+            <img
+              class="footer-logo"
+              src="../../public/logos/InterniaBlanco.png"
+              alt="Logo de la empresa"
+            />
           </picture>
         </div>
 
         <nav class="footer-columns">
           <div class="footer-column">
             <h4>Compañía</h4>
-            <router-link to="/">Sobre Nosotros</router-link>
-            <router-link to="/">Nuestros servicios</router-link>
+            <router-link to="/nosotros">Sobre Nosotras</router-link>
+            <router-link to="/servicios">Nuestros servicios</router-link>
           </div>
 
           <div class="footer-column">
             <h4>Soporte</h4>
-            <router-link to="/">Centro de Ayuda</router-link>
-            <router-link to="/">Contacto</router-link>
-            <router-link to="/">Preguntas Frecuentes</router-link>
+            <router-link to="/ayuda">Centro de Ayuda</router-link>
+            <router-link to="/contacto">Contacto</router-link>
+            <router-link to="/faqs">FAQs</router-link>
           </div>
 
           <div class="footer-column">
             <h4>Legal</h4>
-            <router-link to="/">Términos de Servicio</router-link>
-            <router-link to="/">Política de Privacidad</router-link>
-            <router-link to="/">FAQs</router-link>
+            <router-link to="/servTerms">Términos de Servicio</router-link>
+            <router-link to="/privacidad">Política de Privacidad</router-link>
           </div>
 
           <div class="footer-column">
             <h4>Redes Sociales</h4>
-            <a href="https://www.linkedin.com/company/internia/" target="_blank" rel="noopener">LinkedIn</a>
-            <a href="https://www.instagram.com/interniaverde/" target="_blank" rel="noopener">Instagram</a>
-            <a href="https://www.facebook.com/interniaverde" target="_blank" rel="noopener">Facebook</a>
-            <a href="https://www.twitter.com/interniaverde" target="_blank" rel="noopener">Twitter</a>
+            <a
+              href="https://www.linkedin.com/company/internia/"
+              target="_blank"
+              rel="noopener"
+              >LinkedIn</a
+            >
+            <a
+              href="https://www.instagram.com/interniaverde/"
+              target="_blank"
+              rel="noopener"
+              >Instagram</a
+            >
+            <a
+              href="https://www.twitter.com/interniaverde"
+              target="_blank"
+              rel="noopener"
+              >Twitter</a
+            >
           </div>
         </nav>
       </div>
 
       <div class="footer-bottom">
         <hr />
-        <p>&copy; {{ currentYear }} Internia. Todos los derechos reservados.</p>
+        <p>&copy; Internia. Todos los derechos reservados.</p>
       </div>
     </div>
   </footer>
@@ -62,7 +82,7 @@
 }
 
 .footer-container {
-  max-width: 1000px; 
+  max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px; /* Margen interno para que el texto no toque los bordes en móvil */
 }
@@ -108,7 +128,6 @@ h4 {
   font-weight: 600;
   display: inline-block;
   border-bottom: 2px solid #10b981;
-;
   padding-bottom: 5px;
 }
 
@@ -154,11 +173,12 @@ h4 {
     flex-direction: column;
     text-align: center;
   }
-  
-  .footer-brand, .footer-logo {
+
+  .footer-brand,
+  .footer-logo {
     margin: 0 auto;
   }
-  
+
   .footer-columns {
     flex-direction: column;
     align-items: center;

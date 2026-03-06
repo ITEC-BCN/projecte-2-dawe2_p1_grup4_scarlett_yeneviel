@@ -54,8 +54,42 @@ const router = createRouter({
     name: "CrearOferta",
     component: () => import('@/views/AfegirOferta.vue'),
     props: true
+  },
+  {
+    path: "/nosotros",
+    name: "sobre nosotros",
+    component: () => import('@/views/Nosotros.vue'),
+  },
+    {
+    path: "/servicios",
+    name: "nuestros servicios",
+    component: () => import('@/views/NuestrosServicios.vue'),
+  },
+      {
+    path: "/ayuda",
+    name: "centro de ayuda",
+    component: () => import('@/views/CentroDeAyuda.vue'),
+  },
+        {
+    path: "/contacto",
+    name: "contacto",
+    component: () => import('@/views/Contacto.vue'),
+  },
+        {
+    path: "/faqs",
+    name: "preguntas frecuentes",
+    component: () => import('@/views/FAQs.vue'),
+  },
+          {
+    path: "/servTerms",
+    name: "términos de servicio",
+    component: () => import('@/views/TerminosServicio.vue'),
+  },
+            {
+    path: "/privacidad",
+    name: "Politica de Privacidad",
+    component: () => import('@/views/PoliticaPrivacidad.vue'),
   }
-
   ],
 })
 

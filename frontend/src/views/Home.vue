@@ -1,8 +1,6 @@
-<script setup></script>
-
 <template>
   <main>
-    <section>
+    <section class="hero-text">
       <h1>
         Impulsa tu carrera <strong class="resaltar">FP</strong> con las mejores
         prácticas
@@ -19,20 +17,22 @@
           <button class="btn-secondary">Ver ofertas</button>
         </router-link>
       </div>
-    </section>
-    <img src="/img/home1_img.jpg" alt="Home Image" />
+
+      <div class="info_extra">
+        <div class="avatarGroup">
+          <img src="/img/avatarGroup.png" alt="Avatar Group" />
+          <p>+5.000 Estudiantes ya confían en nosotros</p>
+        </div>
+      </div>
+      </section>
+    <img src="/img/home1_img.jpg" alt="Home Image" class="home-img" />
   </main>
-  <div class="info_extra">
-    <div class="avatarGroup">
-      <img src="/img/avatarGroup.png" alt="Avatar Group" />
-      <p>+5.000 Estudiantes ya confían en nosotros</p>
-    </div>
-  </div>
-  <section>
+
+  <section class="perfiles">
     <div>
       <h1>Perfiles para cada <strong class="resaltar">Necesidad</strong></h1>
     </div>
-    <div>
+    <div class="cards-container">
       <article class="card">
         <img src="/img/sombrero.png" alt="" />
         <h4>Estudiantes</h4>
@@ -56,62 +56,74 @@
     </div>
   </section>
 </template>
-
 <style scoped>
-/* Main */
-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  gap: 2rem;
-}
-
-main img {
-  flex: 1;
-  max-width: 100%;
-  border-radius: 10px;
-}
-
-/* H1 principal */
-h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-}
-
+/* Estilos Globales/Utiles */
 .resaltar {
   color: #10b981;
 }
 
-/* Párrafo principal */
+/* --- MAIN (Hero Section) --- */
+main {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 1.5rem;
+  gap: 2rem;
+  margin: 2rem 0; 
+
+}
+
+.hero-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centra el texto verticalmente respecto a la imagen */
+}
+
+.home-img {
+  flex: 1;
+  max-width: 52%; 
+  object-fit: cover; /* Asegura que la imagen cubra el área sin deformarse */
+  border-radius: 10px;
+}
+
+/* Títulos y Párrafos Main */
+main h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0; /* Quita márgenes por defecto */
+}
+
 main p {
   font-size: 1.1rem;
   margin-bottom: 1.5rem;
   line-height: 1.5;
+  color: #333;
 }
 
-/* Botonera contenedor */
+/* Botonera */
 .botonera {
   display: flex;
-  margin-right: 1.5rem;
+  gap: 1rem; /* Espacio entre botones más limpio */
+  margin-bottom: 2rem; /* Espacio antes de los avatares */
+  max-width: 400px; /* Opcional: limita el ancho de la botonera */
 }
 
-/* Ajuste para que el link no rompa el diseño */
 .btn-link {
-  flex: 1; /* Esto hace que ambos botones ocupen el mismo espacio */
+  flex: 1;
   text-decoration: none;
 }
 
 .botonera button {
-  width: 100%; /* Ahora sí ocupará el 100% de su router-link */
+  width: 100%;
   padding: 14px;
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 1rem;
 }
 
-/* Botón "Empezar ahora" (Clase específica) */
 .btn-primary {
   background: #4C1D95;
   color: white;
@@ -122,10 +134,9 @@ main p {
   background: #3b1675;
 }
 
-/* Botón "Ver ofertas" (Clase específica) */
 .btn-secondary {
   background: white;
-  color: #10b981; 
+  color: #10b981;
   border: 2px solid #10b981;
 }
 
@@ -133,85 +144,92 @@ main p {
   background: #f0fdf4;
 }
 
+/* --- Info Extra (Avatares) --- */
+.info_extra {
+  margin-top: 1rem;
+}
+
 .avatarGroup {
   display: flex;
-  align-items: center; /* Centra el texto con la imagen */
-  gap: 0.6rem; /* Espacio entre imagen y texto */
-  width: max-content; /* Que solo ocupe el tamaño necesario */
-  margin-top: 1rem; /* Separación de contenido anterior */
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .avatarGroup img {
-  width: 200px; /* Tamaño pequeño */
+  width: 150px; 
   height: auto;
-  object-fit: cover; /* Que no se deforme */
 }
 
 .avatarGroup p {
   margin: 0;
-  font-size: 0.9rem; /* Texto más discreto */
-  color: #555;
-  white-space: nowrap; /* Evita que se divida en varias líneas */
+  font-size: 0.9rem;
+  color: #666;
+  white-space: nowrap;
 }
 
-/* Título y párrafo */
-section {
+/* --- SECCIÓN PERFILES (Cards) --- */
+.perfiles {
   text-align: left;
-  margin-bottom: 1rem;
-  margin-top: 1rem;
+  padding: 0 1.5rem; /* Alineado con el padding del main */
+  margin-bottom: 3rem;
 }
 
-section h3 {
+.perfiles h1 {
   font-size: 2rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
-section p {
-  font-size: 1.1rem;
-  color: #555;
-}
-
-/* Cards container - Ajustamos el espaciado entre cards */
-section > div:last-child {
+.cards-container {
   display: flex;
-  gap: 1rem; /* Reducimos el espacio entre ellas */
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-/* Individual card - Reducimos el ancho base y el padding */
 .card {
   background: #f9f9f9;
   border-radius: 10px;
-  padding: 1rem; /* Relleno interno más pequeño */
-  flex: 1 1 150px; /* Bajamos de 200px a 150px para que sean más estrechas */
+  padding: 1.5rem 1rem;
+  flex: 1 1 200px; /* Un poco más de ancho base */
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Card images - Tamaño de iconos más contenido */
 .card img {
-  width: 45px; /* Bajamos de 60px a 45px */
-  height: 45px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-/* Card titles - Fuente más pequeña */
 .card h4 {
-  font-size: 1rem; /* Bajamos de 1.2rem a 1rem */
-  margin-bottom: 0.3rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
   font-weight: 700;
+  color: #333;
 }
 
-/* Card paragraphs - Texto más compacto */
 .card p {
-  font-size: 0.85rem; /* Bajamos de 1rem a 0.85rem */
+  font-size: 0.9rem;
   color: #666;
-  line-height: 1.3;
+  line-height: 1.4;
+  margin: 0;
 }
 
-.info_extra {
-  margin-top: -30px;
-  margin-bottom: 50px;
+/* Responsivo básico */
+@media (max-width: 768px) {
+  main {
+    flex-direction: column-reverse; /* Imagen arriba en móvil */
+  }
+  .home-img {
+    max-width: 100%;
+    height: 250px; /* Altura fija en móvil */
+  }
+  .botonera {
+    margin-right: 0;
+  }
 }
 </style>

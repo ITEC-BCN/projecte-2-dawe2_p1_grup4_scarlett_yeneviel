@@ -1,16 +1,49 @@
-<script setup>
-const currentYear = new Date().getFullYear();
-</script>
-
 <template>
   <footer class="basic-footer">
-    <div class="copyright">
-      <picture>
-        <source srcset="../../public/logos/InterniaBlanco.webp" type="image/webp">
-        <img class="footer-logo" src="../../public/logos/InterniaBlanco.png" alt="Logo de la empresa">
-      </picture>
-      
-      <p>&copy; {{ currentYear }} Internia. Todos los derechos reservados.</p>
+    <div class="footer-container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <picture>
+            <source srcset="../../public/logos/InterniaBlanco.webp" type="image/webp" />
+            <img class="footer-logo" src="../../public/logos/InterniaBlanco.png" alt="Logo de la empresa" />
+          </picture>
+        </div>
+
+        <nav class="footer-columns">
+          <div class="footer-column">
+            <h4>Compañía</h4>
+            <router-link to="/">Sobre Nosotros</router-link>
+            <router-link to="/">Nuestros servicios</router-link>
+          </div>
+
+          <div class="footer-column">
+            <h4>Soporte</h4>
+            <router-link to="/">Centro de Ayuda</router-link>
+            <router-link to="/">Contacto</router-link>
+            <router-link to="/">Preguntas Frecuentes</router-link>
+          </div>
+
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <router-link to="/">Términos de Servicio</router-link>
+            <router-link to="/">Política de Privacidad</router-link>
+            <router-link to="/">FAQs</router-link>
+          </div>
+
+          <div class="footer-column">
+            <h4>Redes Sociales</h4>
+            <a href="https://www.linkedin.com/company/internia/" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="https://www.instagram.com/interniaverde/" target="_blank" rel="noopener">Instagram</a>
+            <a href="https://www.facebook.com/interniaverde" target="_blank" rel="noopener">Facebook</a>
+            <a href="https://www.twitter.com/interniaverde" target="_blank" rel="noopener">Twitter</a>
+          </div>
+        </nav>
+      </div>
+
+      <div class="footer-bottom">
+        <hr />
+        <p>&copy; {{ currentYear }} Internia. Todos los derechos reservados.</p>
+      </div>
     </div>
   </footer>
 </template>
@@ -19,10 +52,7 @@ const currentYear = new Date().getFullYear();
 .basic-footer {
   background-color: #2c3e50;
   color: white;
-  padding: 10px 0; /* Padding vertical, el horizontal lo maneja el container */
-  margin-top: auto; 
-  
-  /* ESTO ASEGURA EL ANCHO TOTAL */
+  padding: 20px 0;
   width: 100vw;
   position: relative;
   left: 50%;
@@ -32,24 +62,106 @@ const currentYear = new Date().getFullYear();
 }
 
 .footer-container {
-  max-width: 1200px; /* Alineado con el ancho de tu Navbar */
+  max-width: 1000px; 
   margin: 0 auto;
-  box-sizing: border-box;
+  padding: 0 20px; /* Margen interno para que el texto no toque los bordes en móvil */
 }
 
-.copyright p {
-  margin: 0;
-  text-align: center;
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 10px;
+}
+
+.footer-brand {
+  flex: 1;
+  min-width: 200px;
+}
+
+.brand-text {
+  color: #ecf0f1; /* Blanco suave */
   font-size: 0.9rem;
-  color: #95a5a6;
+  margin-top: 10px;
 }
 
-/*Logo*/
+.footer-columns {
+  display: flex;
+  flex: 3;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+
+/* Tipografía y Enlaces */
+h4 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: inline-block;
+  border-bottom: 2px solid #10b981;
+;
+  padding-bottom: 5px;
+}
+
+.footer-column a {
+  color: #bdc3c7; /* Gris claro para links */
+  text-decoration: none;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.footer-column a:hover {
+  color: #ffffff; /* Blanco puro al pasar el mouse */
+}
+
+/* Logo */
 .footer-logo {
-  width: 120px; /* ajusta el tamaño como quieras */
-  height: auto; /* mantiene la proporción */
+  width: 120px;
+  height: auto;
   display: block;
-  margin: 0 auto 10px auto; /* centra el logo y agrega un poco de espacio abajo */
 }
 
+/* Parte Inferior */
+.footer-bottom {
+  text-align: center;
+}
+
+.footer-bottom hr {
+  border: 0;
+  border-top: 1px solid #3e4f5f;
+  margin-bottom: 20px;
+}
+
+.footer-bottom p {
+  color: #ecf0f1;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Responsivo para móviles */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .footer-brand, .footer-logo {
+    margin: 0 auto;
+  }
+  
+  .footer-columns {
+    flex-direction: column;
+    align-items: center;
+  }
+}
 </style>

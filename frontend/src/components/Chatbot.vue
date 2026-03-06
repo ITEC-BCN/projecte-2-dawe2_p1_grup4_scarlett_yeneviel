@@ -65,18 +65,18 @@ const enviarMensaje = () => {
 
 /* El botón circular */
 .chat-icon {
-  width: 60px;
-  height: 60px;
-  background-color: #10b981; /* Tu verde accent */
+  width: 70px;
+  height: 70px;
+  background: #10b981;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: transform 0.3s ease;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .chat-icon:hover {

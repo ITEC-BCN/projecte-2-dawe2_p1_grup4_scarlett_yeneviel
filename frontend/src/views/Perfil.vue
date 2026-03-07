@@ -1,25 +1,20 @@
 <script setup>
 import { ref, reactive, watch } from "vue";
-import { useRoute } from 'vue-router';
-import { URL_BACK } from '../../../config';
+import { useRoute } from "vue-router";
+import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 
 const route = useRoute();
 const url = ref(`${URL_BACK}/estudiantes/13`);
 
-const { 
-    students, 
-    loadingStudents, 
-    isCreating, 
-    createStudent 
-} = useStudents (url);
-
+const { students, loadingStudents, isCreating, createStudent } =
+  useStudents(url);
 
 const user = reactive({
   name: "",
   role: "",
   avatar: "",
-  about:"",
+  about: "",
 });
 
 const hardSkills = ref([]);
@@ -32,9 +27,12 @@ const contact = reactive({
 });
 
 const documents = ref([]);
+const academicBackground = ref([]);
 
-watch(() => students.value, (newStudents) => {
-  if (newStudents) {
+watch(
+  () => students.value,
+  (newStudents) => {
+    if (newStudents) {
       Object.assign(user, {
         name: newStudents.nombre + " " + newStudents.apellido || "Sin nombre",
         role: newStudents.role || "Sin rol",
@@ -44,46 +42,64 @@ watch(() => students.value, (newStudents) => {
 
       /* Añadir las hardSkills del estudiante */
       if (newStudents.hard_skills) {
-        hardSkills.value = newStudents.hard_skills.split(",").map(s => s.trim());
+        hardSkills.value = newStudents.hard_skills
+          .split(",")
+          .map((s) => s.trim());
       }
 
       /* Añadir las softSkills del estudiante */
       if (newStudents.soft_skills) {
-        softSkills.value = newStudents.soft_skills.split(",").map(s => s.trim());
+        softSkills.value = newStudents.soft_skills
+          .split(",")
+          .map((s) => s.trim());
       }
 
       /* Añadimos los idiomas del estudiante */
-      if (newStudents.idiomas && newStudents.idiomas.idiomas && newStudents.idiomas.idiomas.length > 0) {
-        languages.value = newStudents.idiomas.idiomas.map(lang => ({
+      if (
+        newStudents.idiomas &&
+        newStudents.idiomas.idiomas &&
+        newStudents.idiomas.idiomas.length > 0
+      ) {
+        languages.value = newStudents.idiomas.idiomas.map((lang) => ({
           name: lang.name,
-          level: lang.level
+          level: lang.level,
         }));
       }
 
       /* Cargamos los datos de contacto del estudiante */
-      if(newStudents.email) {
+      if (newStudents.email) {
         contact.email = newStudents.email;
       }
 
-      if(newStudents.telefono) {
+      if (newStudents.telefono) {
         contact.phone = newStudents.telefono;
       }
 
-      if(newStudents.location) {
+      if (newStudents.location) {
         contact.location = newStudents.location;
       }
 
       /* Añadimos los links del estudiante */
-      if(newStudents.enlaces && newStudents.enlaces.length > 0) {
+      if (newStudents.enlaces && newStudents.enlaces.length > 0) {
         // Procesar los enlaces
         documents.value = newStudents.enlaces.map((enlace, index) => ({
           label: enlace.name || `Enlace ${index + 1}`,
           tipo: enlace.tipo || "Enlace",
-          url: enlace.url || "#"
+          url: enlace.url || "#",
         }));
+      }
+
+      /* Añadimos la formación académica del estudiante */
+      if (newStudents.estudios && Array.isArray(newStudents.estudios.formacion)) {
+        academicBackground.value = newStudents.estudios.formacion.map((f) => ({
+          centro: f.centro || "Centro no especificado",
+          anio: f.anio || "N/A",
+          titulo: f.titulo || "Título no especificado",
+        }));
+      }
     }
-  }
-});
+  },
+);
 
 const editing = ref(false);
 const form = reactive({ name: user.name, role: user.role, about: user.about });
@@ -158,6 +174,22 @@ function addLanguage() {
 function removeLanguage(i) {
   languages.value.splice(i, 1);
 }
+
+// Funciones para editar
+const newEdu = reactive({ centro: "", anio: "", titulo: "" });
+
+function addEducation() {
+  if (newEdu.centro && newEdu.titulo) {
+    academicBackground.value.push({ ...newEdu });
+    newEdu.centro = "";
+    newEdu.anio = "";
+    newEdu.titulo = "";
+  }
+}
+
+function removeEducation(index) {
+  academicBackground.value.splice(index, 1);
+}
 </script>
 
 <template>
@@ -217,27 +249,48 @@ function removeLanguage(i) {
     </aside>
 
     <main class="profile-main">
-      <section class="section">
-        <div class="title">
-          <i class="fa-solid fa-circle-info"></i> Información personal
-        </div>
-        <div v-if="!editing" class="bio-content">{{ user.about }}</div>
+     <section class="section highlight-green"> <div class="title"> Formación Reglada
+  </div>
 
-        <form v-else class="profile-form" @submit.prevent="saveProfile">
-          <div class="field">
-            <label class="small">Nombre</label>
-            <input v-model="form.name" class="input" />
-          </div>
-          <div class="field">
-            <label class="small">Rol / Estudio</label>
-            <input v-model="form.role" class="input" />
-          </div>
-          <div class="field full-width">
-            <label class="small">Sobre mí</label>
-            <textarea v-model="form.about" class="textarea"></textarea>
-          </div>
-        </form>
-      </section>
+  <div v-if="!editing" class="education-timeline">
+    <div
+      v-for="(edu, index) in academicBackground"
+      :key="index"
+      class="edu-item"
+    >
+      <div class="edu-year">{{ edu.anio }}</div>
+      <div class="edu-info">
+        <div class="edu-title">{{ edu.titulo }}</div>
+        <div class="edu-center">{{ edu.centro }}</div>
+      </div>
+    </div>
+    <div v-if="academicBackground.length === 0" class="small">Sin formación registrada.</div>
+  </div>
+
+  <div v-else class="edit-education">
+    <div class="profile-form" style="display: block;"> <div
+        v-for="(edu, index) in academicBackground"
+        :key="'edit' + index"
+        class="edit-edu-row"
+      >
+        <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
+        <input v-model="edu.titulo" placeholder="Título" class="input" />
+        <input v-model="edu.centro" placeholder="Centro" class="input" />
+        <button @click="removeEducation(index)" class="btn-x">×</button>
+      </div>
+    </div>
+
+    <div class="add-box" style="margin-top: 1rem; flex-direction: column; align-items: flex-start;">
+      <p class="subtitle">Nueva titulación</p>
+      <div class="edit-edu-row" style="width: 100%;">
+        <input v-model="newEdu.anio" placeholder="Ej: 2024" class="input input-sm" />
+        <input v-model="newEdu.titulo" placeholder="Título..." class="input" />
+        <input v-model="newEdu.centro" placeholder="Centro..." class="input" />
+        <button @click.prevent="addEducation" class="btn-edit" style="flex: 0; padding: 0 15px;">+</button>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section class="section highlight-purple">
         <div class="title">Habilidades</div>
@@ -334,6 +387,7 @@ function removeLanguage(i) {
 /* GENERAL */
 i {
   color: black;
+  padding-right: 4px;
 }
 
 .profile-page {
@@ -472,7 +526,72 @@ i {
   align-items: center;
   gap: 0.75rem;
 }
+.education-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-left: 0.5rem;
+}
 
+.edu-item {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.edu-item::before {
+  content: "";
+  position: absolute;
+  left: 3.5rem;
+  top: 0;
+  bottom: -1.5rem;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.edu-item:last-child::before {
+  display: none;
+}
+
+.edu-year {
+  min-width: 3.5rem;
+  font-weight: 800;
+  color: var(--accent-purple);
+  font-size: 0.85rem;
+  padding-top: 2px;
+}
+
+.edu-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1rem;
+  text-align: start;
+}
+
+.edu-center {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: start;
+}
+
+/* Estilos para edición */
+.edit-edu-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  align-items: center;
+}
+
+.input-sm {
+  width: 80px;
+}
+
+.add-edu-form {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #e2e8f0;
+}
 /* Colores de sección */
 .highlight-purple {
   background: linear-gradient(to right, #ffffff, #f5f3ff);

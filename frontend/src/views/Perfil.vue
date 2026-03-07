@@ -539,16 +539,6 @@ i {
   position: relative;
 }
 
-.edu-item::before {
-  content: "";
-  position: absolute;
-  left: 3.5rem;
-  top: 0;
-  bottom: -1.5rem;
-  width: 2px;
-  background: #e2e8f0;
-}
-
 .edu-item:last-child::before {
   display: none;
 }

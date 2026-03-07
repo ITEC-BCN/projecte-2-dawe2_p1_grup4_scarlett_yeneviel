@@ -116,7 +116,10 @@ export const obtenerEstudiantes = async () => {
 export const obtenerEstudiantePorId = async (id) => {
   const { data, error } = await supabase
     .from('usuario_estudiante')
-    .select('*')
+    .select(`
+        *,
+        enlaces(*)
+      `)
     .eq('id', id)
     .single();
 

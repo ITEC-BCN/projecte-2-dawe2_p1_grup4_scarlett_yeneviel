@@ -1,36 +1,88 @@
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, watch } from "vue";
+import { useRoute } from 'vue-router';
+import { URL_BACK } from '../../../config';
+import { useStudents } from "../composables/useStudents";
+
+const route = useRoute();
+const url = ref(`${URL_BACK}/estudiantes/13`);
+
+const { 
+    students, 
+    loadingStudents, 
+    isCreating, 
+    createStudent 
+} = useStudents (url);
+
 
 const user = reactive({
-  name: "María López",
-  role: "Estudiante de Informática",
-  avatar: "/img/avatarGroup.png",
-  about:
-    "Apasionada por el desarrollo web y las nuevas tecnologías. Buscando prácticas en backend o frontend donde aprender y aportar valor.",
+  name: "",
+  role: "",
+  avatar: "",
+  about:"",
 });
 
-const hardSkills = ref(["JavaScript", "Vue.js", "HTML", "CSS"]);
-const softSkills = ref([
-  "Trabajo en equipo",
-  "Comunicación",
-  "Resolución de problemas",
-]);
-
-const documents = ref([
-  { id: 1, label: "CV PDF", url: "https://example.com/cv.pdf" },
-  { id: 2, label: "LinkedIn", url: "https://linkedin.com/in/maria" },
-  { id: 3, label: "GitHub", url: "https://github.com/maria" },
-]);
-
-const languages = ref([
-  { id: 1, name: "Español", level: "Nativo" },
-  { id: 2, name: "Inglés", level: "Intermedio" },
-]);
-
+const hardSkills = ref([]);
+const softSkills = ref([]);
+const languages = ref([]);
 const contact = reactive({
-  email: "maria.lopez@example.com",
-  phone: "+34 600 000 000",
-  location: "Barcelona, España",
+  email: "",
+  phone: "",
+  location: "",
+});
+
+const documents = ref([]);
+
+watch(() => students.value, (newStudents) => {
+  if (newStudents) {
+      Object.assign(user, {
+        name: newStudents.nombre + " " + newStudents.apellido || "Sin nombre",
+        role: newStudents.role || "Sin rol",
+        avatar: newStudents.avatar || "/img/avatarGroup.png",
+        about: newStudents.about || "Sin descripción.",
+      });
+
+      /* Añadir las hardSkills del estudiante */
+      if (newStudents.hard_skills) {
+        hardSkills.value = newStudents.hard_skills.split(",").map(s => s.trim());
+      }
+
+      /* Añadir las softSkills del estudiante */
+      if (newStudents.soft_skills) {
+        softSkills.value = newStudents.soft_skills.split(",").map(s => s.trim());
+      }
+
+      /* Añadimos los idiomas del estudiante */
+      if (newStudents.idiomas && newStudents.idiomas.idiomas && newStudents.idiomas.idiomas.length > 0) {
+        languages.value = newStudents.idiomas.idiomas.map(lang => ({
+          name: lang.name,
+          level: lang.level
+        }));
+      }
+
+      /* Cargamos los datos de contacto del estudiante */
+      if(newStudents.email) {
+        contact.email = newStudents.email;
+      }
+
+      if(newStudents.telefono) {
+        contact.phone = newStudents.telefono;
+      }
+
+      if(newStudents.location) {
+        contact.location = newStudents.location;
+      }
+
+      /* Añadimos los links del estudiante */
+      if(newStudents.enlaces && newStudents.enlaces.length > 0) {
+        // Procesar los enlaces
+        documents.value = newStudents.enlaces.map((enlace, index) => ({
+          label: enlace.name || `Enlace ${index + 1}`,
+          tipo: enlace.tipo || "Enlace",
+          url: enlace.url || "#"
+        }));
+    }
+  }
 });
 
 const editing = ref(false);
@@ -245,15 +297,15 @@ function removeLanguage(i) {
         </section>
 
         <section class="section">
-          <div class="title">Documentación</div>
+          <div class="title">Enlaces</div>
           <div class="doc-list">
             <div v-for="doc in documents" :key="doc.id" class="offer-item">
               <div class="offer-info">
                 <i
                   :class="[
-                    doc.label.toLowerCase().includes('github')
+                    doc.tipo.toLowerCase().includes('github')
                       ? 'fa-brands fa-github'
-                      : doc.label.toLowerCase().includes('linkedin')
+                      : doc.tipo.toLowerCase().includes('linkedin')
                         ? 'fa-brands fa-linkedin'
                         : 'fa-solid fa-file-lines',
                   ]"

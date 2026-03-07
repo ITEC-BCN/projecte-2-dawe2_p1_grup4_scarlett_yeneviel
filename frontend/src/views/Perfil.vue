@@ -1,110 +1,111 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive } from "vue";
 
 const user = reactive({
-  name: 'María López',
-  role: 'Estudiante de Informática',
-  avatar: '/img/avatarGroup.png',
-  about: 'Apasionada por el desarrollo web y las nuevas tecnologías. Buscando prácticas en backend o frontend donde aprender y aportar valor.'
-})
+  name: "María López",
+  role: "Estudiante de Informática",
+  avatar: "/img/avatarGroup.png",
+  about:
+    "Apasionada por el desarrollo web y las nuevas tecnologías. Buscando prácticas en backend o frontend donde aprender y aportar valor.",
+});
 
-const hardSkills = ref(['JavaScript', 'Vue.js', 'HTML', 'CSS'])
-const softSkills = ref(['Trabajo en equipo', 'Comunicación', 'Resolución de problemas'])
+const hardSkills = ref(["JavaScript", "Vue.js", "HTML", "CSS"]);
+const softSkills = ref([
+  "Trabajo en equipo",
+  "Comunicación",
+  "Resolución de problemas",
+]);
 
 const documents = ref([
-  { id: 1, label: 'CV PDF', url: 'https://example.com/cv.pdf' },
-  { id: 2, label: 'LinkedIn', url: 'https://linkedin.com/in/maria' },
-  { id: 3, label: 'GitHub', url: 'https://github.com/maria' }
-])
+  { id: 1, label: "CV PDF", url: "https://example.com/cv.pdf" },
+  { id: 2, label: "LinkedIn", url: "https://linkedin.com/in/maria" },
+  { id: 3, label: "GitHub", url: "https://github.com/maria" },
+]);
 
-// idiomas y contacto
 const languages = ref([
-  { id: 1, name: 'Español', level: 'Nativo' },
-  { id: 2, name: 'Inglés', level: 'Intermedio' }
-])
+  { id: 1, name: "Español", level: "Nativo" },
+  { id: 2, name: "Inglés", level: "Intermedio" },
+]);
 
 const contact = reactive({
-  email: 'maria.lopez@example.com',
-  phone: '+34 600 000 000',
-  location: 'Barcelona, España'
-})
+  email: "maria.lopez@example.com",
+  phone: "+34 600 000 000",
+  location: "Barcelona, España",
+});
 
-const editing = ref(false)
-const form = reactive({ name: user.name, role: user.role, about: user.about })
+const editing = ref(false);
+const form = reactive({ name: user.name, role: user.role, about: user.about });
 
-// campos temporales para añadir skills/doc/idiomas
-const newHard = ref('')
-const newSoft = ref('')
-const newDocLabel = ref('')
-const newDocURL = ref('')
-const newLangName = ref('')
-const newLangLevel = ref('')
+const newHard = ref("");
+const newSoft = ref("");
+const newDocLabel = ref("");
+const newDocURL = ref("");
+const newLangName = ref("");
+const newLangLevel = ref("");
 
 function toggleEdit() {
-  editing.value = !editing.value
+  editing.value = !editing.value;
   if (!editing.value) {
-    // restablecer formulario si se cancela
-    form.name = user.name
-    form.role = user.role
-    form.about = user.about
-    newHard.value = ''
-    newSoft.value = ''
-    newDocLabel.value = ''
-    newDocURL.value = ''
-    newLangName.value = ''
-    newLangLevel.value = ''
+    form.name = user.name;
+    form.role = user.role;
+    form.about = user.about;
   }
 }
 
 function saveProfile() {
-  user.name = form.name
-  user.role = form.role
-  user.about = form.about
-  editing.value = false
+  user.name = form.name;
+  user.role = form.role;
+  user.about = form.about;
+  editing.value = false;
 }
 
 function addHard() {
-  const v = newHard.value && newHard.value.trim()
+  const v = newHard.value && newHard.value.trim();
   if (v) {
-    hardSkills.value.push(v)
-    newHard.value = ''
+    hardSkills.value.push(v);
+    newHard.value = "";
   }
 }
-function removeHard(i) { hardSkills.value.splice(i, 1) }
+function removeHard(i) {
+  hardSkills.value.splice(i, 1);
+}
 
 function addSoft() {
-  const v = newSoft.value && newSoft.value.trim()
+  const v = newSoft.value && newSoft.value.trim();
   if (v) {
-    softSkills.value.push(v)
-    newSoft.value = ''
+    softSkills.value.push(v);
+    newSoft.value = "";
   }
 }
-function removeSoft(i) { softSkills.value.splice(i, 1) }
+function removeSoft(i) {
+  softSkills.value.splice(i, 1);
+}
 
 function addDocument() {
-  const label = newDocLabel.value && newDocLabel.value.trim()
-  const url = newDocURL.value && newDocURL.value.trim()
+  const label = newDocLabel.value && newDocLabel.value.trim();
+  const url = newDocURL.value && newDocURL.value.trim();
   if (label && url) {
-    documents.value.push({ id: Date.now(), label, url })
-    newDocLabel.value = ''
-    newDocURL.value = ''
+    documents.value.push({ id: Date.now(), label, url });
+    newDocLabel.value = "";
+    newDocURL.value = "";
   }
 }
 function removeDocument(id) {
-  documents.value = documents.value.filter(d => d.id !== id)
+  documents.value = documents.value.filter((d) => d.id !== id);
 }
 
-// idiomas
 function addLanguage() {
-  const name = newLangName.value && newLangName.value.trim()
-  const level = newLangLevel.value && newLangLevel.value.trim()
+  const name = newLangName.value && newLangName.value.trim();
+  const level = newLangLevel.value && newLangLevel.value.trim();
   if (name) {
-    languages.value.push({ id: Date.now(), name, level: level || 'Básico' })
-    newLangName.value = ''
-    newLangLevel.value = ''
+    languages.value.push({ id: Date.now(), name, level: level || "Básico" });
+    newLangName.value = "";
+    newLangLevel.value = "";
   }
 }
-function removeLanguage(i) { languages.value.splice(i, 1) }
+function removeLanguage(i) {
+  languages.value.splice(i, 1);
+}
 </script>
 
 <template>
@@ -119,14 +120,21 @@ function removeLanguage(i) { languages.value.splice(i, 1) }
       </div>
 
       <div class="profile-actions">
-        <button class="btn-edit" @click="toggleEdit">{{ editing ? 'Cancelar' : 'Editar perfil' }}</button>
-        <button v-if="editing" class="btn-edit" @click="saveProfile">Guardar</button>
+        <button class="btn-edit" @click="toggleEdit">
+          <i
+            :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"
+          ></i>
+          {{ editing ? " Cancelar" : " Editar perfil" }}
+        </button>
+        <button v-if="editing" class="btn-save" @click="saveProfile">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar
+        </button>
       </div>
 
       <div class="profile-stats">
         <div class="stat">
-          <div class="num">{{ hardSkills.length }}</div>
-          <span class="label">Habilidades</span>
+          <div class="num">{{ hardSkills.length + softSkills.length }}</div>
+          <span class="label">Skills</span>
         </div>
         <div class="stat">
           <div class="num">{{ documents.length }}</div>
@@ -134,27 +142,34 @@ function removeLanguage(i) { languages.value.splice(i, 1) }
         </div>
       </div>
 
-      <div style="margin-top:1rem;" class="small">
-        <strong>Sobre mí</strong>
-        <p style="margin:0.4rem 0 0;">{{ user.about }}</p>
+      <div class="sidebar-block">
+        <strong><i class="fa-solid fa-user"></i> Sobre mí</strong>
+        <p>{{ user.about }}</p>
       </div>
 
-      <div style="margin-top:1rem;" class="small">
-        <strong>Contacto</strong>
-        <div style="margin-top:0.4rem;">
-          <div class="small">✉️ <a :href="`mailto:${contact.email}`">{{ contact.email }}</a></div>
-          <div class="small">📞 {{ contact.phone }}</div>
-          <div class="small">📍 {{ contact.location }}</div>
+      <div class="sidebar-block">
+        <strong><i class="fa-solid fa-address-book"></i> Contacto</strong>
+        <div class="contact-links">
+          <div class="small">
+            <i class="fa-solid fa-envelope"></i>
+            <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
+          </div>
+          <div class="small">
+            <i class="fa-solid fa-phone"></i> {{ contact.phone }}
+          </div>
+          <div class="small">
+            <i class="fa-solid fa-location-dot"></i> {{ contact.location }}
+          </div>
         </div>
       </div>
-
     </aside>
 
     <main class="profile-main">
       <section class="section">
-        <div class="title">Información personal</div>
-
-        <div v-if="!editing" class="small" style="white-space:pre-wrap">{{ user.about }}</div>
+        <div class="title">
+          <i class="fa-solid fa-circle-info"></i> Información personal
+        </div>
+        <div v-if="!editing" class="bio-content">{{ user.about }}</div>
 
         <form v-else class="profile-form" @submit.prevent="saveProfile">
           <div class="field">
@@ -165,296 +180,358 @@ function removeLanguage(i) { languages.value.splice(i, 1) }
             <label class="small">Rol / Estudio</label>
             <input v-model="form.role" class="input" />
           </div>
-          <div class="field" style="grid-column: 1 / -1;">
+          <div class="field full-width">
             <label class="small">Sobre mí</label>
             <textarea v-model="form.about" class="textarea"></textarea>
           </div>
         </form>
       </section>
 
-      <section class="section">
-        <div class="title">Skills</div>
-        <div class="profile-form" style="grid-template-columns: 1fr 1fr; gap:1rem;">
+      <section class="section highlight-purple">
+        <div class="title">Habilidades</div>
+        <div class="profile-form">
           <div>
-            <div class="small" style="margin-bottom:0.5rem; font-weight:700; color:var(--accent-purple)">Hard skills</div>
+            <div class="subtitle">Hard skills</div>
             <div class="skill-list">
-              <span v-for="(s, i) in hardSkills" :key="s + i" class="skill-chip">
-                {{ s }}
-                <button v-if="editing" @click="removeHard(i)" class="btn-edit" style="padding:0.15rem 0.4rem; font-weight:600; background:#ef4444;">x</button>
+              <span v-for="(s, i) in hardSkills" :key="i" class="skill-chip">
+                <i class="fa-solid fa-code"></i> {{ s }}
+                <button v-if="editing" @click="removeHard(i)" class="btn-x">
+                  ×
+                </button>
               </span>
             </div>
-
-            <div v-if="editing" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-              <input v-model="newHard" class="input" placeholder="Añadir hard skill" />
-              <button class="btn-edit" @click.prevent="addHard">Añadir</button>
-            </div>
           </div>
-
           <div>
-            <div class="small" style="margin-bottom:0.5rem; font-weight:700; color:var(--accent-purple)">Soft skills</div>
+            <div class="subtitle">Soft skills</div>
             <div class="skill-list">
-              <span v-for="(s, i) in softSkills" :key="s + i" class="skill-chip">
-                {{ s }}
-                <button v-if="editing" @click="removeSoft(i)" class="btn-edit" style="padding:0.15rem 0.4rem; font-weight:600; background:#ef4444;">x</button>
+              <span
+                v-for="(s, i) in softSkills"
+                :key="i"
+                class="skill-chip soft"
+              >
+                <i class="fa-solid fa-brain"></i> {{ s }}
+                <button v-if="editing" @click="removeSoft(i)" class="btn-x">
+                  ×
+                </button>
               </span>
             </div>
-
-            <div v-if="editing" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-              <input v-model="newSoft" class="input" placeholder="Añadir soft skill" />
-              <button class="btn-edit" @click.prevent="addSoft">Añadir</button>
-            </div>
           </div>
+        </div>
+        <div v-if="editing" class="add-box">
+          <input
+            v-model="newHard"
+            class="input"
+            placeholder="Nueva Hard skill"
+          />
+          <button class="btn-edit" @click.prevent="addHard">Añadir</button>
         </div>
       </section>
 
-      <section class="section">
-        <div class="title">Idiomas</div>
-        <div class="skill-list" style="margin-bottom:0.75rem;">
-          <span v-for="(lang, i) in languages" :key="lang.id" class="skill-chip">
-            {{ lang.name }} · {{ lang.level }}
-            <button v-if="editing" @click="removeLanguage(i)" class="btn-edit" style="padding:0.15rem 0.4rem; font-weight:600; background:#ef4444; margin-left:0.4rem;">x</button>
-          </span>
-        </div>
-
-        <div v-if="editing" style="display:grid; grid-template-columns: 2fr 1fr; gap:0.5rem; align-items:center;">
-          <input v-model="newLangName" class="input" placeholder="Idioma (ej. Inglés)" />
-          <input v-model="newLangLevel" class="input" placeholder="Nivel (ej. Avanzado)" />
-          <div style="grid-column:1 / -1; display:flex; justify-content:flex-end;">
-            <button class="btn-edit" @click.prevent="addLanguage">Añadir idioma</button>
+      <div class="grid-two-cols">
+        <section class="section highlight-green">
+          <div class="title">Idiomas</div>
+          <div class="skill-list">
+            <span
+              v-for="(lang, i) in languages"
+              :key="i"
+              class="skill-chip lang"
+            >
+              {{ lang.name }} · <b>{{ lang.level }}</b>
+              <button v-if="editing" @click="removeLanguage(i)" class="btn-x">
+                ×
+              </button>
+            </span>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="section">
-        <div class="title">Documentación</div>
-        <div class="doc-list">
-          <div v-for="doc in documents" :key="doc.id" class="offer-item" style="align-items:center;">
-            <div class="offer-info">
-              <a :href="doc.url" target="_blank" rel="noopener" class="offer-title">{{ doc.label }}</a>
-              <div class="offer-meta small">{{ doc.url }}</div>
+        <section class="section">
+          <div class="title">Documentación</div>
+          <div class="doc-list">
+            <div v-for="doc in documents" :key="doc.id" class="offer-item">
+              <div class="offer-info">
+                <i
+                  :class="[
+                    doc.label.toLowerCase().includes('github')
+                      ? 'fa-brands fa-github'
+                      : doc.label.toLowerCase().includes('linkedin')
+                        ? 'fa-brands fa-linkedin'
+                        : 'fa-solid fa-file-lines',
+                  ]"
+                  class="doc-icon"
+                ></i>
+                <a :href="doc.url" target="_blank" class="offer-title">{{
+                  doc.label
+                }}</a>
+              </div>
+              <button
+                v-if="editing"
+                class="btn-x"
+                @click="removeDocument(doc.id)"
+              >
+                ×
+              </button>
             </div>
-            <div>
-              <button v-if="editing" class="btn-edit" @click="removeDocument(doc.id)" style="background:#ef4444;">Eliminar</button>
-            </div>
           </div>
-        </div>
-
-        <div v-if="editing" style="margin-top:0.75rem; display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
-          <input v-model="newDocLabel" class="input" placeholder="Etiqueta (CV, LinkedIn...)" />
-          <input v-model="newDocURL" class="input" placeholder="URL" />
-          <div style="grid-column:1 / -1; display:flex; justify-content:flex-end; gap:0.5rem;">
-            <button class="btn-edit" @click.prevent="addDocument">Añadir documento</button>
-          </div>
-        </div>
-      </section>
-
+        </section>
+      </div>
     </main>
   </div>
 </template>
 
 <style scoped>
+/* GENERAL */
+i {
+  color: black;
+}
 
-/* Estilos para la vista Perfil */
 .profile-page {
   display: flex;
   gap: 2rem;
   align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 2rem 1.5rem;
+  background-color: #f8fafc;
+  min-height: 78vh;
 }
 
+/* ASIDE */
 .profile-card {
-  width: 360px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.82));
-  border-radius: 12px;
+  width: 340px;
+  background: white;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 8px 20px rgba(33,53,71,0.06);
-  text-align: left;
-  border: 1px solid rgba(33,53,71,0.04);
-}
-
-.profile-header {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 2rem;
 }
 
 .profile-avatar {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  object-fit: cover;
   border: 4px solid var(--accent-green);
-  box-shadow: 0 8px 18px rgba(16,185,129,0.12);
+  object-fit: cover;
+  margin-bottom: 0.5rem;
 }
 
 .profile-name {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   color: var(--accent-purple);
   margin: 0;
 }
-
 .profile-role {
-  margin-top: 0.25rem;
-  color: rgba(33,53,71,0.6);
+  color: #64748b;
   font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .profile-actions {
-  margin-top: 1rem;
   display: flex;
   gap: 0.5rem;
+  margin: 1.2rem 0;
 }
-
-.btn-edit {
-  background: var(--accent-green);
-  color: #fff;
+.btn-edit,
+.btn-save {
+  flex: 1;
   border: none;
-  padding: 0.5rem 0.9rem;
+  padding: 0.6rem;
   border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: all 0.2s;
+  background: var(--accent-green);
+  color: white;
 }
-
+.btn-save {
+  background: var(--accent-purple);
+}
 .btn-edit:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(16,185,129,0.12);
+  opacity: 0.9;
+  transform: translateY(-2px);
 }
 
 .profile-stats {
   display: flex;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
-
 .stat {
   flex: 1;
-  background: linear-gradient(135deg, rgba(139,92,246,0.04), rgba(16,185,129,0.03));
-  padding: 0.75rem;
-  border-radius: 10px;
+  background: #f1f5f9;
+  padding: 0.8rem;
+  border-radius: 12px;
   text-align: center;
 }
-
 .stat .num {
-  font-weight: 700;
+  font-weight: 800;
   color: var(--accent-purple);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
-
 .stat .label {
-  display: block;
-  margin-top: 0.25rem;
-  color: rgba(33,53,71,0.6);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
 }
 
-.profile-main {
-  flex: 1;
-  max-width: 760px;
-  text-align: left;
+.sidebar-block {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem;
+  margin-top: 1rem;
 }
-
-.section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(33,53,71,0.04);
-  box-shadow: 0 6px 18px rgba(33,53,71,0.03);
-}
-
-.section .title {
+.sidebar-block strong {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 700;
-  color: var(--accent-purple);
+  color: #1e293b;
   margin-bottom: 0.5rem;
 }
-
-.offers-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.6rem;
+.sidebar-block p,
+.contact-links .small {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+  text-align: start;
+  padding-left: 20px;
 }
 
-.offer-item {
+/* MAIN CONTENT */
+.profile-main {
+  flex: 1;
+  max-width: 800px;
+}
+.section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.section .title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent-purple);
+  margin-bottom: 1.2rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fff, #fbfdff);
-  border: 1px solid rgba(33,53,71,0.06);
-}
-
-.offer-info {
-  text-align: left;
-}
-
-.offer-title {
-  font-weight: 600;
-  color: rgba(33,53,71,0.9);
-}
-
-.offer-meta {
-  font-size: 0.9rem;
-  color: rgba(33,53,71,0.55);
-}
-
-/* Skills y documentos */
-.skill-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
-.skill-chip {
-  background: linear-gradient(90deg, rgba(139,92,246,0.06), rgba(16,185,129,0.04));
-  padding: 0.35rem 0.6rem;
-  border-radius: 999px;
-  display:inline-flex;
-  align-items:center;
-  gap:0.45rem;
-  font-weight:600;
-  color: rgba(33,53,71,0.85);
-}
-
-.doc-list .offer-item { padding:0.6rem; }
-
-/* Formularios dentro del perfil */
-.profile-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
 
-.profile-form .field {
-  display: flex;
-  flex-direction: column;
+/* Colores de sección */
+.highlight-purple {
+  background: linear-gradient(to right, #ffffff, #f5f3ff);
+  border-left: 4px solid var(--accent-purple);
+}
+.highlight-green {
+  background: linear-gradient(to right, #ffffff, #f0fdf4);
+  border-left: 4px solid var(--accent-green);
 }
 
-.input, .textarea {
+.subtitle {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 0.8rem;
+}
+.bio-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+/* SKILLS CHIPS */
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.skill-chip {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-purple);
+}
+.skill-chip.soft {
+  color: var(--accent-green);
+}
+.skill-chip i {
+  font-size: 0.7rem;
+}
+
+/* DOCS */
+.offer-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  margin-bottom: 0.5rem;
+}
+.doc-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+.offer-title {
+  font-weight: 700;
+  text-decoration: none;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+/* UTILS */
+.grid-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1rem;
+}
+.btn-x {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0 4px;
+  font-weight: bold;
+}
+.full-width {
+  grid-column: 1 / -1;
+}
+.profile-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.input,
+.textarea {
+  width: 100%;
   padding: 0.6rem;
   border-radius: 8px;
-  border: 1px solid rgba(33,53,71,0.08);
-  background: #fbfbfd;
-}
-
-.textarea { min-height: 100px; resize: vertical; }
-
-/* Pequeñas utilidades coherentes con el resto de la web */
-.small { font-size: 0.9rem; color: rgba(33,53,71,0.6); }
-
-/* Responsive */
-@media (max-width: 992px) {
-  .profile-page { gap: 1rem; padding: 1.25rem; }
-  .profile-card { width: 320px; }
+  border: 1px solid #e2e8f0;
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
-  .profile-page { flex-direction: column; padding: 1rem; }
-  .profile-card { width: 100%; display: flex; align-items: center; }
-  .profile-header { flex-direction: row; }
-  .profile-avatar { width: 96px; height: 96px; }
-  .profile-form { grid-template-columns: 1fr; }
+  .profile-page {
+    flex-direction: column;
+  }
+  .profile-card {
+    width: 100%;
+    position: static;
+  }
+  .grid-two-cols {
+    grid-template-columns: 1fr;
+  }
 }
-
 </style>

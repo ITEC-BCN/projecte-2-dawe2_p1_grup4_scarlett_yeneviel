@@ -9,6 +9,9 @@
   margin: 0 auto;
   text-align: center;
 }
+*{
+   font-family: sans-serif;
+}
 
 @media (prefers-color-scheme: light) {
   :root {

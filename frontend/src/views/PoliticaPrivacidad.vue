@@ -31,9 +31,6 @@ const puntosClave = ref([
   <section class="privacidad-container">
     <div class="privacidad-card">
       <header class="privacidad-header">
-        <div class="shield-icon">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
 
         <h1>Política de <span class="resaltar">Privacidad</span></h1>
         <p class="intro-text">
@@ -77,7 +74,7 @@ const puntosClave = ref([
 
 <style scoped>
 .privacidad-container {
-  padding: 4rem 1.5rem;
+  padding: 2rem 1.5rem;
   background-color: #f8fafc;
   display: flex;
   justify-content: center;

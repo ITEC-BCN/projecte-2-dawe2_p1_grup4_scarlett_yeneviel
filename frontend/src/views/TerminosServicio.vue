@@ -53,7 +53,7 @@ const secciones = ref([
 
 <style scoped>
 .terms-container {
-  padding: 4rem 1.5rem;
+  padding: 2rem 1.5rem;
   background-color: #f4f4f9;
   display: flex;
   justify-content: center;

@@ -1,221 +1,283 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
 const categorias = ref([
   {
-    titulo: 'Para Estudiantes',
-    descripcion: 'Cómo aplicar a ofertas, editar tu CV y gestionar tus entrevistas.',
-    icon: '🎓',
-    preguntas: ['¿Cómo aplico a una práctica?', 'Subir mi currículum', 'Estado de mi candidatura']
+    titulo: "Estudiantes",
+    icon: "fa-solid fa-graduation-cap",
+    preguntas: [
+      {
+        titulo: "¿Cómo aplico?",
+        descripcion: "1. Ve a ofertas.\n2. Selecciona la práctica.\n3. Pulsa 'Aplicar'."
+      },
+      {
+        titulo: "Subir CV",
+        descripcion: "En 'Editar perfil', sube tu CV en PDF y guarda cambios."
+      }
+    ]
   },
   {
-    titulo: 'Para Empresas',
-    descripcion: 'Publicación de vacantes, filtrado de candidatos y gestión de convenios.',
-    icon: '🏢',
-    preguntas: ['Publicar oferta', 'Filtrar perfiles junior', 'Validar convenios']
+    titulo: "Empresas",
+    icon: "fa-solid fa-building",
+    preguntas: [
+      {
+        titulo: "Publicar oferta",
+        descripcion: "Accede al panel, pulsa 'Publicar' y completa los datos."
+      },
+      {
+        titulo: "Convenios",
+        descripcion: "Revisa los datos del alumno y acepta el documento legal."
+      }
+    ]
   },
   {
-    titulo: 'Convenios y Legal',
-    descripcion: 'Todo sobre la normativa de prácticas, seguros y acuerdos de universidad.',
-    icon: '⚖️',
-    preguntas: ['¿Qué es un convenio?', 'Seguro escolar', 'Horas máximas']
+    titulo: "Legal",
+    icon: "fa-solid fa-scale-balanced",
+    preguntas: [
+      {
+        titulo: "Seguro escolar",
+        descripcion: "Cubre todo el periodo de prácticas establecido en convenio."
+      },
+      {
+        titulo: "Horas máximas",
+        descripcion: "No pueden superar el límite marcado por el centro educativo."
+      }
+    ]
   }
-])
+]);
 
-const busqueda = ref('')
+const preguntaActiva = ref(null);
+
+function togglePregunta(catIndex, pregIndex) {
+  const id = `${catIndex}-${pregIndex}`;
+  preguntaActiva.value = preguntaActiva.value === id ? null : id;
+}
 </script>
 
 <template>
-  <section class="ayuda-container">
-    <header class="ayuda-header">
-      <span class="resaltar subtitle">Centro de Ayuda</span>
-      <h1>¿En qué podemos <span class="resaltar">ayudarte</span>?</h1>
-      <div class="search-box">
-        <input 
-          v-model="busqueda" 
-          type="text" 
-          placeholder="Busca por palabras clave: 'Convenio', 'CV', 'Registro'..."
-        />
-        <button class="btn-primary">Buscar</button>
+  <div class="ayuda-wrapper">
+    <section class="ayuda-container">
+      
+      <header class="ayuda-header">
+        <span class="resaltar-label">Soporte ITB</span>
+        <h1>Centro de <span class="resaltar">Ayuda</span></h1>
+        <p class="intro-text">Respuestas rápidas a tus dudas.</p>
+      </header>
+
+      <div class="cards-container">
+        <article v-for="(cat, catIndex) in categorias" :key="catIndex" class="ayuda-card">
+          <header class="card-header">
+            <div class="icon-box">
+              <i :class="cat.icon"></i>
+            </div>
+            <h2>{{ cat.titulo }}</h2>
+          </header>
+
+          <div class="card-body">
+            <div
+              v-for="(preg, pregIndex) in cat.preguntas"
+              :key="pregIndex"
+              class="punto-ayuda"
+              @click="togglePregunta(catIndex, pregIndex)"
+              :class="{ 'is-active': preguntaActiva === `${catIndex}-${pregIndex}` }"
+            >
+              <div class="check-box">
+                <i class="fa-solid fa-question"></i>
+              </div>
+              <div class="contenido">
+                <h3>{{ preg.titulo }}</h3>
+                <p v-if="preguntaActiva === `${catIndex}-${pregIndex}`" class="respuesta">
+                  {{ preg.descripcion }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
-    </header>
 
-    <div class="cards-container">
-      <article v-for="(cat, index) in categorias" :key="index" class="card-ayuda">
-        <div class="icon-header">
-          <span class="cat-icon">{{ cat.icon }}</span>
-          <h3>{{ cat.titulo }}</h3>
-        </div>
-        <p>{{ cat.descripcion }}</p>
-        
-        <ul class="lista-ayuda">
-          <li v-for="pregunta in cat.preguntas" :key="pregunta">
-            <a href="#">{{ pregunta }}</a>
-          </li>
-        </ul>
-        
-        <button class="btn-secondary">Ver todo</button>
-      </article>
-    </div>
+      <footer class="ayuda-footer">
+        <p>¿No encuentras lo que buscas?</p>
+        <a href="mailto:secretaria@itb.cat" class="btn-primary">
+          <i class="fa-solid fa-envelope"></i>
+          Contacta con nosotros
+        </a>
+      </footer>
 
-    <footer class="ayuda-footer">
-      <p>¿No encuentras lo que buscas? <router-link to="/contacto" class="resaltar">Contacta con nosotros</router-link></p>
-    </footer>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped>
+/* Tipografía */
+.ayuda-wrapper {
+  width: 100%;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: center;
+
+}
+
 .ayuda-container {
-  padding: 4rem 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  width: 100%;
+  max-width: 1200px; /* Ancho optimizado */
 }
 
 .ayuda-header {
   text-align: center;
-  margin-bottom: 5rem;
+  margin-bottom: 3rem;
 }
 
-.subtitle {
+.resaltar-label {
+  color: #10b981;
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.85rem;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
 }
 
 .ayuda-header h1 {
   font-size: 2.5rem;
-  margin: 1rem 0 2rem;
   color: #333;
+  margin: 0.5rem 0;
 }
 
-/* Buscador */
-.search-box {
-  display: flex;
-  max-width: 600px;
-  margin: 0 auto;
-  gap: 0.5rem;
-  background: white;
-  padding: 0.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  border: 1px solid #eee;
+.resaltar {
+  color: #10b981;
 }
 
-.search-box input {
-  flex: 1;
-  border: none;
-  padding: 0.8rem 1rem;
+.intro-text {
+  color: #777;
   font-size: 1rem;
-  outline: none;
 }
 
-.btn-primary {
-  background: #4C1D95;
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* Cards */
+/* Grid de Cards */
 .cards-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
-  flex-wrap: wrap;
+  margin-bottom: 3rem;
 }
 
-.card-ayuda {
-  background: #fff;
-  border: 1px solid #f0f0f0;
-  border-radius: 15px;
+.ayuda-card {
+  background: white;
+  border-radius: 20px;
   padding: 2rem;
-  flex: 1 1 300px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  border-top: 6px solid #4C1D95; /* Color morado ITB */
   display: flex;
   flex-direction: column;
 }
 
-.icon-header {
+.card-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.cat-icon {
-  font-size: 2rem;
-  background: #f3f0ff;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-}
-
-.card-ayuda h3 {
-  color: #4C1D95;
-  margin: 0;
-}
-
-.card-ayuda p {
-  color: #666;
-  font-size: 0.95rem;
-  line-height: 1.5;
   margin-bottom: 1.5rem;
 }
 
-.lista-ayuda {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 2rem 0;
+.icon-box {
+  color: #4C1D95;
+  font-size: 1.5rem;
 }
 
-.lista-ayuda li {
-  margin-bottom: 0.8rem;
+.card-header h2 {
+  color: #4C1D95;
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: 700;
 }
 
-.lista-ayuda a {
+/* Preguntas compactas */
+.punto-ayuda {
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.punto-ayuda:hover {
+  border-color: #10b981;
+}
+
+.punto-ayuda.is-active {
+  background: #f9f9fb;
+  border-color: #4C1D95;
+}
+
+.check-box {
+  background: #10b981;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.contenido h3 {
+  margin: 0;
+  font-size: 1rem;
   color: #333;
-  text-decoration: none;
+  font-weight: 600;
+}
+
+.respuesta {
+  margin-top: 0.5rem;
+  color: #555;
+  line-height: 1.5;
   font-size: 0.9rem;
-  transition: color 0.2s;
+  white-space: pre-line;
 }
 
-.lista-ayuda a:hover {
-  color: #10b981;
-  text-decoration: underline;
+/* Footer estilo Legal */
+.ayuda-footer {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+  text-align: center;
 }
 
-.btn-secondary {
-  margin-top: auto;
-  background: white;
-  color: #10b981;
-  border: 2px solid #10b981;
-  padding: 0.6rem;
-  border-radius: 8px;
+.ayuda-footer p {
+  color: #777;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: #4C1D95;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.3s;
+  text-decoration: none;
+  transition: transform 0.2s, background 0.2s;
 }
 
-.btn-secondary:hover {
-  background: #f0fdf4;
+.btn-primary:hover {
+  transform: scale(1.02);
+  background: #3b1675;
 }
 
-.ayuda-footer {
-  text-align: center;
-  margin-top: 4rem;
-  color: #777;
+/* Responsivo */
+@media (max-width: 992px) {
+  .cards-container { grid-template-columns: repeat(2, 1fr); }
 }
 
-.resaltar { color: #10b981; }
-
-@media (max-width: 768px) {
-  .search-box {
-    flex-direction: column;
-  }
+@media (max-width: 650px) {
+  .cards-container { grid-template-columns: 1fr; }
+  .ayuda-header h1 { font-size: 2rem; }
 }
 </style>

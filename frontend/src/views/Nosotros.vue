@@ -55,15 +55,13 @@ const equipo = ref([
 </template>
 
 <style scoped>
-/* --- ESTILOS REUTILIZADOS DE TU CONFIGURACIÓN --- */
-
 .resaltar {
   color: #10b981;
 }
 .header-section {
-  max-width: 800px; /* Limitamos el ancho para que el texto no se estire demasiado */
+  max-width: 800px; 
   margin-bottom: 3rem;
-  text-align: left; /* O 'center' si prefieres todo centrado */
+  text-align: left;
 }
 
 .subtitle {
@@ -85,8 +83,8 @@ const equipo = ref([
 
 .perfiles {
   text-align: left;
-  padding: 4rem 1.5rem;
-  margin-top: 3rem;
+  padding: 2rem 1.5rem;
+  margin-top: 0.5rem;
   border-top: 1px solid #eee;
 }
 
@@ -113,7 +111,7 @@ const equipo = ref([
   background: #f9f9f9;
   border-radius: 12px;
   padding: 2rem 1.5rem;
-  flex: 1 1 280px; /* Ajuste para que se vean bien en desktop y móvil */
+  flex: 1 1 280px;
   max-width: 350px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);

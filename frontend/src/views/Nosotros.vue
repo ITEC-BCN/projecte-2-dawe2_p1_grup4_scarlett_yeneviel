@@ -1,40 +1,50 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
 // Datos
 const equipo = ref([
   {
-    nombre: 'Silvia Serra',
-    rol: 'Frontend Developer',
-    especialidad: 'Maquetación y estilos',
-    img: 'https://via.placeholder.com/150',
-    descripcion: 'Especialista en interfaces visuales y experiencia de usuario adaptable.'
+    nombre: "Silvia Serra",
+    rol: "Frontend Developer",
+    especialidad: "Maquetación y estilos",
+    img: new URL('@/assets/silvia.jpg', import.meta.url).href,
+    descripcion:
+      "Especialista en interfaces visuales y experiencia de usuario adaptable.",
   },
   {
-    nombre: 'Scarlett Toala',
-    rol: 'Fullstack Developer',
-    especialidad: 'Backend',
-    img: 'https://via.placeholder.com/150',
-    descripcion: 'Enfocada en la lógica de servidor, APIs y arquitectura robusta.'
+    nombre: "Scarlett Toala",
+    rol: "Fullstack Developer",
+    especialidad: "Backend",
+    img: "https://via.placeholder.com/150",
+    descripcion:
+      "Enfocada en la lógica de servidor, APIs y arquitectura robusta.",
   },
   {
-    nombre: 'Yeneviel Roberts',
-    rol: 'Fullstack Developer',
-    especialidad: 'Base de Datos',
-    img: 'https://via.placeholder.com/150',
-    descripcion: 'Experta en el diseño, gestión y optimización de grandes volúmenes de datos.'
-  }
-])
+    nombre: "Yeneviel Roberts",
+    rol: "Fullstack Developer",
+    especialidad: "Base de Datos",
+    img: "https://via.placeholder.com/150",
+    descripcion:
+      "Experta en el diseño, gestión y optimización de grandes volúmenes de datos.",
+  },
+]);
 </script>
 
 <template>
   <footer class="perfiles">
-    <h1>Sobre <span class="resaltar">nosotras</span></h1>
-    
+    <div class="header-section">
+      <span class="resaltar subtitle">Talento y Compromiso</span>
+      <h1>Sobre <span class="resaltar">nosotras</span></h1>
+      <p class="intro-texto">
+        Somos un equipo multidisciplinar apasionado por la tecnología y la educación. <br>
+        Combinamos nuestras especialidades para crear la mejor experiencia en la formación dual de FP.
+      </p>
+    </div>
+
     <div class="cards-container">
       <article v-for="(miembro, index) in equipo" :key="index" class="card">
         <img :src="miembro.img" :alt="miembro.nombre" class="avatar-img" />
-        <h4>{{ miembro.nombre }}</h4>
+        <h2 class="nombre">{{ miembro.nombre }}</h2>
         <p class="resaltar rol-tag">{{ miembro.rol }}</p>
         <p class="descripcion">
           <strong>{{ miembro.especialidad }}</strong>: {{ miembro.descripcion }}
@@ -50,6 +60,28 @@ const equipo = ref([
 .resaltar {
   color: #10b981;
 }
+.header-section {
+  max-width: 800px; /* Limitamos el ancho para que el texto no se estire demasiado */
+  margin-bottom: 3rem;
+  text-align: left; /* O 'center' si prefieres todo centrado */
+}
+
+.subtitle {
+  display: block;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.nombre {
+  color: #4C1D95;
+  font-size: 1.8rem; 
+  font-weight: 800;   
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.5px;
+}
 
 .perfiles {
   text-align: left;
@@ -59,9 +91,15 @@ const equipo = ref([
 }
 
 .perfiles h1 {
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin-bottom: 2rem;
   font-weight: 700;
+}
+
+.intro-texto {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.6;
 }
 
 .cards-container {
@@ -90,10 +128,9 @@ const equipo = ref([
 }
 
 .card img {
-  width: 80px;
-  height: 80px;
+  width: 150px;
+  height: 150px;
   object-fit: cover;
-  border-radius: 50%;
   margin-bottom: 1.2rem;
   border: 3px solid #10b981;
   padding: 3px;
@@ -123,7 +160,7 @@ const equipo = ref([
   .perfiles {
     text-align: center;
   }
-  
+
   .cards-container {
     flex-direction: column;
     align-items: center;

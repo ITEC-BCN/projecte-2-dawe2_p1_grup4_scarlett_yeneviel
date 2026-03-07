@@ -1,41 +1,53 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
-const fechaVigencia = ref('06 de Marzo de 2026')
+const fechaVigencia = ref("06 de Marzo de 2026");
 
 const puntosClave = ref([
   {
-    titulo: 'Responsable del Tratamiento',
-    descripcion: 'Los datos recogidos a través de esta plataforma son responsabilidad del Institut Tecnològic de Barcelona (ITB), con sede en Av. de l’Aiguablava, 121, 08033 Barcelona.'
+    titulo: "Responsable del Tratamiento",
+    descripcion:
+      "Los datos recogidos a través de esta plataforma son responsabilidad del Institut Tecnològic de Barcelona (ITB), con sede en Av. de l’Aiguablava, 121, 08033 Barcelona.",
   },
   {
-    titulo: 'Finalidad de los Datos',
-    descripcion: 'Utilizamos tu información exclusivamente para gestionar tu perfil profesional, permitirte aplicar a ofertas de prácticas y conectar tu talento con empresas del sector tecnológico.'
+    titulo: "Finalidad de los Datos",
+    descripcion:
+      "Utilizamos tu información exclusivamente para gestionar tu perfil profesional, permitirte aplicar a ofertas de prácticas y conectar tu talento con empresas del sector tecnológico.",
   },
   {
-    titulo: 'Cesión a Terceros',
-    descripcion: 'Al inscribirte en una oferta, autorizas que tus datos de contacto y CV sean compartidos con la empresa ofertante para que puedan evaluar tu candidatura.'
+    titulo: "Cesión a Terceros",
+    descripcion:
+      "Al inscribirte en una oferta, autorizas que tus datos de contacto y CV sean compartidos con la empresa ofertante para que puedan evaluar tu candidatura.",
   },
   {
-    titulo: 'Tus Derechos (ARCO)',
-    descripcion: 'Tienes derecho a Acceder, Rectificar, Cancelar u Oponerte al tratamiento de tus datos en cualquier momento enviando un correo a secretaria@itb.cat.'
-  }
-])
+    titulo: "Tus Derechos (ARCO)",
+    descripcion:
+      "Tienes derecho a Acceder, Rectificar, Cancelar u Oponerte al tratamiento de tus datos en cualquier momento enviando un correo a secretaria@itb.cat.",
+  },
+]);
 </script>
 
 <template>
   <section class="privacidad-container">
     <div class="privacidad-card">
       <header class="privacidad-header">
-        <div class="shield-icon">🛡️</div>
+        <div class="shield-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+
         <h1>Política de <span class="resaltar">Privacidad</span></h1>
         <p class="intro-text">
-          Tu privacidad es nuestra prioridad. Aquí te explicamos cómo protegemos tus datos personales.
+          Tu privacidad es nuestra prioridad. Aquí te explicamos cómo protegemos
+          tus datos personales.
         </p>
       </header>
 
       <div class="privacidad-body">
-        <article v-for="(punto, index) in puntosClave" :key="index" class="punto-privacidad">
+        <article
+          v-for="(punto, index) in puntosClave"
+          :key="index"
+          class="punto-privacidad"
+        >
           <div class="check-box">✓</div>
           <div class="contenido">
             <h3>{{ punto.titulo }}</h3>
@@ -44,7 +56,11 @@ const puntosClave = ref([
         </article>
 
         <div class="info-adicional">
-          <p><strong>Conservación:</strong> Mantendremos tus datos mientras tu cuenta esté activa o mientras sea necesario para cumplir con los convenios de prácticas vigentes.</p>
+          <p>
+            <strong>Conservación:</strong> Mantendremos tus datos mientras tu
+            cuenta esté activa o mientras sea necesario para cumplir con los
+            convenios de prácticas vigentes.
+          </p>
         </div>
       </div>
 
@@ -73,8 +89,8 @@ const puntosClave = ref([
   width: 100%;
   padding: 3rem;
   border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-  border-top: 6px solid #4C1D95; /* Detalle con el color principal */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+  border-top: 6px solid #4c1d95; /* Detalle con el color principal */
 }
 
 .privacidad-header {
@@ -83,8 +99,11 @@ const puntosClave = ref([
 }
 
 .shield-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 4rem; /* Un poco más grande para que destaque */
+  margin-bottom: 1.5rem;
+  color: black; /* Color morado de Internia */
+  /* Opcional: un ligero efecto de brillo */
+  filter: drop-shadow(0 4px 6px rgba(76, 29, 149, 0.2));
 }
 
 .resaltar {
@@ -133,7 +152,7 @@ const puntosClave = ref([
 
 .contenido h3 {
   margin: 0 0 0.5rem 0;
-  color: #4C1D95;
+  color: #4c1d95;
   font-size: 1.2rem;
 }
 
@@ -147,7 +166,7 @@ const puntosClave = ref([
   background: #f3f0ff;
   padding: 1.2rem;
   border-radius: 10px;
-  color: #4C1D95;
+  color: #4c1d95;
   font-size: 0.95rem;
   margin-bottom: 3rem;
 }
@@ -171,7 +190,7 @@ const puntosClave = ref([
 }
 
 .btn-primary {
-  background: #4C1D95;
+  background: #4c1d95;
   color: white;
   border: none;
   padding: 0.8rem 2rem;
@@ -182,8 +201,8 @@ const puntosClave = ref([
 
 .btn-secondary {
   background: white;
-  color: #4C1D95;
-  border: 2px solid #4C1D95;
+  color: #4c1d95;
+  border: 2px solid #4c1d95;
   padding: 0.8rem 2rem;
   border-radius: 10px;
   font-weight: 700;
@@ -191,8 +210,15 @@ const puntosClave = ref([
 }
 
 @media (max-width: 600px) {
-  .privacidad-card { padding: 1.5rem; }
-  .botones-footer { flex-direction: column; }
-  .punto-privacidad { flex-direction: column; gap: 0.8rem; }
+  .privacidad-card {
+    padding: 1.5rem;
+  }
+  .botones-footer {
+    flex-direction: column;
+  }
+  .punto-privacidad {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
 }
 </style>

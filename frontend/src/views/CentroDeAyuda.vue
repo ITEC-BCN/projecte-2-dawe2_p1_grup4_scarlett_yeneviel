@@ -59,7 +59,7 @@ const busqueda = ref('')
     </div>
 
     <footer class="ayuda-footer">
-      <p>¿No encuentras lo que buscas? <a href="#" class="resaltar">Contacta con soporte</a></p>
+      <p>¿No encuentras lo que buscas? <router-link to="/contacto" class="resaltar">Contacta con nosotros</router-link></p>
     </footer>
   </section>
 </template>

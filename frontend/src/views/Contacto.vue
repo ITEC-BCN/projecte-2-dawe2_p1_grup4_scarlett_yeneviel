@@ -13,6 +13,17 @@ const enviarFormulario = () => {
   // Aquí podrías resetear el formulario
   formulario.value = { nombre: '', email: '', mensaje: '' }
 }
+
+/*
+Pasos para configurar EmailJS
+Regístrate en emailjs.com.
+
+Conecta tu servicio de correo (Gmail, por ejemplo).
+
+Crea una Email Template con etiquetas como {{nombre}}, {{email}} y {{mensaje}}.
+
+Instálalo en tu proyecto: npm install @emailjs/browser.
+ */
 </script>
 
 <template>
@@ -26,7 +37,9 @@ const enviarFormulario = () => {
 
         <div class="datos-lista">
           <div class="dato-item">
-            <div class="icon-circle">📍</div>
+            <div class="icon-circle">
+              <i class="fa-solid fa-location-dot"></i>
+            </div>
             <div>
               <h4>Dirección</h4>
               <p>Avinguda de l'Aiguablava, 121<br>08033 Barcelona</p>
@@ -34,7 +47,9 @@ const enviarFormulario = () => {
           </div>
 
           <div class="dato-item">
-            <div class="icon-circle">📞</div>
+            <div class="icon-circle">
+              <i class="fa-solid fa-phone"></i>
+            </div>
             <div>
               <h4>Teléfono</h4>
               <p>+34 937 07 00 20</p>
@@ -42,10 +57,12 @@ const enviarFormulario = () => {
           </div>
 
           <div class="dato-item">
-            <div class="icon-circle">✉️</div>
+            <div class="icon-circle">
+              <i class="fa-solid fa-envelope"></i>
+            </div>
             <div>
               <h4>Email</h4>
-              <p>secretaria@itb.cat</p>
+              <a href="mailto:secretaria@itb.cat" class="mail">secretaria@itb.cat</a>
             </div>
           </div>
         </div>
@@ -77,6 +94,11 @@ const enviarFormulario = () => {
 </template>
 
 <style scoped>
+.mail{
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 600;
+}
 .contacto-section {
   padding: 5rem 1.5rem;
   background-color: #fcfcfc;
@@ -114,8 +136,9 @@ const enviarFormulario = () => {
 
 /* Lista de datos */
 .datos-lista {
-  display: flex;
+  display: flex;;
   flex-direction: column;
+  text-align: left;
   gap: 2rem;
 }
 
@@ -126,7 +149,7 @@ const enviarFormulario = () => {
 }
 
 .icon-circle {
-  background: #4C1D95;
+  background: black;
   color: white;
   width: 45px;
   height: 45px;

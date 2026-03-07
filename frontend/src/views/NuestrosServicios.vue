@@ -4,24 +4,24 @@ import { ref } from 'vue'
 const servicios = ref([
   {
     titulo: 'Perfil Profesional',
-    icono: '👤', // Puedes sustituir por SVG o FontAwesome
+    icono: 'fa-solid fa-user', 
     descripcion: 'Crea un perfil optimizado para destacar tus habilidades académicas y proyectos personales ante las empresas.',
     tag: 'Talento'
   },
   {
     titulo: 'Match de Prácticas',
-    icono: '🎯',
+    icono: 'fa-solid fa-bullseye', // Cambiado de emoji a icono
     descripcion: 'Nuestro algoritmo te conecta con las ofertas que realmente encajan con tu formación y aspiraciones.',
     tag: 'Inteligencia'
   },
   {
     titulo: 'Gestión de Convenios',
-    icono: '📝',
+    icono: 'fa-solid fa-file-signature', // Cambiado de emoji a icono
     descripcion: 'Simplificamos la burocracia entre tu universidad y la empresa para que empieces cuanto antes.',
     tag: 'Agilidad'
   }
 ])
-</script>
+</script>handcuffsbrat
 
 <template>
   <section class="servicios-section">
@@ -33,15 +33,18 @@ const servicios = ref([
       </p>
     </div>
 
-    <div class="cards-container">
-      <article v-for="(servicio, index) in servicios" :key="index" class="card-servicio">
-        <div class="icon-box">{{ servicio.icono }}</div>
-        <span class="service-tag">{{ servicio.tag }}</span>
-        <h4>{{ servicio.titulo }}</h4>
-        <p>{{ servicio.descripcion }}</p>
-        <button class="btn-mini">Saber más</button>
-      </article>
+   <div class="cards-container">
+  <article v-for="(servicio, index) in servicios" :key="index" class="card-servicio">
+    
+    <div class="icon-box">
+      <i :class="servicio.icono"></i>
     </div>
+
+    <span class="service-tag">{{ servicio.tag }}</span>
+    <h4>{{ servicio.titulo }}</h4>
+    <p>{{ servicio.descripcion }}</p>
+  </article>
+</div>
   </section>
 </template>
 
@@ -51,6 +54,8 @@ const servicios = ref([
   background-color: #fff;
   max-width: 1200px;
   margin: 0 auto;
+  
+
 }
 
 .header-servicios {
@@ -95,8 +100,8 @@ const servicios = ref([
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Alineación a la izquierda para variar del footer */
-  text-align: left;
+  align-items: center; /* Alineación a la izquierda para variar del footer */
+  text-align: center;
 }
 
 .card-servicio:hover {
@@ -106,7 +111,7 @@ const servicios = ref([
 }
 
 .icon-box {
-  font-size: 2.5rem;
+  font-size: 4rem;
   margin-bottom: 1.5rem;
   background: #f3f0ff;
   width: 60px;

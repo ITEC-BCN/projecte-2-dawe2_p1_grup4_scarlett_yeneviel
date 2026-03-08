@@ -248,9 +248,10 @@ app.post("/login", async (req, res) => {
     }
 
     // Comparar contraseñas (en producción usar bcrypt)
-    
-    const password_hash=bcrypt.hashSync(password, 12)
-    if (estudiante.password_hash !== password_hash) {
+    // Comparar usando compareSync
+    const isSuccess = await bcrypt.compareSync(password, estudiante.password_hash);
+    if (!isSuccess) {
+      // si quieres ver tu contraseña, al lado de error poner una coma y: pass: await bcrypt.hashSync(password, 12)
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 

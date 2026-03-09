@@ -29,7 +29,9 @@ import {
   obtenerAdminPorId,
   actualizarAdmin,
   obtenerEstudiantePorEmail,
-  obtenerAdminPorEmail
+  obtenerAdminPorEmail,
+  VerPostulacionesAdmin,
+  actulizarEstadoOferta
 
 } from './supabaseClient.js'
 import requireAuth from './middleware/requireAuth.js';
@@ -333,6 +335,30 @@ app.post("/login-admin", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+//=================== Funcionalidades administrador ===================
+
+// GET: Obtener las postulaciones de ua oferta
+app.get("/postulaciones/:id", async (req, res) => {
+  try {
+    const datos = await VerPostulacionesAdmin(req.params.id);
+    res.json(datos);
+  } catch (err) {
+    res.status(404).json({ error: "Postulaciones para esta ofert no encontradas" });
+  }
+});
+
+
+// PUT: Actualizar el estado de una candidatura
+app.put("/candidatura/estado/:id", async (req, res) => {
+  try {
+    const {id_oferta, id_estudiante}=req.body
+    const datos = await actulizarEstadoOferta(req.params.id, id_oferta, id_estudiante);
+    res.json(datos);
+  } catch (err) {
+    res.status(404).json({ error: "Oferta o estudiante no encontrado" });
   }
 });
 

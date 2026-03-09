@@ -89,6 +89,11 @@ const router = createRouter({
     path: "/privacidad",
     name: "Politica de Privacidad",
     component: () => import('@/views/PoliticaPrivacidad.vue'),
+  },
+  {
+    path:"/admin/oferta/:id",
+    name:" ver oferta admin",
+    component:() => import('@/views/admin/verOfertaAdmin.vue')
   }
   ],
 })

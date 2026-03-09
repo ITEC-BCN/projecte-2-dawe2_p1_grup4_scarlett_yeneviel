@@ -33,6 +33,28 @@ export function useFetch(url) {
         }
     }
 
+
+    const postulaciones= async(urlPostulaciones)=>{
+
+        ///postulaciones/:id
+        try {
+            const res = await fetch(urlPostulaciones);
+
+            if (!res.ok) {
+                // Si el servidor responde mal, ponemos un mensaje claro
+                throw new Error('Error a la petició: ' + res.status)
+            }
+
+            // Guardamos los datos para que los componentes los usen
+          return  data.value = await res.json();
+
+        } catch (err) {
+            // Si hay cualquier error lo guardamos en 'error' para mostrarlo al usuario
+           return  err.message
+        }
+
+    }
+
     //ACTIONS
 
     // PUT/PATCH: Enviar actualizaciones
@@ -73,5 +95,5 @@ export function useFetch(url) {
 
     // Si cambia la URL (por ejemplo otro ID), volvemos a pedir los datos
     watch(url, fetchData)//Necesario para cada vez que se cambie el parametro se redenrise la página
-    return { data, error, loading, fetchData, actualizarOferta }
+    return { data, error, loading, fetchData, actualizarOferta, postulaciones }
 }

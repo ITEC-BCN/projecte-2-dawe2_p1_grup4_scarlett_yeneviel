@@ -154,18 +154,64 @@ Crear los usuarios (coordinador y estudiante), y poder hacer funcionalidades de 
 - Arreglos de Modificar ofertas
 - Mejoras del Home
 
-## Dia 12 - 17/02/2026 
+## Dia 12 - 23/02/2026 
 **Asistencia:** Scarlett Toala, Yeneviel Roberts
 
 **Temas tratados**
 - Funcionalidad de inicio de sesión
 - Hacer funcionalidad de registro de usuario
 
+  ## Dia 12 - 24/02/2026 
+ Talent Arena
+
   ## Dia 13 - 02/03/2026 
 **Asistencia:** Yeneviel Roberts
 
 **Temas tratados**
 - Realización del perfil usuario (Estudiante)
+
+
+## 09/03/2025 Retrospective
+**Asistencia:** Scarlett Toala y Yeneviel Roberts
+| Qué ha ido bien | Qué hace falta mejorar | Qué he aprendido | Dificultat |
+|-----------------|------------------------|------------------|------------|
+|Hacer las historias de usuario de login y registro| Completar las tareas dentro del tiempo establecido | | Falta de tiempo|
+
+
+# Sprint 5 Daylies 
+
+**Planificación del sprint:**
+Poder crear ofertas, actualizar y borrar estas mismas desde la página web
+
+ - **HU10-Registrar usuarios**
+1. HU10.4 Superusario aprueba o rechaza la solicitud
+
+ - **HU14-Vista Perfil**
+1. HU014.1 Código que accede a la base de datos
+2. HU014.2 Mostrar contenido en el frontend sobre el usuario
+3. HU14.3 Creación del dashboard de ofertas
+
+ - **HU07-Crear Usuarios**
+1. HU07.4 login de administrador
+2. HU07.3 Indicar al usuario que ha accedido después de hacer login
+     
+ - **HU02 - Vizualización del detalle de oferta**
+1. HU02.4 detalle de la oferta-administrador
+
+ - **HU16 - Lista de ofertas publicadas:**
+1. HU16.1 Ver listado de ofertas-administrador
+2. HU16.2 actualizar una candidatura 
+
+- **HU09 - Ver ofertas iniciales home page**
+HU09.2 Postula a ofertas
+
+- **HU19 - Chat IA**
+1. HU19.1 Chatbot
+
+
+
+
+
 
 
 

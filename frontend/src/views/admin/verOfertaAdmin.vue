@@ -1,9 +1,9 @@
 <script setup>
-import { ref } from 'vue';
+import { ref,onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useFetch } from '../composables/useFetchOfertas';
-import { URL_BACK } from '../../../config';
-import ModalEliminar from '../components/Modal.vue';
+import { useFetch } from '../../composables/useFetchOfertas';
+import { URL_BACK } from '../../../../config';
+import ModalEliminar from '../../components/Modal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,8 +11,7 @@ const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
-const { data: oferta, error, loading } = useFetch(url);
-
+const { data: oferta, error, loading, postulaciones } = useFetch(url);
 const volver = () => router.push({ name: "ofertas" });
 
 const ActualizarOferta = (id) => {
@@ -32,30 +31,26 @@ const ofertaEliminada = () => {
   console.log("La oferta fue eliminada");
 };
 
-// CODIGO QUE FUNCIONA
-/* const EliminarOferta = async (id) => {
-  const confirmacion = confirm("¿Estás seguro de que quieres eliminar esta oferta?");
-
-  if (!confirmacion) return;
+//Postulaciones
+const listaPostulaciones=ref([]);
+const cargandoPostulaciones=ref(true)
+const obtenerPostulaciones =async()=>{
 
   try {
-    const response = await fetch(`${URL_BACK}/ofertas/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Error al eliminar la oferta");
-    }
-
-    alert("Oferta eliminada correctamente");
-
-    router.push({ name: "ListadoOfertas" }); // cambia por el nombre real de tu ruta
+    cargandoPostulaciones.value = true;
+    // Llamamos a la función del composable pasándole el ID
+    const res = await postulaciones(`${URL_BACK}/postulaciones/${route.params.id}`);
+    listaPostulaciones.value = res || [];
   } catch (err) {
-    console.error(err);
-    alert("Hubo un error al eliminar la oferta");
+    console.error("Error cargando postulaciones:", err);
+  } finally {
+    cargandoPostulaciones.value = false;
   }
-}; */
-
+}
+// Ejecutar al cargar la página
+onMounted(async() => {
+  await obtenerPostulaciones();
+});
 
 </script>
 
@@ -129,9 +124,51 @@ const ofertaEliminada = () => {
           </aside>
 
         </div>
+
+        <!-- Botones juntos en una fila -->
+        <div class="actions">
+          <button class="btn-update" @click="ActualizarOferta(oferta.id)">Actualizar</button>
+          <button @click="abrirModal(oferta.id)" class="btn-delete">Eliminar</button>
+
+          <!-- Componente del modal -->
+          <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id" @eliminado="ofertaEliminada" />
+        </div>
+
       </article>
 
     </div>
+
+    <!-- Sección de postulaciones con clases y estructura mejorada -->
+    <section class="postulaciones-section">
+      <h2 class="postulaciones-header">Postulaciones</h2>
+
+      <div v-if="cargandoPostulaciones" class="postulaciones-empty">
+        <p>Cargando postulaciones...</p>
+      </div>
+
+      <div v-else-if="listaPostulaciones.length === 0" class="postulaciones-empty">
+        <p>No hay postulaciones para esta oferta</p>
+      </div>
+
+      <div v-else class="postulaciones-list">
+        <div v-for="item in listaPostulaciones" :key="item.id" class="candidato-card">
+          <div class="candidato-main">
+            <img :src="item.usuario_estudiante.avatar || '/img/avatarGroup.png'" alt="avatar" class="candidato-avatar" />
+            <div class="candidato-info">
+              <p class="candidato-name">{{ item.usuario_estudiante.nombre }} {{ item.usuario_estudiante.apellido }}</p>
+              <p class="candidato-email">{{ item.usuario_estudiante.email }}</p>
+              <p class="candidato-fecha">Fecha de postulación: {{ item.fecha_postulacion || '—' }}</p>
+            </div>
+          </div>
+
+          <div class="candidato-actions">
+            <button class="btn-view">Ver perfil</button>
+            <button class="btn-view">Ver CV</button>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
   </div>
 </template>
 
@@ -319,7 +356,101 @@ const ofertaEliminada = () => {
   color: #DC2626;
 }
 
-/*  Responsive */
+/* Estilo para la fila de acciones (botones) */
+.actions {
+  display: flex;
+  gap: 12px; /* espacio entre botones */
+  align-items: center;
+  margin-top: 18px;
+}
+
+/* Estilos para la sección de postulaciones */
+.postulaciones-section {
+  margin-top: 30px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.postulaciones-header {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.postulaciones-empty {
+  background: #FFFFFF;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  color: #6B7280;
+}
+
+.postulaciones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.candidato-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #FFFFFF;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+}
+
+.candidato-main {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.candidato-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #E5E7EB;
+}
+
+.candidato-name {
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.candidato-email {
+  color: #6B7280;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.candidato-fecha {
+  color: #6B7280;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.candidato-actions .btn-view {
+  background: #6b46c1;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin: 5px;
+  font-weight: 600;
+}
+
+.candidato-actions .btn-view:hover {
+  background: #5a38a8;
+}
+
 @media (max-width: 768px) {
 
   .oferta-card {
@@ -340,5 +471,16 @@ const ofertaEliminada = () => {
     font-size: 1.5rem;
   }
 
+  .candidato-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .candidato-actions {
+    align-self: stretch;
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+  }
 }
 </style>

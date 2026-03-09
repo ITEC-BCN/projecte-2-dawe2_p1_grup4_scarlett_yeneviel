@@ -219,3 +219,30 @@ export const obtenerAdminPorEmail = async (email) => {
   if (error) throw error;
   return data;
 };
+
+
+// =============== FUNCIONALIDADES DEL ADMINISTRADOR ===============
+
+export const VerPostulacionesAdmin = async (idOferta) => {
+  const { data, error } = await supabase
+    .from('postulaciones')
+    .select(`
+      *,
+      usuario_estudiante (
+        id, 
+        nombre, 
+        apellido, 
+        email
+      )
+    `)
+    .eq('id_oferta', Number(idOferta));
+
+    console.log(data)
+
+  if (error) {
+    console.error("Error al obtener postulaciones:", error.message);
+    throw error;
+  }
+  
+  return data;
+};

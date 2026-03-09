@@ -27,7 +27,8 @@ import {
   actualizarAdmin,
   obtenerEstudiantePorEmail,
   obtenerAdminPorEmail,
-  VerPostulacionesAdmin
+  VerPostulacionesAdmin,
+  actulizarEstadoOferta
 
 } from './supabaseClient.js'
 const app = express();
@@ -317,6 +318,18 @@ app.get("/postulaciones/:id", async (req, res) => {
     res.json(datos);
   } catch (err) {
     res.status(404).json({ error: "Postulaciones para esta ofert no encontradas" });
+  }
+});
+
+
+// PUT: Actualizar el estado de una candidatura
+app.put("/candidatura/estado:id", async (req, res) => {
+  try {
+    const {id_oferta, id_estudiante}=req.body
+    const datos = await actulizarEstadoOferta(req.params.id, id_oferta, id_estudiante);
+    res.json(datos);
+  } catch (err) {
+    res.status(404).json({ error: "Oferta o estudiante no encontrado" });
   }
 });
 

@@ -157,11 +157,13 @@ onMounted(async() => {
             <div class="candidato-info">
               <p class="candidato-name">{{ item.usuario_estudiante.nombre }} {{ item.usuario_estudiante.apellido }}</p>
               <p class="candidato-email">{{ item.usuario_estudiante.email }}</p>
+              <p class="candidato-email"><strong>Estado: </strong>{{ item.estado }}</p>
               <p class="candidato-fecha">Fecha de postulación: {{ item.fecha_postulacion || '—' }}</p>
             </div>
           </div>
 
           <div class="candidato-actions">
+            <button class="btn-view">Actualizar estado</button>
             <button class="btn-view">Ver perfil</button>
             <button class="btn-view">Ver CV</button>
           </div>

@@ -237,8 +237,6 @@ export const VerPostulacionesAdmin = async (idOferta) => {
     `)
     .eq('id_oferta', Number(idOferta));
 
-    console.log(data)
-
   if (error) {
     console.error("Error al obtener postulaciones:", error.message);
     throw error;
@@ -246,3 +244,25 @@ export const VerPostulacionesAdmin = async (idOferta) => {
   
   return data;
 };
+
+
+export const actulizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado) => {
+  
+  const {data, error} = await supabase
+    .from('postulaciones')
+    .update({estado: nuevoEstado})
+    .where (
+      and(
+        eq('id_oferta', idOferta),
+        eq('id_usuario_estudiante', id_estudiante)
+
+      )
+    )
+
+  if (error) {
+    console.error("Error al obtener postulaciones:", error.message);
+    throw error;
+  }
+  
+  return data;
+}

@@ -323,7 +323,7 @@ app.get("/postulaciones/:id", async (req, res) => {
 
 
 // PUT: Actualizar el estado de una candidatura
-app.put("/candidatura/estado:id", async (req, res) => {
+app.put("/candidatura/estado/:id", async (req, res) => {
   try {
     const {id_oferta, id_estudiante}=req.body
     const datos = await actulizarEstadoOferta(req.params.id, id_oferta, id_estudiante);

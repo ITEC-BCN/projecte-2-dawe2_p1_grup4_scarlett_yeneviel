@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import { URL_BACK } from '../../../../config';
 import ModalEliminar from '../../components/Modal.vue';
+import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -30,6 +31,19 @@ const abrirModal = (id) => {
 const ofertaEliminada = () => {
   console.log("La oferta fue eliminada");
 };
+
+
+//ACTUALIZAR ESTADO DE LA CANDIDATURA
+const actualizarEstado=ref(null);
+
+const modalEstadoCandi = (id_oferta, id_estudiante)=>{
+
+  actualizarEstado.value.id_oferta=id_oferta;
+  actualizarEstado.value.id_estudiante;
+
+  actualizarEstado.value.openModal();
+}
+
 
 //Postulaciones
 const listaPostulaciones=ref([]);
@@ -134,11 +148,8 @@ onMounted(async() => {
           <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id" @eliminado="ofertaEliminada" />
         </div>
 
-      </article>
 
-    </div>
-
-    <!-- Sección de postulaciones con clases y estructura mejorada -->
+         <!-- Sección de postulaciones con clases y estructura mejorada -->
     <section class="postulaciones-section">
       <h2 class="postulaciones-header">Postulaciones</h2>
 
@@ -163,13 +174,19 @@ onMounted(async() => {
           </div>
 
           <div class="candidato-actions">
-            <button class="btn-view">Actualizar estado</button>
+            <button @click="modalEstadoCandi(oferta.id, item.usuario_estudiante.id)" class="btn-view">Actualizar estado</button>
             <button class="btn-view">Ver perfil</button>
             <button class="btn-view">Ver CV</button>
           </div>
         </div>
       </div>
     </section>
+
+      </article>
+
+    </div>
+
+   
  
   </div>
 </template>

@@ -1,49 +1,48 @@
-import { useApi } from "./useApi";
-import { watch, onMounted } from "vue";
+import { ref, watch } from "vue";
 
 export function useStudents(urlRef) {
-    // 1. Definimos las funciones de "fetch"
-    const fetchAllReq = async (url) => {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Error al obtener alumnos: " + res.status);
-        return await res.json();
+    const students = ref(null);
+    const loadingStudents = ref(true);
+    const errorStudents = ref(null);
+
+    const fetchAllReq = async () => {
+        const currentUrl = urlRef.value;
+        if (!currentUrl || currentUrl.includes('null')) return;
+
+        loadingStudents.value = true;
+        try {
+            const token = localStorage.getItem('token'); // Recuperamos el token
+
+            const res = await fetch(currentUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Por si falla la cookie
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!res.ok) throw new Error("Error en la carga de datos");
+
+            students.value = await res.json();
+            errorStudents.value = null;
+        } catch (err) {
+            errorStudents.value = err.message;
+            console.log("Token actual enviado:", localStorage.getItem('token')); // Mira si sale algo aquí
+            console.error("Error detallado:", err);
+        } finally {
+            loadingStudents.value = false;
+        }
     };
 
-    const postStudentReq = async (body) => {
-        const res = await fetch("https://api.ejemplo.com/students", { // Tu URL de POST
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error("Error al crear alumno");
-        return await res.json();
-    };
-
-    // 2. Creamos instancias independientes de useApi
-    // Esto evita que el loading de "Crear" pise al loading de "Listar"
-    const listTask = useApi(() => fetchAllReq(urlRef.value));
-    const createTask = useApi(postStudentReq);
-
-    // 3. Lógica automática (Watchers / Lifecycle)
-    // Solo si quieres que se dispare solo al cargar el composable
-    onMounted(() => listTask.execute());
-    
     watch(urlRef, () => {
-        listTask.execute();
-    });
+        fetchAllReq();
+    }, { immediate: true });
 
-    // 4. Exponemos todo de forma organizada
     return {
-        // Estado de la Lista
-        students: listTask.data,
-        loadingStudents: listTask.loading,
-        errorStudents: listTask.error,
-        refreshStudents: listTask.execute,
-
-        // Estado de la Creación
-        createStudent: createTask.execute,
-        isCreating: createTask.loading,
-        createError: createTask.error,
-        newStudentData: createTask.data
+        students,
+        loadingStudents,
+        errorStudents,
+        refreshStudents: fetchAllReq
     };
 }

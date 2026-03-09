@@ -9,7 +9,10 @@ app.listen(PORT, () => {
 import express from 'express';
 import cors from 'cors'
 import bcrypt from 'bcryptjs';
-
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
+import { SECRET_JWT_KEY } from '../config.js';
+import { URL_FRONT } from '../../config.js';
 
 import { 
   obtenerOfertas, 
@@ -29,12 +32,20 @@ import {
   obtenerAdminPorEmail
 
 } from './supabaseClient.js'
+import requireAuth from './middleware/requireAuth.js';
 const app = express();
 
 // Permitir cualquier origen (para desarrollo)
-app.use(cors())
+app.use(cors({
+  //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
+  origin: URL_FRONT, // Cambia esto por la URL de tu frontend
+  credentials: true, // Permite enviar cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
 
 app.use(express.json());
+app.use(cookieParser());
 
 //Rutas
 
@@ -134,7 +145,8 @@ app.post("/estudiantes", async (req, res) => {
     const nuevo = await crearEstudiante(req.body);
     res.status(201).json({
       message: "Registro exitoso",
-      data: nuevo[0]
+      data: nuevo[0],
+      token: token
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -152,7 +164,7 @@ app.get("/estudiantes", async (req, res) => {
 });
 
 // GET: Obtener un estudiante por ID
-app.get("/estudiantes/:id", async (req, res) => {
+app.get("/estudiantes/:id", requireAuth ,async (req, res) => {
   try {
     const estudiante = await obtenerEstudiantePorId(req.params.id);
     res.json(estudiante);
@@ -232,6 +244,7 @@ app.put("/admins/:id", async (req, res) => {
 //================ LOGIN ====================
 
 // POST: Login de estudiante
+// POST: Login de estudiante
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -240,32 +253,48 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Email y contraseña requeridos" });
     }
 
-    // Buscar estudiante por email
+    // 1. Buscar estudiante
     const estudiante = await obtenerEstudiantePorEmail(email);
 
     if (!estudiante) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 
-    // Comparar contraseñas (en producción usar bcrypt)
-    // Comparar usando compareSync
-    const isSuccess = await bcrypt.compareSync(password, estudiante.password_hash);
+    // 2. Comparar contraseñas
+    const isSuccess = await bcrypt.compare(password, estudiante.password_hash);
     if (!isSuccess) {
-      // si quieres ver tu contraseña, al lado de error poner una coma y: pass: await bcrypt.hashSync(password, 12)
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 
-    // Login exitoso
-    res.status(200).json({
-      message: "Login exitoso",
-      token: "tu-token-jwt-aqui", // Implementar JWT en el futuro
-      //pasamos el id del estudiante para que el frontend pueda usarlo en futuras peticiones
-      data: {
-        id: estudiante.id,
-      }
+    // 3. GENERAR EL TOKEN JWT
+    // Guardamos el ID y el email dentro del token
+    const token = jwt.sign(
+      { id: estudiante.id, email: estudiante.email },
+      SECRET_JWT_KEY,
+      { expiresIn: '2h' }
+    );
+
+    // 4. GUARDAR EN COOKIE
+    res.cookie('access_token', token, {
+      httpOnly: true,    // Seguridad: No accesible desde JS del frontend
+      secure: true,      // Obligatorio para SameSite: 'none'
+      sameSite: 'none',  // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
+      maxAge: 1000 * 60 * 60 // 1 hora
     });
+
+    // 5. Respuesta al Frontend
+    return res.status(200).json({
+      message: "Login exitoso",
+      user: {
+        id: estudiante.id,
+        email: estudiante.email
+      },
+      token
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 

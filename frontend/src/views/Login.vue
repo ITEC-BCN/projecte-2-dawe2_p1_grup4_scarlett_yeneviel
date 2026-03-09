@@ -36,12 +36,27 @@ const handleLogin = async (e) => {
       return
     }
 
-    // Guardar datos del usuario
-    localStorage.setItem('usuario', JSON.stringify(data.data))
-    localStorage.setItem('token', data.token || '')
+    // --- LÓGICA DE GUARDADO CORREGIDA ---
+    const userId = data.user?.id || data.id
+    const userToken = data.token
 
-    // Redirigir al dashboard
-    router.push('/dashboard')
+    if (userToken) {
+      localStorage.setItem('token', userToken)
+      // Guardamos la cookie para el middleware del backend
+      document.cookie = `access_token=${userToken}; path=/; SameSite=None; Secure`
+      console.log("¡TOKEN GUARDADO EN LOGIN!", userToken)
+    } else {
+      console.error("EL BACKEND NO ENVIÓ TOKEN")
+    }
+
+    if (userId) {
+      localStorage.setItem('studentId', userId)
+      console.log("ID guardado:", userId)
+    }
+
+    // Redirigir al perfil
+    router.push('/perfil')
+
   } catch (err) {
     error.value = 'Error de conexión con el servidor'
     console.error(err)

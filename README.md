@@ -161,10 +161,10 @@ Crear los usuarios (coordinador y estudiante), y poder hacer funcionalidades de 
 - Funcionalidad de inicio de sesión
 - Hacer funcionalidad de registro de usuario
 
-  ## Dia 12 - 24/02/2026 
+  ## Dia 13 - 24/02/2026 
  Talent Arena
 
-  ## Dia 13 - 02/03/2026 
+  ## Dia 14 - 02/03/2026 
 **Asistencia:** Yeneviel Roberts
 
 **Temas tratados**
@@ -208,7 +208,14 @@ HU09.2 Postula a ofertas
 - **HU19 - Chat IA**
 1. HU19.1 Chatbot
 
+## Daylies
+ ## Dia 15 - 09/03/2026 
+**Asistencia:** Yeneviel Roberts y Scarlett Toala
 
+**Temas tratados**
+- Planificación del sprint 4
+- Protección de las rutas
+- Funcionalidades basicas del administrador
 
 
 

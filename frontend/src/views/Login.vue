@@ -44,14 +44,12 @@ const handleLogin = async (e) => {
       localStorage.setItem('token', userToken)
       // Guardamos la cookie para el middleware del backend
       document.cookie = `access_token=${userToken}; path=/; SameSite=None; Secure`
-      console.log("¡TOKEN GUARDADO EN LOGIN!", userToken)
     } else {
       console.error("EL BACKEND NO ENVIÓ TOKEN")
     }
 
     if (userId) {
       localStorage.setItem('studentId', userId)
-      console.log("ID guardado:", userId)
     }
 
     // Redirigir al perfil

@@ -8,6 +8,7 @@
         <button @click="closeModal" class="btn-cancel">No</button>
       </div>
       <div v-else>
+        <p>{{ mensaje }}</p>
         <button @click="closeMensaje" class="btn-confirm">Aceptar</button>
       </div>
     </div>
@@ -15,24 +16,31 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from "vue";
+import { ref, defineProps, defineEmits, defineExpose } from "vue";
 import { useRouter } from "vue-router";
 import { URL_BACK } from '../../../config';
 
+// Props (camelCase to match Vue conventions)
 const props = defineProps({
   ofertaId: Number,
-  estudiante_id:Number
+  estudianteId: Number
 });
 
-const emits = defineEmits(["eliminado", "cerrar"]);
+const emits = defineEmits(["actualizado", "cerrar"]);
 
 const router = useRouter();
 
 const isModalOpen = ref(false);
+const estado = ref("");
+const mensaje = ref("");
+const loading = ref(false);
 
-let estado = "";
-
-const openModal = () => isModalOpen.value = true;
+const openModal = () => {
+  // reset state when opening
+  estado.value = "";
+  mensaje.value = "";
+  isModalOpen.value = true;
+};
 const closeModal = () => {
   isModalOpen.value = false;
   emits("cerrar");
@@ -42,28 +50,39 @@ const closeMensaje = () => {
   closeModal();
 };
 
-const loading = ref(false);
-
 const actualizarEstado = async () => {
-  
   try {
-     loading.value = true;
-    const response = await fetch(`${URL_BACK}/candidatura/estado/${props.ofertaId}`, {
+    loading.value = true;
+
+    // Asegurarse de tener los ids antes de llamar al backend
+    if (!props.ofertaId || !props.estudianteId) {
+      mensaje.value = 'Faltan datos de oferta o estudiante';
+      loading.value = false;
+      return;
+    }
+
+    // Usar path params: /candidatura/estado/:ofertaId/:estudianteId
+    const url = `${URL_BACK}/candidatura/estado/${encodeURIComponent(props.ofertaId)}/${encodeURIComponent(props.estudianteId)}`;
+
+    const response = await fetch(url, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado: estado.value })
     });
 
     if (!response.ok) throw new Error("Error al actualizar la candidatura");
 
-    mensaje.value = "Candidatura actualizanda correctamente";
+    mensaje.value = "Candidatura actualizada correctamente";
 
-    emits("eliminado"); // Avisamos al padre que eliminó
+    emits("actualizado"); // Avisamos al padre que se actualizó
 
     setTimeout(() => {
-      router.push({ name: "ofertas" }); // redirige
-    }, 1500);
+      // cerrar modal después de mostrar mensaje
+      closeModal();
+    }, 1200);
   } catch (err) {
     console.error(err);
-    mensaje.value = "Hubo un error al eliminar la oferta";
+    mensaje.value = "Hubo un error al actualizar la candidatura";
   } finally {
     loading.value = false;
   }

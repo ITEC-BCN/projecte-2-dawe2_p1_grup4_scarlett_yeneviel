@@ -351,13 +351,20 @@ app.get("/postulaciones/:id", async (req, res) => {
 });
 
 
-// PUT: Actualizar el estado de una candidatura
-app.put("/candidatura/estado/:id", async (req, res) => {
+// PUT: Actualizar el estado de una candidatura (ahora acepta ofertaId y estudianteId por la URL)
+app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   try {
-    const {id_oferta, id_estudiante}=req.body
-    const datos = await actulizarEstadoOferta(req.params.id, id_oferta, id_estudiante);
+    const { ofertaId, estudianteId } = req.params;
+    const { estado } = req.body;
+
+    if (!estado) {
+      return res.status(400).json({ error: "Falta el campo 'estado' en el body" });
+    }
+
+    const datos = await actulizarEstadoOferta(ofertaId, estudianteId, estado);
     res.json(datos);
   } catch (err) {
+    console.error(err);
     res.status(404).json({ error: "Oferta o estudiante no encontrado" });
   }
 });

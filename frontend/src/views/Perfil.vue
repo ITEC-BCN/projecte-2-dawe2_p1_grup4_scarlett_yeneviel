@@ -211,6 +211,18 @@ function addEducation() {
 function removeEducation(index) {
   academicBackground.value.splice(index, 1);
 }
+
+// Función segura para obtener el icono
+const getDocIcon = (tipo) => {
+  if (!tipo) return 'fa-solid fa-file-lines';
+  
+  const tipoFormat = tipo.toLowerCase();
+  if (tipoFormat.includes('github')) return 'fa-brands fa-github';
+  if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
+  
+  return 'fa-solid fa-file-lines';
+};
+
 </script>
 
 <template>
@@ -370,24 +382,16 @@ function removeEducation(index) {
           </div>
         </section>
 
-        <section class="section">
+<section class="section">
           <div class="title">Enlaces</div>
-          <div class="doc-list">
+          
+          <div v-if="documents.length > 0" class="doc-list">
             <div v-for="doc in documents" :key="doc.id" class="offer-item">
               <div class="offer-info">
-                <i
-                  :class="[
-                    doc.tipo.toLowerCase().includes('github')
-                      ? 'fa-brands fa-github'
-                      : doc.tipo.toLowerCase().includes('linkedin')
-                        ? 'fa-brands fa-linkedin'
-                        : 'fa-solid fa-file-lines',
-                  ]"
-                  class="doc-icon"
-                ></i>
-                <a :href="doc.url" target="_blank" class="offer-title">{{
-                  doc.label
-                }}</a>
+                <i :class="getDocIcon(doc.tipo)" class="doc-icon"></i>
+                <a :href="doc.url" target="_blank" class="offer-title">
+                  {{ doc.label }}
+                </a>
               </div>
               <button
                 v-if="editing"
@@ -397,6 +401,10 @@ function removeEducation(index) {
                 ×
               </button>
             </div>
+          </div>
+          
+          <div v-else class="small" style="color: #64748b; padding-left: 0.5rem;">
+            Aún no hay enlaces añadidos.
           </div>
         </section>
       </div>

@@ -1,4 +1,5 @@
 <script setup>
+///admin/oferta/:id
 import { ref,onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
@@ -9,40 +10,52 @@ import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
 const route = useRoute();
 const router = useRouter();
 
-
-// Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
 const { data: oferta, error, loading, postulaciones } = useFetch(url);
+
 const volver = () => router.push({ name: "ofertas" });
 
 const ActualizarOferta = (id) => {
   router.push({ name: "ActualizarOferta", params: { id: id } });
 };
 
-//Funciones para el modal de eliminar
+// Funciones para el modal de eliminar
+// El ref guarda la instancia del modal para poder abrirlo desde aquí
 const modalEliminar = ref(null);
 
 const abrirModal = (id) => {
-  // Actualizamos el id de la oferta en el modal
+  // Preparamos el modal con el id y lo mostramos para confirmar el borrado
   modalEliminar.value.ofertaId = id;
   modalEliminar.value.openModal();
 };
 
 const ofertaEliminada = () => {
+  // Mensaje simple cuando se elimina la oferta (puedes mostrar notificación aquí)
   console.log("La oferta fue eliminada");
 };
 
 
-//ACTUALIZAR ESTADO DE LA CANDIDATURA
-const actualizarEstado=ref(null);
+// ACTUALIZAR ESTADO DE LA CANDIDATURA
+// Ref al modal que actualizará el estado
+const modalEstadoRef = ref(null);
 
-const modalEstadoCandi = (id_oferta, id_estudiante)=>{
+// Guardamos aquí los ids para pasarlos al modal
+const selectedOfertaId = ref(null);
+const selectedEstudianteId = ref(null);
 
-  actualizarEstado.value.id_oferta=id_oferta;
-  actualizarEstado.value.id_estudiante;
+const modalEstadoCandi = (id_oferta, id_estudiante) => {
+  // Al pulsar 'Actualizar estado' guardamos los ids y abrimos el modal
+  selectedOfertaId.value = id_oferta;
+  selectedEstudianteId.value = id_estudiante;
 
-  actualizarEstado.value.openModal();
-}
+  modalEstadoRef.value?.openModal();
+};
+
+const candidaturaActualizada = () => {
+  // Cuando el estado cambia, refrescamos la lista para ver el cambio
+  console.log('Estado de la candidatura actualizado');
+  obtenerPostulaciones();
+};
 
 
 //Postulaciones
@@ -147,8 +160,6 @@ onMounted(async() => {
           <!-- Componente del modal -->
           <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id" @eliminado="ofertaEliminada" />
         </div>
-
-
          <!-- Sección de postulaciones con clases y estructura mejorada -->
     <section class="postulaciones-section">
       <h2 class="postulaciones-header">Postulaciones</h2>
@@ -174,7 +185,7 @@ onMounted(async() => {
           </div>
 
           <div class="candidato-actions">
-            <button @click="modalEstadoCandi(oferta.id, item.usuario_estudiante.id)" class="btn-view">Actualizar estado</button>
+            <button @click="modalEstadoCandi(Number(route.params.id), item.usuario_estudiante.id)" class="btn-view">Actualizar estado</button>
             <button class="btn-view">Ver perfil</button>
             <button class="btn-view">Ver CV</button>
           </div>
@@ -189,6 +200,14 @@ onMounted(async() => {
    
  
   </div>
+
+  <!-- Modal para actualizar estado (bindamos ids y manejamos evento actualizado) -->
+  <ActualizarEstado
+    ref="modalEstadoRef"
+    :oferta-id="selectedOfertaId"
+    :estudiante-id="selectedEstudianteId"
+    @actualizado="candidaturaActualizada"
+  />
 </template>
 
 <style scoped>

@@ -59,7 +59,6 @@ export function useFetch(url) {
 
     // PUT/PATCH: Enviar actualizaciones
     const actualizarOferta = async (body, urlAlternativa) => {
-        // Explicación simple: esta función manda los cambios al servidor.
         // body = lo que queremos cambiar. urlAlternativa = ruta donde enviarlo (a veces la pasamos desde el componente).
         loading.value = true;
         error.value = null;

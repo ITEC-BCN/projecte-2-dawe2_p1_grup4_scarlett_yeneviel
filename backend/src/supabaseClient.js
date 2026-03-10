@@ -254,16 +254,12 @@ export const actulizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado)
   const {data, error} = await supabase
     .from('postulaciones')
     .update({estado: nuevoEstado})
-    .where (
-      and(
-        eq('id_oferta', idOferta),
-        eq('id_usuario_estudiante', id_estudiante)
+    .eq('id_oferta', idOferta)
+    .eq('id_usuario_estudiante', id_estudiante)
 
-      )
-    )
 
   if (error) {
-    console.error("Error al obtener postulaciones:", error.message);
+    console.error("Error al actualizar el estado de la candidatura:", error.message);
     throw error;
   }
   

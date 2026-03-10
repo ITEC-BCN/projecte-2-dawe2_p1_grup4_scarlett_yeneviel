@@ -1,27 +1,14 @@
-
 <script setup>
-import { ref, reactive, watch, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, reactive, watch } from "vue";
+import { useRoute } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 
 const route = useRoute();
-const router = useRouter();
+const url = ref(`${URL_BACK}/estudiantes/13`);
 
-
-// --- 1. IDENTIFICACIÓN DINÁMICA ---
-// Obtenemos el ID de la URL (ej: /perfil/5) o del login previo
-const studentId = route.params.id || localStorage.getItem("studentId");
-
-
-if (!studentId) {
-  router.push('/login'); // Si no hay ID, lo mandamos al login
-}
-
-const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
-
-// --- 2. CARGA DE DATOS ---
-const { students, loadingStudents } = useStudents(url);
+const { students, loadingStudents, isCreating, createStudent } =
+  useStudents(url);
 
 const user = reactive({
   name: "",
@@ -33,101 +20,120 @@ const user = reactive({
 const hardSkills = ref([]);
 const softSkills = ref([]);
 const languages = ref([]);
-const contact = reactive({ email: "", phone: "", location: "" });
+const contact = reactive({
+  email: "",
+  phone: "",
+  location: "",
+});
+
 const documents = ref([]);
 const academicBackground = ref([]);
 
-// Formulario reactivo para la edición
-const editing = ref(false);
-const form = reactive({ name: "", role: "", about: "" });
-
-// Sincronizar datos cuando llegan del Backend
 watch(
   () => students.value,
-  (newVal) => {
-    if (newVal) {
-      user.name = (newVal.nombre || "") + " " + (newVal.apellido || "");
-      user.role = newVal.role || "Estudiante";
-      user.avatar = newVal.avatar || "/img/avatarGroup.png";
-      user.about = newVal.about || "Sin descripción.";
+  (newStudents) => {
+    if (newStudents) {
+      Object.assign(user, {
+        name: newStudents.nombre + " " + newStudents.apellido || "Sin nombre",
+        role: newStudents.role || "Sin rol",
+        avatar: newStudents.avatar || "/img/avatarGroup.png",
+        about: newStudents.about || "Sin descripción.",
+      });
 
-      // Habilidades (Asumiendo que vienen como String separado por comas)
-      hardSkills.value = newVal.hard_skills ? newVal.hard_skills.split(",").map(s => s.trim()) : [];
-      softSkills.value = newVal.soft_skills ? newVal.soft_skills.split(",").map(s => s.trim()) : [];
-      
-      // Idiomas y otros
-      languages.value = newVal.idiomas?.idiomas || [];
-      contact.email = newVal.email || "";
-      contact.phone = newVal.telefono || "";
-      contact.location = newVal.location || "";
-      
-      // Enlaces/Documentos
-      documents.value = newVal.enlaces || [];
-      
-      // Formación
-      academicBackground.value = newVal.estudios?.formacion || [];
+      /* Añadir las hardSkills del estudiante */
+      if (newStudents.hard_skills) {
+        hardSkills.value = newStudents.hard_skills
+          .split(",")
+          .map((s) => s.trim());
+      }
 
-      // Inicializar el formulario de edición
-      form.name = user.name;
-      form.role = user.role;
-      form.about = user.about;
+      /* Añadir las softSkills del estudiante */
+      if (newStudents.soft_skills) {
+        softSkills.value = newStudents.soft_skills
+          .split(",")
+          .map((s) => s.trim());
+      }
+
+      /* Añadimos los idiomas del estudiante */
+      if (
+        newStudents.idiomas &&
+        newStudents.idiomas.idiomas &&
+        newStudents.idiomas.idiomas.length > 0
+      ) {
+        languages.value = newStudents.idiomas.idiomas.map((lang) => ({
+          name: lang.name,
+          level: lang.level,
+        }));
+      }
+
+      /* Cargamos los datos de contacto del estudiante */
+      if (newStudents.email) {
+        contact.email = newStudents.email;
+      }
+
+      if (newStudents.telefono) {
+        contact.phone = newStudents.telefono;
+      }
+
+      if (newStudents.location) {
+        contact.location = newStudents.location;
+      }
+
+      /* Añadimos los links del estudiante */
+      if (newStudents.enlaces && newStudents.enlaces.length > 0) {
+        // Procesar los enlaces
+        documents.value = newStudents.enlaces.map((enlace, index) => ({
+          label: enlace.name || `Enlace ${index + 1}`,
+          tipo: enlace.tipo || "Enlace",
+          url: enlace.url || "#",
+        }));
+      }
+
+      /* Añadimos la formación académica del estudiante */
+      if (newStudents.estudios && Array.isArray(newStudents.estudios.formacion)) {
+        academicBackground.value = newStudents.estudios.formacion.map((f) => ({
+          centro: f.centro || "Centro no especificado",
+          anio: f.anio || "N/A",
+          titulo: f.titulo || "Título no especificado",
+        }));
+      }
     }
   },
-  { immediate: true }
 );
 
-// --- 3. ACCIONES ---
+const editing = ref(false);
+const form = reactive({ name: user.name, role: user.role, about: user.about });
+
+const newHard = ref("");
+const newSoft = ref("");
+const newDocLabel = ref("");
+const newDocURL = ref("");
+const newLangName = ref("");
+const newLangLevel = ref("");
 
 function toggleEdit() {
   editing.value = !editing.value;
   if (!editing.value) {
-    // Resetear formulario si cancela
     form.name = user.name;
     form.role = user.role;
     form.about = user.about;
   }
 }
 
-async function saveProfile() {
-  try {
-    // IMPORTANTE: Aquí enviamos los datos al BACKEND
-    const response = await fetch(`${URL_BACK}/estudiantes/${studentId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nombre: form.name.split(' ')[0], // Ejemplo simple de separar nombre
-        apellido: form.name.split(' ').slice(1).join(' '),
-        about: form.about,
-        hard_skills: hardSkills.value.join(','),
-        soft_skills: softSkills.value.join(',')
-      }),
-      credentials: 'include' // <--- PARA QUE EL BACKEND SEPA QUIÉN ERES POR LA COOKIE
-    });
-
-    if (response.ok) {
-      user.name = form.name;
-      user.role = form.role;
-      user.about = form.about;
-      editing.value = false;
-      alert("¡Perfil actualizado!");
-    } else {
-      alert("Error al guardar: No tienes permiso o la sesión caducó.");
-    }
-  } catch (error) {
-    console.error("Error:", error);
-  }
+function saveProfile() {
+  user.name = form.name;
+  user.role = form.role;
+  user.about = form.about;
+  editing.value = false;
 }
 
-// Funciones de utilidad (Habilidades, etc) se mantienen igual...
-const newHard = ref("");
 function addHard() {
-  if (newHard.value.trim()) {
-    hardSkills.value.push(newHard.value.trim());
+  const v = newHard.value && newHard.value.trim();
+  if (v) {
+    hardSkills.value.push(v);
     newHard.value = "";
   }
 }
-function removeHard(i) { hardSkills.value.splice(i, 1); }
-
 function removeHard(i) {
   hardSkills.value.splice(i, 1);
 }
@@ -187,9 +193,7 @@ function removeEducation(index) {
 </script>
 
 <template>
-  <div v-if="loadingStudents">Cargando perfil...</div>
-  <div v-else class="profile-page">
-      <div class="profile-page">
+  <div class="profile-page">
     <aside class="profile-card">
       <div class="profile-header">
         <img :src="user.avatar" alt="avatar" class="profile-avatar" />
@@ -376,7 +380,6 @@ function removeEducation(index) {
         </section>
       </div>
     </main>
-  </div>
   </div>
 </template>
 
@@ -693,8 +696,3 @@ i {
   }
 }
 </style>
-
-                   
-
-                   
-

@@ -217,6 +217,13 @@ HU09.2 Postula a ofertas
 - Protección de las rutas
 - Funcionalidades basicas del administrador
 
+ ## Dia 16 - 10/03/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala y Silvia Serra
+
+**Temas tratados**
+- Funcionalidades del perfil de estudiante
+- El administrador puede actualizar los estados de las candidaturas
+
 
 
 

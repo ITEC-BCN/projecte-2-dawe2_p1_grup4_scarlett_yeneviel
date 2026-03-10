@@ -6,7 +6,7 @@ export function useStudents(urlRef) {
     const loadingStudents = ref(true);
     const errorStudents = ref(null);
 
-    const fetchAllReq = async (url) => {
+    const fetchAllReq = async () => {
         const currentUrl = urlRef.value;
         if (!currentUrl || currentUrl.includes('null')) return;
 

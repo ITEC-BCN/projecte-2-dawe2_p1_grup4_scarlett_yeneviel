@@ -1,11 +1,15 @@
 <script setup>
 import { ref, reactive, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 
 const route = useRoute();
-const url = ref(`${URL_BACK}/estudiantes/13`);
+const router = useRouter();
+const studentId = route.params.id || localStorage.getItem("studentId");
+const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
+
+
 
 const { students, loadingStudents, isCreating, createStudent } =
   useStudents(url);
@@ -81,13 +85,30 @@ watch(
 
       /* Añadimos los links del estudiante */
       if (newStudents.enlaces && newStudents.enlaces.length > 0) {
-        // Procesar los enlaces
+        // 1. Un console.log para ver exactamente qué nos manda Supabase
+        console.log("Enlaces recibidos del back:", newStudents.enlaces);
+
+        // 2. Procesar los enlaces mapeando el ID y cubriendo name/nombre
         documents.value = newStudents.enlaces.map((enlace, index) => ({
-          label: enlace.name || `Enlace ${index + 1}`,
+          id: enlace.id || Date.now() + index, // <-- ¡CRÍTICO! Añadimos un ID para el v-for
+          label: enlace.nombre || enlace.name || `Enlace ${index + 1}`, // <-- Cubrimos 'nombre' y 'name'
           tipo: enlace.tipo || "Enlace",
           url: enlace.url || "#",
         }));
+      } else {
+         console.log("El backend no envió enlaces o el array está vacío.");
       }
+
+      // Función segura para obtener el icono
+const getDocIcon = (tipo) => {
+  if (!tipo) return 'fa-solid fa-file-lines';
+  
+  const tipoFormat = tipo.toLowerCase();
+  if (tipoFormat.includes('github')) return 'fa-brands fa-github';
+  if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
+  
+  return 'fa-solid fa-file-lines';
+};
 
       /* Añadimos la formación académica del estudiante */
       if (newStudents.estudios && Array.isArray(newStudents.estudios.formacion)) {
@@ -537,6 +558,17 @@ i {
   display: flex;
   gap: 1.5rem;
   position: relative;
+}
+
+
+.edu-item::before {
+  content: "";
+  position: absolute;
+  left: 3.5rem;
+  top: 0;
+  bottom: -1.5rem;
+  width: 2px;
+  background: #e2e8f0;
 }
 
 .edu-item:last-child::before {

@@ -9,7 +9,7 @@ const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 
-
+console.log(studentId)
 
 const { students, loadingStudents, isCreating, createStudent } =
   useStudents(url);
@@ -20,6 +20,7 @@ const user = reactive({
   avatar: "",
   about: "",
 });
+
 
 const hardSkills = ref([]);
 const softSkills = ref([]);
@@ -44,19 +45,31 @@ watch(
         about: newStudents.about || "Sin descripción.",
       });
 
-      /* Añadir las hardSkills del estudiante */
-      if (newStudents.hard_skills) {
-        hardSkills.value = newStudents.hard_skills
-          .split(",")
-          .map((s) => s.trim());
-      }
+      /* 1. Limpiamos los arrays antes de llenarlos */
+      hardSkills.value = [];
+      softSkills.value = [];
 
-      /* Añadir las softSkills del estudiante */
-      if (newStudents.soft_skills) {
-        softSkills.value = newStudents.soft_skills
-          .split(",")
-          .map((s) => s.trim());
+      /* 2. Clasificar las skills */
+      if (newStudents.estudiante_skill && Array.isArray(newStudents.estudiante_skill)) {
+        console.log("Procesando skills:", newStudents.estudiante_skill);
+        
+        newStudents.estudiante_skill.forEach((item) => {
+          // Accedemos de forma segura a item.skill
+          const datosSkill = item.skill; 
+          
+          if (datosSkill && datosSkill.nombre) {
+            // Limpiamos el tipo para evitar errores de mayúsculas o espacios
+            const tipoSkill = datosSkill.tipo ? datosSkill.tipo.toLowerCase().trim() : '';
+
+            if (tipoSkill === 'hard skill') {
+              hardSkills.value.push(datosSkill.nombre);
+            } else if (tipoSkill === 'soft skill') {
+              softSkills.value.push(datosSkill.nombre);
+            }
+          }
+        });
       }
+      console.log("¿Hay skills en el estudiante?:", newStudents.estudiante_skill);
 
       /* Añadimos los idiomas del estudiante */
       if (
@@ -96,19 +109,11 @@ watch(
           url: enlace.url || "#",
         }));
       } else {
-         console.log("El backend no envió enlaces o el array está vacío.");
+        console.log("El backend no envió enlaces o el array está vacío.");
       }
 
       // Función segura para obtener el icono
-const getDocIcon = (tipo) => {
-  if (!tipo) return 'fa-solid fa-file-lines';
-  
-  const tipoFormat = tipo.toLowerCase();
-  if (tipoFormat.includes('github')) return 'fa-brands fa-github';
-  if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
-  
-  return 'fa-solid fa-file-lines';
-};
+      
 
       /* Añadimos la formación académica del estudiante */
       if (newStudents.estudios && Array.isArray(newStudents.estudios.formacion)) {
@@ -120,6 +125,7 @@ const getDocIcon = (tipo) => {
       }
     }
   },
+  { immediate: true }
 );
 
 const editing = ref(false);
@@ -215,11 +221,11 @@ function removeEducation(index) {
 // Función segura para obtener el icono
 const getDocIcon = (tipo) => {
   if (!tipo) return 'fa-solid fa-file-lines';
-  
+
   const tipoFormat = tipo.toLowerCase();
   if (tipoFormat.includes('github')) return 'fa-brands fa-github';
   if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
-  
+
   return 'fa-solid fa-file-lines';
 };
 
@@ -238,9 +244,7 @@ const getDocIcon = (tipo) => {
 
       <div class="profile-actions">
         <button class="btn-edit" @click="toggleEdit">
-          <i
-            :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"
-          ></i>
+          <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
           {{ editing ? " Cancelar" : " Editar perfil" }}
         </button>
         <button v-if="editing" class="btn-save" @click="saveProfile">
@@ -282,48 +286,42 @@ const getDocIcon = (tipo) => {
     </aside>
 
     <main class="profile-main">
-     <section class="section highlight-green"> <div class="title"> Formación Reglada
-  </div>
+      <section class="section highlight-green">
+        <div class="title"> Formación Reglada
+        </div>
 
-  <div v-if="!editing" class="education-timeline">
-    <div
-      v-for="(edu, index) in academicBackground"
-      :key="index"
-      class="edu-item"
-    >
-      <div class="edu-year">{{ edu.anio }}</div>
-      <div class="edu-info">
-        <div class="edu-title">{{ edu.titulo }}</div>
-        <div class="edu-center">{{ edu.centro }}</div>
-      </div>
-    </div>
-    <div v-if="academicBackground.length === 0" class="small">Sin formación registrada.</div>
-  </div>
+        <div v-if="!editing" class="education-timeline">
+          <div v-for="(edu, index) in academicBackground" :key="index" class="edu-item">
+            <div class="edu-year">{{ edu.anio }}</div>
+            <div class="edu-info">
+              <div class="edu-title">{{ edu.titulo }}</div>
+              <div class="edu-center">{{ edu.centro }}</div>
+            </div>
+          </div>
+          <div v-if="academicBackground.length === 0" class="small">Sin formación registrada.</div>
+        </div>
 
-  <div v-else class="edit-education">
-    <div class="profile-form" style="display: block;"> <div
-        v-for="(edu, index) in academicBackground"
-        :key="'edit' + index"
-        class="edit-edu-row"
-      >
-        <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
-        <input v-model="edu.titulo" placeholder="Título" class="input" />
-        <input v-model="edu.centro" placeholder="Centro" class="input" />
-        <button @click="removeEducation(index)" class="btn-x">×</button>
-      </div>
-    </div>
+        <div v-else class="edit-education">
+          <div class="profile-form" style="display: block;">
+            <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-edu-row">
+              <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
+              <input v-model="edu.titulo" placeholder="Título" class="input" />
+              <input v-model="edu.centro" placeholder="Centro" class="input" />
+              <button @click="removeEducation(index)" class="btn-x">×</button>
+            </div>
+          </div>
 
-    <div class="add-box" style="margin-top: 1rem; flex-direction: column; align-items: flex-start;">
-      <p class="subtitle">Nueva titulación</p>
-      <div class="edit-edu-row" style="width: 100%;">
-        <input v-model="newEdu.anio" placeholder="Ej: 2024" class="input input-sm" />
-        <input v-model="newEdu.titulo" placeholder="Título..." class="input" />
-        <input v-model="newEdu.centro" placeholder="Centro..." class="input" />
-        <button @click.prevent="addEducation" class="btn-edit" style="flex: 0; padding: 0 15px;">+</button>
-      </div>
-    </div>
-  </div>
-</section>
+          <div class="add-box" style="margin-top: 1rem; flex-direction: column; align-items: flex-start;">
+            <p class="subtitle">Nueva titulación</p>
+            <div class="edit-edu-row" style="width: 100%;">
+              <input v-model="newEdu.anio" placeholder="Ej: 2024" class="input input-sm" />
+              <input v-model="newEdu.titulo" placeholder="Título..." class="input" />
+              <input v-model="newEdu.centro" placeholder="Centro..." class="input" />
+              <button @click.prevent="addEducation" class="btn-edit" style="flex: 0; padding: 0 15px;">+</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section class="section highlight-purple">
         <div class="title">Habilidades</div>
@@ -342,11 +340,7 @@ const getDocIcon = (tipo) => {
           <div>
             <div class="subtitle">Soft skills</div>
             <div class="skill-list">
-              <span
-                v-for="(s, i) in softSkills"
-                :key="i"
-                class="skill-chip soft"
-              >
+              <span v-for="(s, i) in softSkills" :key="i" class="skill-chip soft">
                 <i class="fa-solid fa-brain"></i> {{ s }}
                 <button v-if="editing" @click="removeSoft(i)" class="btn-x">
                   ×
@@ -356,11 +350,7 @@ const getDocIcon = (tipo) => {
           </div>
         </div>
         <div v-if="editing" class="add-box">
-          <input
-            v-model="newHard"
-            class="input"
-            placeholder="Nueva Hard skill"
-          />
+          <input v-model="newHard" class="input" placeholder="Nueva Hard skill" />
           <button class="btn-edit" @click.prevent="addHard">Añadir</button>
         </div>
       </section>
@@ -369,11 +359,7 @@ const getDocIcon = (tipo) => {
         <section class="section highlight-green">
           <div class="title">Idiomas</div>
           <div class="skill-list">
-            <span
-              v-for="(lang, i) in languages"
-              :key="i"
-              class="skill-chip lang"
-            >
+            <span v-for="(lang, i) in languages" :key="i" class="skill-chip lang">
               {{ lang.name }} · <b>{{ lang.level }}</b>
               <button v-if="editing" @click="removeLanguage(i)" class="btn-x">
                 ×
@@ -382,9 +368,9 @@ const getDocIcon = (tipo) => {
           </div>
         </section>
 
-<section class="section">
+        <section class="section">
           <div class="title">Enlaces</div>
-          
+
           <div v-if="documents.length > 0" class="doc-list">
             <div v-for="doc in documents" :key="doc.id" class="offer-item">
               <div class="offer-info">
@@ -393,16 +379,12 @@ const getDocIcon = (tipo) => {
                   {{ doc.label }}
                 </a>
               </div>
-              <button
-                v-if="editing"
-                class="btn-x"
-                @click="removeDocument(doc.id)"
-              >
+              <button v-if="editing" class="btn-x" @click="removeDocument(doc.id)">
                 ×
               </button>
             </div>
           </div>
-          
+
           <div v-else class="small" style="color: #64748b; padding-left: 0.5rem;">
             Aún no hay enlaces añadidos.
           </div>
@@ -456,6 +438,7 @@ i {
   color: var(--accent-purple);
   margin: 0;
 }
+
 .profile-role {
   color: #64748b;
   font-size: 0.95rem;
@@ -467,6 +450,7 @@ i {
   gap: 0.5rem;
   margin: 1.2rem 0;
 }
+
 .btn-edit,
 .btn-save {
   flex: 1;
@@ -479,9 +463,11 @@ i {
   background: var(--accent-green);
   color: white;
 }
+
 .btn-save {
   background: var(--accent-purple);
 }
+
 .btn-edit:hover {
   opacity: 0.9;
   transform: translateY(-2px);
@@ -492,6 +478,7 @@ i {
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
+
 .stat {
   flex: 1;
   background: #f1f5f9;
@@ -499,11 +486,13 @@ i {
   border-radius: 12px;
   text-align: center;
 }
+
 .stat .num {
   font-weight: 800;
   color: var(--accent-purple);
   font-size: 1.2rem;
 }
+
 .stat .label {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -516,6 +505,7 @@ i {
   padding-top: 1rem;
   margin-top: 1rem;
 }
+
 .sidebar-block strong {
   display: flex;
   align-items: center;
@@ -523,6 +513,7 @@ i {
   color: #1e293b;
   margin-bottom: 0.5rem;
 }
+
 .sidebar-block p,
 .contact-links .small {
   font-size: 0.85rem;
@@ -537,6 +528,7 @@ i {
   flex: 1;
   max-width: 800px;
 }
+
 .section {
   background: white;
   border-radius: 16px;
@@ -555,6 +547,7 @@ i {
   align-items: center;
   gap: 0.75rem;
 }
+
 .education-timeline {
   display: flex;
   flex-direction: column;
@@ -622,11 +615,13 @@ i {
   padding-top: 1rem;
   border-top: 1px dashed #e2e8f0;
 }
+
 /* Colores de sección */
 .highlight-purple {
   background: linear-gradient(to right, #ffffff, #f5f3ff);
   border-left: 4px solid var(--accent-purple);
 }
+
 .highlight-green {
   background: linear-gradient(to right, #ffffff, #f0fdf4);
   border-left: 4px solid var(--accent-green);
@@ -639,6 +634,7 @@ i {
   color: #64748b;
   margin-bottom: 0.8rem;
 }
+
 .bio-content {
   font-size: 0.95rem;
   line-height: 1.6;
@@ -651,6 +647,7 @@ i {
   flex-wrap: wrap;
   gap: 0.6rem;
 }
+
 .skill-chip {
   background: white;
   border: 1px solid #e2e8f0;
@@ -663,9 +660,11 @@ i {
   gap: 0.5rem;
   color: var(--accent-purple);
 }
+
 .skill-chip.soft {
   color: var(--accent-green);
 }
+
 .skill-chip i {
   font-size: 0.7rem;
 }
@@ -680,10 +679,12 @@ i {
   border: 1px solid #f1f5f9;
   margin-bottom: 0.5rem;
 }
+
 .doc-icon {
   font-size: 1.2rem;
   margin-right: 0.5rem;
 }
+
 .offer-title {
   font-weight: 700;
   text-decoration: none;
@@ -697,6 +698,7 @@ i {
   grid-template-columns: 1fr 1.2fr;
   gap: 1rem;
 }
+
 .btn-x {
   background: #fee2e2;
   color: #ef4444;
@@ -706,14 +708,17 @@ i {
   padding: 0 4px;
   font-weight: bold;
 }
+
 .full-width {
   grid-column: 1 / -1;
 }
+
 .profile-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
+
 .input,
 .textarea {
   width: 100%;
@@ -727,10 +732,12 @@ i {
   .profile-page {
     flex-direction: column;
   }
+
   .profile-card {
     width: 100%;
     position: static;
   }
+
   .grid-two-cols {
     grid-template-columns: 1fr;
   }

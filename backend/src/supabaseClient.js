@@ -120,7 +120,10 @@ export const obtenerEstudiantePorId = async (id) => {
     .from('usuario_estudiante')
     .select(`
         *,
-        enlaces(*)
+        enlaces(*),
+        estudiante_skill(
+          skill(*)
+        )
       `)
     .eq('id', id)
     .single();

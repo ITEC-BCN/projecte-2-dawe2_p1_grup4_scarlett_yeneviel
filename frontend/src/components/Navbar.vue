@@ -1,5 +1,44 @@
 <script setup>
-// No necesitas lógica extra por ahora
+import { ref, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+const route = useRoute();
+const router = useRouter();
+
+// Variables reactivas para saber el estado del usuario
+const isAuthenticated = ref(false);
+const userRole = ref('');
+
+// Función que lee el localStorage para saber quién está navegando
+const checkAuthStatus = () => {
+  const token = localStorage.getItem('token'); // Ajusta el nombre si usas otro
+  const role = localStorage.getItem('role');   // Ej: 'admin' o 'estudiante'
+  
+  isAuthenticated.value = !!token; // Si hay token es true, si no, false
+  userRole.value = role || '';
+};
+
+// 1. Revisamos al montar el componente (cuando cargas la página)
+onMounted(() => {
+  checkAuthStatus();
+});
+
+// 2. Revisamos cada vez que cambias de página (ruta)
+// Esto es un truco para que el Navbar se actualice automáticamente tras el Login
+watch(() => route.path, () => {
+  checkAuthStatus();
+});
+
+// Función para cerrar sesión
+const logout = () => {
+  // Limpiamos todo el rastro del usuario
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');
+  localStorage.removeItem('studentId'); // O los datos que guardes
+  
+  checkAuthStatus(); // Actualizamos las variables
+  router.push('/login'); // Lo mandamos de vuelta al login
+};
 </script>
 
 <template>
@@ -16,9 +55,24 @@
       <div class="nav-links">
         <router-link to="/">Inicio</router-link>
         <router-link to="/ofertas">Ofertas</router-link>
-        <router-link to="/login">Login</router-link>
-        <router-link to="/perfil">Perfil</router-link>
-        <router-link to="/dashboard">Dashboard</router-link>
+
+        <router-link v-if="!isAuthenticated" to="/login" class="btn-login">
+          Login
+        </router-link>
+
+        <template v-else>
+          <router-link v-if="userRole === 'estudiante'" to="/perfil">
+            Mi Perfil
+          </router-link>
+
+          <router-link v-if="userRole === 'estudiante'" to="/dashboard" class="btn-dashboard">
+            Dashboard
+          </router-link>
+
+          <a href="#" @click.prevent="logout" class="btn-logout">
+            Cerrar sesión
+          </a>
+        </template>
       </div>
     </div>
   </nav>

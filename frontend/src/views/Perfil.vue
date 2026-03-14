@@ -6,7 +6,7 @@ import { useStudents } from "../composables/useStudents";
 
 const route = useRoute();
 const router = useRouter();
-const studentId = route.params.id || localStorage.getItem("studentId");
+const studentId = route.params.id || localStorage.getItem("userId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 
 console.log(studentId)

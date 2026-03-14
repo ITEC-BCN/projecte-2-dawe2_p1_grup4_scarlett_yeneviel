@@ -142,11 +142,6 @@ onMounted(async() => {
                 <strong>Expira el</strong>
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
-
-              <button class="btn-apply">
-                Inscribirme
-              </button>
-
             </div>
           </aside>
 

@@ -34,7 +34,7 @@ const logout = () => {
   // Limpiamos todo el rastro del usuario
   localStorage.removeItem('token');
   localStorage.removeItem('role');
-  localStorage.removeItem('studentId'); // O los datos que guardes
+  localStorage.removeItem('userId'); // O los datos que guardes
   
   checkAuthStatus(); // Actualizamos las variables
   router.push('/login'); // Lo mandamos de vuelta al login

@@ -29,6 +29,7 @@ const handleLoginAdmin = async(e) => {
       return
     }
     localStorage.setItem('token', data.token)
+    localStorage.setItem('userId', data.user.id)
     localStorage.setItem('role', 'admin')
     router.push({ name: 'ofertas' })
 
@@ -43,7 +44,7 @@ const handleLoginAdmin = async(e) => {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1>Iniciar sesión</h1>
+      <h1>Iniciar sesión - Administración</h1>
 
       <!-- Mostrar errores -->
       <div v-if="error" class="error-message">{{ error }}</div>

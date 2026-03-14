@@ -103,8 +103,9 @@ const router = createRouter({
   },
   {
     path:"/admin/oferta/:id",
-    name:" verOfertaAdmin",
+    name:"verOfertaAdmin",
     component:() => import('@/views/admin/verOfertaAdmin.vue'),
+    props: true,
     meta: { requiresAdmin: true }
   }
   ],

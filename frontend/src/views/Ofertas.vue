@@ -8,15 +8,12 @@ import { URL_BACK } from "../../../config";
 const router = useRouter();
 const url = ref(`${URL_BACK}/ofertas`); // Aquí poner la URL de tu API (se coge del .env)
 const { data, error, loading, fetchData } = useFetch(url);
-/*const emit=defineEmits(["verDetalleOferta"])
-
-const verDetalle=()=>{
-    emit("verDetalleOferta")
-}
-*/
-const verDetalle = (id) => {
-  router.push({ name: "OfertaDetalle", params: { id: id } });
+const verDetalle = (id, namePath) => {
+  router.push({ name: namePath, params: { id: id } });
 };
+
+
+const roleUSer= localStorage.getItem('role')
 </script>
 
 <template>
@@ -30,14 +27,30 @@ const verDetalle = (id) => {
   <section v-else class="container-ofertas">
     <!--Aquí ya se cargó los datos de la api-->
     <h1 class="main-title">Ofertas Públicas de Prácticas</h1>
-    <div v-if="data && data" class="grid-ofertas">
+    <div v-if="roleUSer == 'admin'">
+      <button @click="" class="addOferta">Crear nueva oferta</button>
+      <div v-if="data && data" class="grid-ofertas">
+        <CardOferta
+        v-for="oferta in data"
+        :key="oferta.id"
+        :oferta="oferta"
+        @verDetalleOferta="verDetalle(oferta.id,'verOfertaAdmin')"
+      />
+      </div>
+     
+    </div>
+    <div v-else>
+      <div v-if="data && data" class="grid-ofertas">
+   
       <CardOferta
         v-for="oferta in data"
         :key="oferta.id"
         :oferta="oferta"
-        @verDetalleOferta="verDetalle(oferta.id)"
+        @verDetalleOferta="verDetalle(oferta.id,'OfertaDetalle')"
       />
     </div>
+    </div>
+
   </section>
 
   <div></div>
@@ -68,6 +81,21 @@ const verDetalle = (id) => {
   gap: 24px; /* Espacio entre tarjetas */
 }
 
+.addOferta {
+  background-color: #512da8; /* Morado de la imagen */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: background-color 0.2s;
+}
+
+.addOferta:hover {
+  background-color: #4527a0;
+}
 /* Responsive: si la pantalla es pequeña, baja a 1 o 2 columnas */
 @media (max-width: 1024px) {
   .grid-ofertas {

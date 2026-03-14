@@ -42,6 +42,7 @@ const handleLogin = async (e) => {
 
     if (userToken) {
       localStorage.setItem('token', userToken)
+      localStorage.setItem('role','estudiante')
       // Guardamos la cookie para el middleware del backend
       document.cookie = `access_token=${userToken}; path=/; SameSite=None; Secure`
     } else {

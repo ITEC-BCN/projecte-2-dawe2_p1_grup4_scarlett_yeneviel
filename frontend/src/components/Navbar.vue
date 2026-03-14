@@ -65,7 +65,7 @@ const logout = () => {
             Mi Perfil
           </router-link>
 
-          <router-link v-if="userRole === 'estudiante'" to="/dashboard" class="btn-dashboard">
+          <router-link v-if="userRole === 'estudiante'" to="/dashboard">
             Dashboard
           </router-link>
 

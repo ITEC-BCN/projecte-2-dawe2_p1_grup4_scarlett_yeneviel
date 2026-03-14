@@ -31,7 +31,8 @@ import {
   obtenerEstudiantePorEmail,
   obtenerAdminPorEmail,
   VerPostulacionesAdmin,
-  actulizarEstadoOferta
+  actulizarEstadoOferta,
+  postularOferta
 
 } from './supabaseClient.js'
 import requireAuth from './middleware/requireAuth.js';
@@ -184,6 +185,19 @@ app.put("/estudiantes/:id", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+app.post("/estudiante/postular", async (req, res)=>{
+
+  try{
+    const { id_oferta, id_estudiante} = req.body
+    const postulacion = await postularOferta (id_oferta, id_estudiante)
+    res.json(postulacion);
+    console.log("inscripción hecha correctamente")
+
+  }catch (err){
+    res.status(400).json({ error: err.message });
+  }
+})
 
 //================ Adminsitrador ====================
 

@@ -1,9 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetchOfertas';
 import { URL_BACK } from '../../../config';
-import ModalEliminar from '../components/Modal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,52 +10,50 @@ const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
-const { data: oferta, error, loading } = useFetch(url);
+const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);
 
 const volver = () => router.push({ name: "ofertas" });
 
-const ActualizarOferta = (id) => {
-  router.push({ name: "ActualizarOferta", params: { id: id } });
-};
+const idEstudiante=localStorage.getItem("studentId")
+const bodyPostulacion=ref({
+  id_oferta:route.params.id,
+  id_estudiante:idEstudiante
+})
 
-//Funciones para el modal de eliminar
-const modalEliminar = ref(null);
-
-const abrirModal = (id) => {
-  // Actualizamos el id de la oferta en el modal
-  modalEliminar.value.ofertaId = id;
-  modalEliminar.value.openModal();
-};
-
-const ofertaEliminada = () => {
-  console.log("La oferta fue eliminada");
-};
-
-// CODIGO QUE FUNCIONA
-/* const EliminarOferta = async (id) => {
-  const confirmacion = confirm("¿Estás seguro de que quieres eliminar esta oferta?");
-
-  if (!confirmacion) return;
+const yaPostulado = ref(false);
+const verificarPostulacion= async()=>{
 
   try {
-    const response = await fetch(`${URL_BACK}/ofertas/${id}`, {
-      method: "DELETE",
-    });
+    const listaPostulados= await postulaciones(`${URL_BACK}/postulaciones/${route.params.id}`)
 
-    if (!response.ok) {
-      throw new Error("Error al eliminar la oferta");
-    }
 
-    alert("Oferta eliminada correctamente");
+    // Usamos .some para saber si existe al menos uno 
+    yaPostulado.value= listaPostulados.some( p=> parseInt(p.id_usuario_estudiante) == parseInt(idEstudiante))
+  }catch (err){
 
-    router.push({ name: "ListadoOfertas" }); // cambia por el nombre real de tu ruta
-  } catch (err) {
-    console.error(err);
-    alert("Hubo un error al eliminar la oferta");
+    console.error("Error obteniendo las postulaciones: ", err)
   }
-}; */
+}
 
+// Llamamos a la función cuando el componente se carga
+onMounted(() => {
+  verificarPostulacion();
+});
 
+const postularOferta = async ()=>{
+
+  try{
+    
+    const res = await estudiantePostula(bodyPostulacion.value,`${URL_BACK}/estudiante/postular`)
+
+    alert("inscripción hecha correctamente")
+
+  }catch (error){
+    console.error("Error al hacer la incripción: ", error)
+    alert("Error al hacer la incripción")
+
+  }
+}
 </script>
 
 <template>
@@ -121,8 +118,8 @@ const ofertaEliminada = () => {
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
 
-              <button class="btn-apply">
-                Inscribirme
+              <button @click="postularOferta" :disabled="yaPostulado" class="btn-apply">
+                {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
               </button>
 
             </div>
@@ -263,6 +260,13 @@ const ofertaEliminada = () => {
 .btn-apply:hover {
   background: #3b1675;
   transform: translateY(-1px);
+}
+
+/*Cuando esta deactivado */
+.btn-apply:disabled {
+  background-color: #9ca3af; /* Gris */
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-back {

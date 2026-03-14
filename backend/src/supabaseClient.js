@@ -145,6 +145,24 @@ export const actualizarEstudiante = async (id, datosActualizados) => {
   return data;
 };
 
+
+export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
+   const { data, error} = await supabase
+   .from('postulaciones')
+   .insert([{
+      id_oferta:parseInt(id_oferta),
+      id_usuario_estudiante:parseInt(id_usuario_estudiante),
+      estado: 'En proceso'
+   }]).select()
+
+  if (error) {
+    console.error("Error al actualizar el estado de la candidatura:", error.message);
+    throw error;
+  }
+
+  return data
+}
+
 // ====================== Adminsitrador ==========================
 // --- FUNCIONES PARA USUARIO_ADMI ---
 

@@ -36,7 +36,7 @@ export function useFetch(url) {
 
     const postulaciones= async(urlPostulaciones)=>{
 
-        ///postulaciones/:id
+        ///postulaciones/:id  id de la oferta
         try {
             const res = await fetch(urlPostulaciones);
 
@@ -46,7 +46,7 @@ export function useFetch(url) {
             }
 
             // Guardamos los datos para que los componentes los usen
-          return  data.value = await res.json();
+          return  await res.json();
 
         } catch (err) {
             // Si hay cualquier error lo guardamos en 'error' para mostrarlo al usuario
@@ -89,10 +89,29 @@ export function useFetch(url) {
             loading.value = false;
         }
     };
+
+    const estudiantePostula = async(body, urlAlternativa)=>{
+        try {
+            const res= await fetch( urlAlternativa , {
+                method:'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            const resultado = await res.json();
+                if (!res.ok) {
+                error.value = resultado.error || "Error en el servidor";
+                throw new Error(error.value);
+            }
+            return resultado 
+        } catch (err) {
+            throw err;
+        }
+
+    }
     //Disparador: cuando el componente que use este archivo se monte, pedimos los datos
     onMounted(fetchData);//Ejecuta la función
 
     // Si cambia la URL (por ejemplo otro ID), volvemos a pedir los datos
     watch(url, fetchData)//Necesario para cada vez que se cambie el parametro se redenrise la página
-    return { data, error, loading, fetchData, actualizarOferta, postulaciones }
+    return { data, error, loading, fetchData, actualizarOferta, postulaciones, estudiantePostula }
 }

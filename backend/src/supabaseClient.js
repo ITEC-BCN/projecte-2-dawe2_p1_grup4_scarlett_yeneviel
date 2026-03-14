@@ -268,3 +268,4 @@ export const actulizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado)
   
   return data;
 }
+

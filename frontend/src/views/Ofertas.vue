@@ -14,6 +14,11 @@ const verDetalle = (id, namePath) => {
 
 
 const roleUSer= localStorage.getItem('role')
+
+const crearOferta = ()=>{
+
+  router.push('/crear')
+}
 </script>
 
 <template>
@@ -26,9 +31,9 @@ const roleUSer= localStorage.getItem('role')
 
   <section v-else class="container-ofertas">
     <!--Aquí ya se cargó los datos de la api-->
-    <h1 class="main-title">Ofertas Públicas de Prácticas</h1>
+    <h1 class="main-title">Ofertas de Prácticas</h1>
     <div v-if="roleUSer == 'admin'">
-      <button @click="" class="addOferta">Crear nueva oferta</button>
+      <button @click="crearOferta" class="addOferta">Crear nueva oferta</button>
       <div v-if="data && data" class="grid-ofertas">
         <CardOferta
         v-for="oferta in data"

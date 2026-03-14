@@ -50,7 +50,7 @@ const handleLogin = async (e) => {
     }
 
     if (userId) {
-      localStorage.setItem('userId', userId)
+      localStorage.setItem('studentId', userId)
     }
 
     // Redirigir al perfil

@@ -6,10 +6,12 @@ import { useStudents } from "../composables/useStudents";
 
 const route = useRoute();
 const router = useRouter();
-const studentId = route.params.id || localStorage.getItem("userId");
+const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 
-console.log(studentId)
+ const role = localStorage.getItem('role'); 
+
+ 
 
 const { students, loadingStudents, isCreating, createStudent } =
   useStudents(url);
@@ -242,7 +244,7 @@ const getDocIcon = (tipo) => {
         </div>
       </div>
 
-      <div class="profile-actions">
+      <div class="profile-actions" v-if="role == 'estudiante'" >
         <button class="btn-edit" @click="toggleEdit">
           <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
           {{ editing ? " Cancelar" : " Editar perfil" }}

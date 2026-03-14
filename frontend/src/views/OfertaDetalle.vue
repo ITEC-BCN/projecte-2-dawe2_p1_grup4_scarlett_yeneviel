@@ -47,6 +47,7 @@ const postularOferta = async ()=>{
     const res = await estudiantePostula(bodyPostulacion.value,`${URL_BACK}/estudiante/postular`)
 
     alert("inscripción hecha correctamente")
+     verificarPostulacion()
 
   }catch (error){
     console.error("Error al hacer la incripción: ", error)

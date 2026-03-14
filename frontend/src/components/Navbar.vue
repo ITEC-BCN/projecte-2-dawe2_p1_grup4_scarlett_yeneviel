@@ -33,8 +33,12 @@ watch(() => route.path, () => {
 const logout = () => {
   // Limpiamos todo el rastro del usuario
   localStorage.removeItem('token');
-  localStorage.removeItem('role');
-  localStorage.removeItem('userId'); // O los datos que guardes
+  localStorage.removeItem('role'); // O los datos que guardes
+  localStorage.removeItem('studentId')
+
+  if(role == 'admin'){
+    localStorage.removeItem('userId');
+  }
   
   checkAuthStatus(); // Actualizamos las variables
   router.push('/login'); // Lo mandamos de vuelta al login
@@ -72,6 +76,8 @@ const logout = () => {
           <a href="#" @click.prevent="logout" class="btn-logout">
             Cerrar sesión
           </a>
+
+          <p v-if="userRole =='admin'">User: Administrador</p>
         </template>
       </div>
     </div>

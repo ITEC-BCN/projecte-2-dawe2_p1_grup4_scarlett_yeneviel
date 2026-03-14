@@ -39,7 +39,7 @@ const router = createRouter({
       props: true,
     },
      {
-      path: "/perfil",
+      path: "/perfil/:id",
       name: "perfil",
       component: () => import('@/views/Perfil.vue'),
       props: true,

@@ -38,9 +38,6 @@ export function useFetchUser(url) {
     // POST
     const NewStudent = async (body, urlAlternativa) => {
         // body = datos del registr. urlAlternativa = ruta donde enviarlo .
-        loading.value = true;
-        error.value = null;
-
         try {
             const res = await fetch(urlAlternativa, {
                 method: 'POST',
@@ -50,20 +47,12 @@ export function useFetchUser(url) {
 
             const resultado = await res.json();
             if (!res.ok) {
-                // Si el servidor nos devuelve un error, lo guardamos para que la UI lo muestre
-                error.value = resultado.error || "Error en el servidor";
                 throw new Error(error.value);
             }
-            // Guardamos lo que devolvió el servidor (por ejemplo la oferta ya actualizada)
-            data.value = resultado;
             return resultado // Devolvemos el resultado para que quien llame lo pueda usar
             
         } catch (err) {
-            // Guardamos el texto del error y lo re-lanzamos para que el componente lo capture
-            error.value = err.message;
             throw err; // Re-lanzamos para que el componente sepa que hubo fallo
-        } finally {
-            loading.value = false;
         }
     };
 

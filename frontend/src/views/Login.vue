@@ -54,7 +54,7 @@ const handleLogin = async (e) => {
     }
 
     // Redirigir al perfil
-    router.push('/perfil')
+    router.push(`/perfil`)
 
   } catch (err) {
     error.value = 'Error de conexión con el servidor'

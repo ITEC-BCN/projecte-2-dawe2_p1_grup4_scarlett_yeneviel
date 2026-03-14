@@ -36,7 +36,7 @@ const logout = () => {
   localStorage.removeItem('role'); // O los datos que guardes
   localStorage.removeItem('studentId')
 
-  if(role == 'admin'){
+  if(userRole.value == 'admin'){
     localStorage.removeItem('userId');
   }
   

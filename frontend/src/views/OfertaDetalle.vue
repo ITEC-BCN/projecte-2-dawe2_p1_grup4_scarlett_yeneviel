@@ -14,7 +14,7 @@ const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFe
 
 const volver = () => router.push({ name: "ofertas" });
 
-const idEstudiante=localStorage.getItem("userId")
+const idEstudiante=localStorage.getItem("studentId")
 const bodyPostulacion=ref({
   id_oferta:route.params.id,
   id_estudiante:idEstudiante

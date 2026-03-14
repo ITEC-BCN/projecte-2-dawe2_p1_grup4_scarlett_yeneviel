@@ -96,7 +96,8 @@ export const crearEstudiante = async (nuevoEstudiante) => {
       estado: nuevoEstudiante.estado || 'pendiente',
       password_hash: nuevoEstudiante.password_hash
     }])
-    .select();
+    .select()
+    .single();
 
   if (error) throw error;
   return data;

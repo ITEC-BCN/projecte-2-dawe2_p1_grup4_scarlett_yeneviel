@@ -240,7 +240,7 @@ const getDocIcon = (tipo) => {
         <img :src="user.avatar" alt="avatar" class="profile-avatar" />
         <div>
           <h2 class="profile-name">{{ user.name }}</h2>
-          <div class="profile-role">{{ user.role }}</div>
+          <div class="profile-role">Estudiante</div>
         </div>
       </div>
 

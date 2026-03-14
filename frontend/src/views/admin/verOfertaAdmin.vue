@@ -81,7 +81,7 @@ onMounted(async() => {
 
 //Ver perfil de los estudiantes postulados
 const verDetallePerfil = (id) => {
-  router.push({ name: 'perfil', params: { id: id } });
+  router.push({ name: 'perfilId', params: { id: id } });
 };
 </script>
 

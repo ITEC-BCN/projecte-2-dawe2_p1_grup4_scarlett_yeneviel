@@ -145,10 +145,30 @@ app.post("/estudiantes", async (req, res) => {
   try {
     const newPassword_hash =  bcrypt.hashSync(req.body.password_hash, 12);
     req.body.password_hash=newPassword_hash
-    const nuevo = await crearEstudiante(req.body);
+    const nuevoEstudiante = await crearEstudiante(req.body);
+
+      // 3. GENERAR EL TOKEN JWT
+    // Guardamos el ID y el email dentro del token
+    const token = jwt.sign(
+      { id: nuevoEstudiante.id, email: nuevoEstudiante.email },
+      SECRET_JWT_KEY,
+      { expiresIn: '2h' }
+    );
+
+    // 4. GUARDAR EN COOKIE
+    res.cookie('access_token', token, {
+      httpOnly: true,    // Seguridad: No accesible desde JS del frontend
+      secure: true,      // Obligatorio para SameSite: 'none'
+      sameSite: 'none',  // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
+      maxAge: 1000 * 60 * 60 // 1 hora
+    });
+
     res.status(201).json({
       message: "Registro exitoso",
-      data: nuevo[0],
+      user: {
+        id:nuevoEstudiante.id,
+        email:nuevoEstudiante.email
+      },
       token: token
     });
   } catch (err) {

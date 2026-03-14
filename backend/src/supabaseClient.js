@@ -172,8 +172,8 @@ export const crearAdmin = async (nuevoAdmin) => {
     .from('usuario_admi')
     .insert([{
       nombre_centro: nuevoAdmin.nombre_centro,
-      nombre_admi: nuevoAdmin.nombre,
-      apellido_admin: nuevoAdmin.apellido,
+      nombre: nuevoAdmin.nombre,
+      apellido: nuevoAdmin.apellido,
       telefono: nuevoAdmin.telefono,
       email: nuevoAdmin.email,
       password_hash: nuevoAdmin.password_hash // Ya debe venir hasheada desde el app.js

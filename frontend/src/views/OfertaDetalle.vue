@@ -54,6 +54,10 @@ const postularOferta = async ()=>{
 
   }
 }
+
+const guardarOferta = ()=>{
+  alert ("oferta guardada correctamente")
+}
 </script>
 
 <template>
@@ -117,6 +121,10 @@ const postularOferta = async ()=>{
                 <strong>Expira el</strong>
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
+
+              <button @click="guardarOferta" class="btn-apply">
+                Guardar oferta
+              </button>
 
               <button @click="postularOferta" :disabled="yaPostulado" class="btn-apply">
                 {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}

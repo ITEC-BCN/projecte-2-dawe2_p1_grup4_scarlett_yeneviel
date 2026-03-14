@@ -70,7 +70,7 @@ app.post("/ofertas", async (req, res) => {
 
     res.status(201).json(nuevaOferta);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || String(err) });
   }
 });
 
@@ -79,7 +79,7 @@ app.get('/ofertas', async (req, res) => {
     const ofertas = await obtenerOfertas();
     res.json(ofertas);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || String(err) });
   }
 });
 
@@ -94,7 +94,7 @@ app.get('/ofertas/:id', async (req, res) => {
     
     res.json(oferta);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || String(err) });
   }
 });
 
@@ -120,7 +120,7 @@ app.put('/oferta/:id',async (req, res)=>{
     });
 
   }catch (err){
-    res.status(500).json({error:err.message})
+    res.status(500).json({error: err.message || String(err) })
   }
 })
 
@@ -134,7 +134,7 @@ app.delete('/ofertas/:id', async (req, res) => {
 
     res.json(resultado);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || String(err) });
   }
 });
 
@@ -152,7 +152,7 @@ app.post("/estudiantes", async (req, res) => {
       token: token
     });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || String(err) });
   }
 });
 
@@ -162,7 +162,7 @@ app.get("/estudiantes", async (req, res) => {
     const lista = await obtenerEstudiantes();
     res.json(lista);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || String(err) });
   }
 });
 
@@ -172,7 +172,7 @@ app.get("/estudiantes/:id", requireAuth ,async (req, res) => {
     const estudiante = await obtenerEstudiantePorId(req.params.id);
     res.json(estudiante);
   } catch (err) {
-    res.status(404).json({ error: "Estudiante no encontrado" });
+    res.status(404).json({ error: err.message || "Estudiante no encontrado" });
   }
 });
 
@@ -182,7 +182,7 @@ app.put("/estudiantes/:id", async (req, res) => {
     const actualizado = await actualizarEstudiante(req.params.id, req.body);
     res.json(actualizado);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || String(err) });
   }
 });
 
@@ -195,7 +195,7 @@ app.post("/estudiante/postular", async (req, res)=>{
     console.log("inscripción hecha correctamente")
 
   }catch (err){
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || String(err) });
   }
 })
 
@@ -204,20 +204,17 @@ app.post("/estudiante/postular", async (req, res)=>{
 // --- RUTAS PARA ADMINISTRADORES ---
 
 // POST: Registrar un nuevo administrador
-app.post("/admins", async (req, res) => {
+app.post("/admin/registro", async (req, res) => {
   try {
-    // Aquí podrías hashear la contraseña antes de enviarla
-    // const { password, ...datos } = req.body;
-    // const hash = await bcrypt.hash(password, 10);
-    // const nuevo = await crearAdmin({ ...datos, password_hash: hash });
-
+    const newPassword_hash =  bcrypt.hashSync(req.body.password_hash, 12);
+    req.body.password_hash=newPassword_hash
     const nuevo = await crearAdmin(req.body);
     res.status(201).json({
       message: "Registro de administrador exitoso",
-      data: nuevo[0]
+      data: nuevo[0],
     });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || String(err) });
   }
 });
 
@@ -227,7 +224,7 @@ app.get("/admins", async (req, res) => {
     const lista = await obtenerAdmins();
     res.json(lista);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || String(err) });
   }
 });
 
@@ -237,7 +234,7 @@ app.get("/admins/:id", async (req, res) => {
     const admin = await obtenerAdminPorId(req.params.id);
     res.json(admin);
   } catch (err) {
-    res.status(404).json({ error: "Administrador no encontrado" });
+    res.status(404).json({ error: err.message || "Administrador no encontrado" });
   }
 });
 
@@ -253,14 +250,14 @@ app.put("/admins/:id", async (req, res) => {
         data: actualizado[0]
     });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || String(err) });
   }
 });
 
 //================ LOGIN ====================
 
 // POST: Login de estudiante
-// POST: Login de estudiante
+
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -310,7 +307,7 @@ app.post("/login", async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json({ error: err.message || "Error interno del servidor" });
   }
 });
 
@@ -331,26 +328,42 @@ app.post("/login-admin", async (req, res) => {
     }
 
     // Comparar contraseñas
-    if (admin.password_hash !== password) {
+    const isSuccess = await bcrypt.compare(password, admin.password_hash);
+    if (!isSuccess) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 
-    // Login exitoso
+    // Generar el token JWT igual que estudiante
+    const token = jwt.sign(
+      { id: admin.id, email: admin.email, tipo: "admin" },
+      SECRET_JWT_KEY,
+      { expiresIn: '2h' }
+    );
+
+    // Guardar en cookie (nombre correcto)
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 1000 * 60 * 60 // 1 hora
+    });
+
+    // Respuesta consistente con login estudiante
     res.status(200).json({
       message: "Login de admin exitoso",
-      token: "tu-token-jwt-aqui",
-      data: {
+      user: {
         id: admin.id,
-        nombre: admin.nombre_admi,
-        apellido: admin.apellido_admin,
+        nombre: admin.nombre,
         email: admin.email,
         tipo: "admin"
-      }
+      },
+      token
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || String(err) });
   }
 });
+
 
 //=================== Funcionalidades administrador ===================
 
@@ -360,7 +373,7 @@ app.get("/postulaciones/:id", async (req, res) => {
     const datos = await VerPostulacionesAdmin(req.params.id);
     res.json(datos);
   } catch (err) {
-    res.status(404).json({ error: "Postulaciones para esta ofert no encontradas" });
+    res.status(404).json({ error: err.message || "Postulaciones para esta ofert no encontradas" });
   }
 });
 
@@ -379,7 +392,7 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
     res.json(datos);
   } catch (err) {
     console.error(err);
-    res.status(404).json({ error: "Oferta o estudiante no encontrado" });
+    res.status(404).json({ error: err.message || "Oferta o estudiante no encontrado" });
   }
 });
 

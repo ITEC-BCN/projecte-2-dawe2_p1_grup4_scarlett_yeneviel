@@ -14,6 +14,12 @@ const router = createRouter({
       component: () => import('@/views/Login.vue'),
       props: true
     },
+    {
+      path: "/admin/login",
+      name: "loginAdmin",
+      component: () => import('@/views/admin/LoginAdmin.vue'),
+      props: true
+    },
           {
       path: "/registro",
       name: "registro",
@@ -24,36 +30,41 @@ const router = createRouter({
       path: '/ofertas',
       name: 'ofertas',
       component: () => import('@/views/Ofertas.vue'),
+
     },
     {
       path: "/oferta/:id",
       name: "OfertaDetalle",
       component: () => import('@/views/OfertaDetalle.vue'),
-      props: true
+      props: true,
     },
      {
       path: "/perfil",
       name: "perfil",
       component: () => import('@/views/Perfil.vue'),
-      props: true
+      props: true,
+      meta: { requiresAuth: true }
     },
           {
       path: "/dashboard",
       name: "dashboard",
       component: () => import('@/views/Dasboard.vue'),
-      props: true
+      props: true,
+      meta: { requiresAuth: true }
     },
              {
       path: "/oferta/actualizar/:id",
       name: "ActualizarOferta",
       component: () => import('@/views/ActualizarOferta.vue'),
-      props: true
+      props: true,
+      meta: { requiresAdmin: true }
     },
     {
     path: "/crear",
     name: "CrearOferta",
     component: () => import('@/views/AfegirOferta.vue'),
-    props: true
+    props: true,
+    meta: { requiresAdmin: true }
   },
   {
     path: "/nosotros",
@@ -92,10 +103,43 @@ const router = createRouter({
   },
   {
     path:"/admin/oferta/:id",
-    name:" ver oferta admin",
-    component:() => import('@/views/admin/verOfertaAdmin.vue')
+    name:" verOfertaAdmin",
+    component:() => import('@/views/admin/verOfertaAdmin.vue'),
+    meta: { requiresAdmin: true }
   }
   ],
 })
+
+//Tipo de middleware
+//meta ponemos el requisito para poder visitar esa ruta
+router.beforeEach((to, from, next) => {
+  // Obtenemos el rol y el estado de autenticación
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('role'); // 'admin' o 'estudiante'
+
+  // 1. Verificar si la ruta requiere ser admin
+  if (to.matched.some(record => record.meta.requiresAdmin)) {
+    
+    if (token && userRole === 'admin') {
+      next(); // Es admin, puede pasar
+    } else {
+      // No es admin: lo mandamos a las ofertas o a una página de "No autorizado"
+      alert("Acceso denegado: Esta zona es solo para administradores.");
+      next({ name: 'ofertas' }); 
+    }
+
+  } else if (to.matched.some(record => record.meta.requiresAuth)) {
+    // 2. Verificar rutas que solo requieren estar logueado (estudiante o admin)
+    if (token) {
+      next();
+    } else {
+      next({ name: 'login' });
+    }
+
+  } else {
+    // 3. Rutas públicas
+    next();
+  }
+});
 
 export default router

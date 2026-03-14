@@ -50,7 +50,7 @@ const router = createRouter({
       name: "perfilId",
       component: () => import('@/views/Perfil.vue'),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAdmin: true }
     },
           {
       path: "/dashboard",

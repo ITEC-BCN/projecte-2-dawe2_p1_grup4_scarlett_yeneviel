@@ -53,8 +53,8 @@ const handleLogin = async (e) => {
       localStorage.setItem('studentId', userId)
     }
 
-    // Redirigir al perfil
-    router.push(`/perfil`)
+    // Redirigir a las ofertas personalizadas
+    router.push({ name: 'ofertasRecomendadas', params: { id: userId } })
 
   } catch (err) {
     error.value = 'Error de conexión con el servidor'

@@ -32,7 +32,8 @@ import {
   obtenerAdminPorEmail,
   VerPostulacionesAdmin,
   actulizarEstadoOferta,
-  postularOferta
+  postularOferta,
+  obtenerOfertasCompatibles
 
 } from './supabaseClient.js'
 import requireAuth from './middleware/requireAuth.js';
@@ -137,6 +138,24 @@ app.delete('/ofertas/:id', async (req, res) => {
     res.status(500).json({ error: err.message || String(err) });
   }
 });
+
+/*========OFERTAS Filtradas=========*/
+app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
+  try {
+    const estudianteId = req.params.id;
+
+    // Llamamos a la función que acabamos de crear en supabaseCliente.js
+    const data = await obtenerOfertasCompatibles(estudianteId);
+
+    // Devolvemos la magia al frontend
+    res.json(data);
+
+  } catch (err) {
+    console.error("Error en endpoint de ofertas recomendadas:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 //====================== Usuario Estudiante =======================
 
@@ -419,29 +438,3 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
 app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
 
 
-/*========OFERTAS Filtradas=========*/
- // Asegúrate de tener importado tu cliente de Supabase aquí también
-// const supabase = require('./tu_configuracion_supabase');
-
-app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
-  try {
-    const estudianteId = req.params.id;
-
-    // Usamos .rpc() para llamar a la función que creamos en el Paso 1
-    const { data, error } = await supabase
-      .rpc('obtener_ofertas_compatibles', { 
-        estudiante_id_param: estudianteId 
-      });
-
-    if (error) {
-      console.error("Error en Supabase RPC:", error);
-      return res.status(500).json({ error: "Error al calcular compatibilidad" });
-    }
-
-    // Devolvemos la magia al frontend
-    res.json(data);
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});

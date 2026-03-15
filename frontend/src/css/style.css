@@ -5,12 +5,15 @@
 }
 
 #app {
-  max-width: 1280px;
+  width: 100%;
+  /* Ahora ocupa el 100% de la pantalla */
+  /* max-width: 1280px;  <-- LO HEMOS BORRADO */
   margin: 0 auto;
   text-align: center;
 }
-*{
-   font-family: sans-serif;
+
+* {
+  font-family: sans-serif;
 }
 
 @media (prefers-color-scheme: light) {
@@ -18,23 +21,30 @@
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
-html, body {
-  max-width: 100%;
-  overflow-x: hidden; /* Corta cualquier contenido que se salga por los lados */
-  margin: 0;
-  padding: 0;
-}
+
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+    /* Corta cualquier contenido que se salga por los lados */
+    margin: 0;
+    padding: 0;
+  }
 }
 
 @media (max-width: 768px) {
   main {
-    flex-direction: column; /* Esto hace que la imagen baje debajo del texto */
-    text-align: center;    /* Centra el texto en móvil */
+    flex-direction: column;
+    /* Esto hace que la imagen baje debajo del texto */
+    text-align: center;
+    /* Centra el texto en móvil */
   }
 }

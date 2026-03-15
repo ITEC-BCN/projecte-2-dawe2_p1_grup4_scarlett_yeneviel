@@ -235,17 +235,18 @@ const getDocIcon = (tipo) => {
 
 <template>
   <div class="profile-page">
+    
     <aside class="profile-card">
       <div class="profile-header">
-        <img :src="user.avatar" alt="avatar" class="profile-avatar" />
-        <div>
-          <h2 class="profile-name">{{ user.name }}</h2>
-          <div class="profile-role">Estudiante</div>
+        <div class="avatar-container">
+          <img :src="user.avatar" alt="avatar" class="profile-avatar" />
         </div>
+        <h2 class="profile-name">{{ user.name }}</h2>
+        <div class="profile-role">Estudiante</div>
       </div>
 
-      <div class="profile-actions" v-if="role == 'estudiante'" >
-        <button class="btn-edit" @click="toggleEdit">
+      <div class="profile-actions" v-if="role == 'estudiante'">
+        <button class="btn-primary" :class="{ 'btn-cancel': editing }" @click="toggleEdit">
           <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
           {{ editing ? " Cancelar" : " Editar perfil" }}
         </button>
@@ -261,487 +262,596 @@ const getDocIcon = (tipo) => {
         </div>
         <div class="stat">
           <div class="num">{{ documents.length }}</div>
-          <span class="label">Documentos</span>
+          <span class="label">Enlaces</span>
         </div>
       </div>
 
       <div class="sidebar-block">
-        <strong><i class="fa-solid fa-user"></i> Sobre mí</strong>
-        <p>{{ user.about }}</p>
+        <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
+        <p class="sidebar-text">{{ user.about }}</p>
       </div>
 
       <div class="sidebar-block">
-        <strong><i class="fa-solid fa-address-book"></i> Contacto</strong>
+        <h3 class="sidebar-title"><i class="fa-solid fa-address-book"></i> Contacto</h3>
         <div class="contact-links">
-          <div class="small">
+          <a :href="`mailto:${contact.email}`" class="contact-item">
             <i class="fa-solid fa-envelope"></i>
-            <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
+            <span>{{ contact.email || 'Sin email' }}</span>
+          </a>
+          <div class="contact-item">
+            <i class="fa-solid fa-phone"></i>
+            <span>{{ contact.phone || 'Sin teléfono' }}</span>
           </div>
-          <div class="small">
-            <i class="fa-solid fa-phone"></i> {{ contact.phone }}
-          </div>
-          <div class="small">
-            <i class="fa-solid fa-location-dot"></i> {{ contact.location }}
+          <div class="contact-item">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>{{ contact.location || 'Sin ubicación' }}</span>
           </div>
         </div>
       </div>
     </aside>
 
     <main class="profile-main">
-      <section class="section highlight-green">
-        <div class="title"> Formación Reglada
-        </div>
+      
+      <section class="section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-graduation-cap icon-green"></i> Formación Académica
+        </h2>
 
         <div v-if="!editing" class="education-timeline">
+          <div v-if="academicBackground.length === 0" class="empty-state">
+            Sin formación registrada aún.
+          </div>
           <div v-for="(edu, index) in academicBackground" :key="index" class="edu-item">
             <div class="edu-year">{{ edu.anio }}</div>
+            <div class="edu-dot"></div>
             <div class="edu-info">
               <div class="edu-title">{{ edu.titulo }}</div>
               <div class="edu-center">{{ edu.centro }}</div>
             </div>
           </div>
-          <div v-if="academicBackground.length === 0" class="small">Sin formación registrada.</div>
         </div>
 
         <div v-else class="edit-education">
-          <div class="profile-form" style="display: block;">
-            <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-edu-row">
-              <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
-              <input v-model="edu.titulo" placeholder="Título" class="input" />
-              <input v-model="edu.centro" placeholder="Centro" class="input" />
-              <button @click="removeEducation(index)" class="btn-x">×</button>
-            </div>
+          <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-row">
+            <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
+            <input v-model="edu.titulo" placeholder="Título" class="input" />
+            <input v-model="edu.centro" placeholder="Centro" class="input" />
+            <button @click="removeEducation(index)" class="btn-icon-danger"><i class="fa-solid fa-trash"></i></button>
           </div>
-
-          <div class="add-box" style="margin-top: 1rem; flex-direction: column; align-items: flex-start;">
-            <p class="subtitle">Nueva titulación</p>
-            <div class="edit-edu-row" style="width: 100%;">
+          <div class="add-box">
+            <p class="subtitle">Añadir nueva titulación</p>
+            <div class="edit-row">
               <input v-model="newEdu.anio" placeholder="Ej: 2024" class="input input-sm" />
-              <input v-model="newEdu.titulo" placeholder="Título..." class="input" />
-              <input v-model="newEdu.centro" placeholder="Centro..." class="input" />
-              <button @click.prevent="addEducation" class="btn-edit" style="flex: 0; padding: 0 15px;">+</button>
+              <input v-model="newEdu.titulo" placeholder="Título" class="input" />
+              <input v-model="newEdu.centro" placeholder="Centro" class="input" />
+              <button @click.prevent="addEducation" class="btn-icon-success"><i class="fa-solid fa-plus"></i></button>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section highlight-purple">
-        <div class="title">Habilidades</div>
-        <div class="profile-form">
-          <div>
-            <div class="subtitle">Hard skills</div>
+      <section class="section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-bolt icon-purple"></i> Habilidades y Competencias
+        </h2>
+        
+        <div class="skills-grid">
+          <div class="skill-group">
+            <h3 class="skill-subtitle">Hard Skills</h3>
             <div class="skill-list">
-              <span v-for="(s, i) in hardSkills" :key="i" class="skill-chip">
-                <i class="fa-solid fa-code"></i> {{ s }}
-                <button v-if="editing" @click="removeHard(i)" class="btn-x">
-                  ×
-                </button>
+              <span v-for="(s, i) in hardSkills" :key="i" class="skill-chip hard">
+                {{ s }}
+                <button v-if="editing" @click="removeHard(i)" class="btn-remove-chip"><i class="fa-solid fa-xmark"></i></button>
               </span>
+              <span v-if="hardSkills.length === 0" class="empty-state">No hay hard skills.</span>
+            </div>
+            <div v-if="editing" class="add-inline">
+              <input v-model="newHard" class="input" placeholder="Añadir..." @keyup.enter="addHard" />
+              <button class="btn-add-small" @click.prevent="addHard">Añadir</button>
             </div>
           </div>
-          <div>
-            <div class="subtitle">Soft skills</div>
+
+          <div class="skill-group">
+            <h3 class="skill-subtitle">Soft Skills</h3>
             <div class="skill-list">
               <span v-for="(s, i) in softSkills" :key="i" class="skill-chip soft">
-                <i class="fa-solid fa-brain"></i> {{ s }}
-                <button v-if="editing" @click="removeSoft(i)" class="btn-x">
-                  ×
-                </button>
+                {{ s }}
+                <button v-if="editing" @click="removeSoft(i)" class="btn-remove-chip"><i class="fa-solid fa-xmark"></i></button>
               </span>
+              <span v-if="softSkills.length === 0" class="empty-state">No hay soft skills.</span>
+            </div>
+            <div v-if="editing" class="add-inline">
+              <input v-model="newSoft" class="input" placeholder="Añadir..." @keyup.enter="addSoft" />
+              <button class="btn-add-small" @click.prevent="addSoft">Añadir</button>
             </div>
           </div>
-        </div>
-        <div v-if="editing" class="add-box">
-          <input v-model="newHard" class="input" placeholder="Nueva Hard skill" />
-          <button class="btn-edit" @click.prevent="addHard">Añadir</button>
         </div>
       </section>
 
       <div class="grid-two-cols">
-        <section class="section highlight-green">
-          <div class="title">Idiomas</div>
+        <section class="section">
+          <h2 class="section-title"><i class="fa-solid fa-language icon-green"></i> Idiomas</h2>
           <div class="skill-list">
             <span v-for="(lang, i) in languages" :key="i" class="skill-chip lang">
-              {{ lang.name }} · <b>{{ lang.level }}</b>
-              <button v-if="editing" @click="removeLanguage(i)" class="btn-x">
-                ×
-              </button>
+              <strong>{{ lang.name }}</strong> <span class="badge-level">{{ lang.level }}</span>
+              <button v-if="editing" @click="removeLanguage(i)" class="btn-remove-chip"><i class="fa-solid fa-xmark"></i></button>
             </span>
+            <span v-if="languages.length === 0" class="empty-state">Sin idiomas registrados.</span>
           </div>
         </section>
 
         <section class="section">
-          <div class="title">Enlaces</div>
-
-          <div v-if="documents.length > 0" class="doc-list">
-            <div v-for="doc in documents" :key="doc.id" class="offer-item">
-              <div class="offer-info">
-                <i :class="getDocIcon(doc.tipo)" class="doc-icon"></i>
-                <a :href="doc.url" target="_blank" class="offer-title">
-                  {{ doc.label }}
-                </a>
-              </div>
-              <button v-if="editing" class="btn-x" @click="removeDocument(doc.id)">
-                ×
+          <h2 class="section-title"><i class="fa-solid fa-link icon-purple"></i> Enlaces</h2>
+          <div class="links-list">
+            <div v-for="doc in documents" :key="doc.id" class="link-item">
+              <a :href="doc.url" target="_blank" class="link-content">
+                <i :class="getDocIcon(doc.tipo)" class="link-icon"></i>
+                <span class="link-label">{{ doc.label }}</span>
+              </a>
+              <button v-if="editing" class="btn-icon-danger-small" @click="removeDocument(doc.id)">
+                <i class="fa-solid fa-trash"></i>
               </button>
             </div>
-          </div>
-
-          <div v-else class="small" style="color: #64748b; padding-left: 0.5rem;">
-            Aún no hay enlaces añadidos.
+            <div v-if="documents.length === 0" class="empty-state">Aún no hay enlaces.</div>
           </div>
         </section>
       </div>
+
     </main>
   </div>
 </template>
 
 <style scoped>
 /* GENERAL */
-i {
-  color: black;
-  padding-right: 4px;
-}
-
 .profile-page {
   display: flex;
-  gap: 2rem;
+  gap: 30px;
   align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1.5rem;
-  background-color: #f8fafc;
-  min-height: 78vh;
+  padding: 40px 20px;
+  background-color: #F3F4F6; /* Fondo gris muy suave y limpio */
+  min-height: 100vh;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* ASIDE */
+/* SIDEBAR CARD */
 .profile-card {
-  width: 340px;
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  width: 320px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   position: sticky;
-  top: 2rem;
+  top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.profile-header {
+  text-align: center;
+}
+
+.avatar-container {
+  display: inline-block;
+  padding: 4px;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-purple));
+  border-radius: 50%;
+  margin-bottom: 15px;
 }
 
 .profile-avatar {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  border: 4px solid var(--accent-green);
+  border: 4px solid #ffffff;
   object-fit: cover;
-  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .profile-name {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: var(--accent-purple);
-  margin: 0;
+  color: #111827;
+  margin: 0 0 5px 0;
 }
 
 .profile-role {
   color: #64748b;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
+/* BOTONES SIDEBAR */
 .profile-actions {
   display: flex;
-  gap: 0.5rem;
-  margin: 1.2rem 0;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.btn-edit,
-.btn-save {
-  flex: 1;
+.btn-primary, .btn-save {
+  width: 100%;
+  padding: 12px;
   border: none;
-  padding: 0.6rem;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s;
-  background: var(--accent-green);
-  color: white;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.btn-primary:hover { background: #e2e8f0; }
+
+.btn-primary.btn-cancel {
+  background: #fee2e2;
+  color: #ef4444;
 }
 
 .btn-save {
   background: var(--accent-purple);
+  color: white;
 }
+.btn-save:hover { background: #7c3aed; }
 
-.btn-edit:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
+/* ESTADÍSTICAS */
 .profile-stats {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 15px;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 20px 0;
 }
 
 .stat {
   flex: 1;
-  background: #f1f5f9;
-  padding: 0.8rem;
-  border-radius: 12px;
   text-align: center;
 }
 
 .stat .num {
   font-weight: 800;
-  color: var(--accent-purple);
-  font-size: 1.2rem;
+  color: #111827;
+  font-size: 1.5rem;
 }
 
 .stat .label {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   color: #64748b;
   font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-.sidebar-block {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 1rem;
-  margin-top: 1rem;
-}
-
-.sidebar-block strong {
+/* TEXTOS SIDEBAR */
+.sidebar-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 10px 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
+  gap: 8px;
 }
 
-.sidebar-block p,
-.contact-links .small {
-  font-size: 0.85rem;
+.sidebar-text {
+  font-size: 0.95rem;
   color: #475569;
-  line-height: 1.5;
-  text-align: start;
-  padding-left: 20px;
+  line-height: 1.6;
+  margin: 0;
+  text-align: left;
 }
 
-/* MAIN CONTENT */
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #475569;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.contact-item i {
+  color: var(--accent-purple);
+  width: 16px;
+  text-align: center;
+}
+
+.contact-item span {
+  word-break: break-all;
+}
+
+/* CONTENIDO PRINCIPAL */
 .profile-main {
   flex: 1;
-  max-width: 800px;
+  max-width: 850px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
 .section {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 35px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
 }
 
-.section .title {
-  font-size: 1.5rem;
+.section-title {
+  font-size: 1.4rem;
   font-weight: 800;
-  color: var(--accent-purple);
-  margin-bottom: 1.2rem;
+  color: #111827;
+  margin: 0 0 25px 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 10px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 15px;
 }
 
+.icon-green { color: var(--accent-green); }
+.icon-purple { color: var(--accent-purple); }
+
+/* LÍNEA DE TIEMPO (FORMACIÓN) */
 .education-timeline {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-left: 0.5rem;
+  gap: 0;
 }
 
 .edu-item {
   display: flex;
-  gap: 1.5rem;
+  gap: 20px;
   position: relative;
+  padding-bottom: 30px;
 }
 
-
-.edu-item::before {
-  content: "";
-  position: absolute;
-  left: 3.5rem;
-  top: 0;
-  bottom: -1.5rem;
-  width: 2px;
-  background: #e2e8f0;
-}
-
-.edu-item:last-child::before {
-  display: none;
+.edu-item:last-child {
+  padding-bottom: 0;
 }
 
 .edu-year {
-  min-width: 3.5rem;
-  font-weight: 800;
-  color: var(--accent-purple);
-  font-size: 0.85rem;
+  width: 60px;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.95rem;
+  text-align: right;
   padding-top: 2px;
+}
+
+.edu-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  margin-top: 6px;
+  box-shadow: 0 0 0 4px #ecfdf5;
+}
+
+.edu-item:not(:last-child) .edu-dot::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 5px;
+  width: 2px;
+  height: calc(100% + 30px);
+  background: #e2e8f0;
+  z-index: -1;
+}
+
+.edu-info {
+  flex: 1;
+  text-align: left;
 }
 
 .edu-title {
   font-weight: 700;
   color: #1e293b;
-  font-size: 1rem;
-  text-align: start;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
 }
 
 .edu-center {
   color: #64748b;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-align: start;
-}
-
-/* Estilos para edición */
-.edit-edu-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.8rem;
-  align-items: center;
-}
-
-.input-sm {
-  width: 80px;
-}
-
-.add-edu-form {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px dashed #e2e8f0;
-}
-
-/* Colores de sección */
-.highlight-purple {
-  background: linear-gradient(to right, #ffffff, #f5f3ff);
-  border-left: 4px solid var(--accent-purple);
-}
-
-.highlight-green {
-  background: linear-gradient(to right, #ffffff, #f0fdf4);
-  border-left: 4px solid var(--accent-green);
-}
-
-.subtitle {
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  color: #64748b;
-  margin-bottom: 0.8rem;
-}
-
-.bio-content {
   font-size: 0.95rem;
-  line-height: 1.6;
-  color: #334155;
 }
 
 /* SKILLS CHIPS */
+.skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.skill-subtitle {
+  font-size: 1rem;
+  color: #475569;
+  margin: 0 0 15px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .skill-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 10px;
 }
 
 .skill-chip {
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 20px;
   font-weight: 600;
   font-size: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--accent-purple);
+  gap: 8px;
+}
+
+/* Colores pastel para los chips */
+.skill-chip.hard {
+  background: #f3e8ff;
+  color: #6b21a8;
 }
 
 .skill-chip.soft {
-  color: var(--accent-green);
+  background: #dcfce7;
+  color: #166534;
 }
 
-.skill-chip i {
-  font-size: 0.7rem;
+.skill-chip.lang {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
 }
 
-/* DOCS */
-.offer-item {
+.badge-level {
+  background: rgba(0,0,0,0.1);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+/* ENLACES / LINKS */
+.links-list {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link-item {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 0.8rem;
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #f1f5f9;
-  margin-bottom: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.doc-icon {
-  font-size: 1.2rem;
-  margin-right: 0.5rem;
+.link-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-.offer-title {
-  font-weight: 700;
+.link-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   text-decoration: none;
   color: #1e293b;
-  font-size: 0.9rem;
+  font-weight: 600;
 }
 
-/* UTILS */
-.grid-two-cols {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 1rem;
+.link-icon {
+  font-size: 1.4rem;
+  color: var(--accent-purple);
 }
 
-.btn-x {
+/* FORMULARIOS DE EDICIÓN (Mejorados) */
+.edit-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.input-sm { width: 80px; flex: none; }
+
+.btn-icon-danger, .btn-icon-success, .btn-remove-chip {
   background: #fee2e2;
   color: #ef4444;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
-  padding: 0 4px;
-  font-weight: bold;
 }
 
-.full-width {
-  grid-column: 1 / -1;
+.btn-icon-success {
+  background: #dcfce7;
+  color: #16a34a;
 }
 
-.profile-form {
+.btn-remove-chip {
+  background: transparent;
+  color: inherit;
+  width: auto;
+  height: auto;
+  opacity: 0.7;
+  padding: 0;
+}
+.btn-remove-chip:hover { opacity: 1; }
+
+.add-inline {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-add-small {
+  padding: 0 15px;
+  background: var(--accent-purple);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.empty-state {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.grid-two-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 25px;
 }
 
-.input,
-.textarea {
-  width: 100%;
-  padding: 0.6rem;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  margin-top: 4px;
-}
-
-@media (max-width: 768px) {
-  .profile-page {
-    flex-direction: column;
-  }
-
-  .profile-card {
-    width: 100%;
-    position: static;
-  }
-
-  .grid-two-cols {
-    grid-template-columns: 1fr;
-  }
+/* RESPONSIVE */
+@media (max-width: 860px) {
+  .profile-page { flex-direction: column; }
+  .profile-card { width: 100%; box-sizing: border-box; position: static; }
+  .grid-two-cols, .skills-grid { grid-template-columns: 1fr; }
+  .edit-row { flex-direction: column; align-items: stretch; }
+  .input-sm { width: 100%; }
 }
 </style>

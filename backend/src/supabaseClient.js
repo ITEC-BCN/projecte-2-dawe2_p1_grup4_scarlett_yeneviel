@@ -78,6 +78,23 @@ export const eliminarOferta = async (id) => {
   return { message: 'Oferta eliminada correctamente' };
 };
 
+// ================== OFERTAS PERSONALIZADAS ==========================
+
+export const obtenerOfertasCompatibles = async (estudianteId) => {
+  const { data, error } = await supabase
+    // Usamos rpc para llamar a la función (procedure) que creaste en Supabase
+    .rpc('obtener_ofertas_compatibles', { 
+      // Le pasamos el parámetro. Es buena idea convertirlo a número (parseInt) por si acaso
+      estudiante_id_param: parseInt(estudianteId) 
+    });
+
+  if (error) {
+    console.error("Error en Supabase RPC:", error);
+    throw error;
+  }
+  
+  return data;
+};
 
 // ================== USUARIOS =======================
 

@@ -9,7 +9,9 @@ const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 
-console.log(studentId)
+ const role = localStorage.getItem('role'); 
+
+ 
 
 const { students, loadingStudents, isCreating, createStudent } =
   useStudents(url);
@@ -238,11 +240,11 @@ const getDocIcon = (tipo) => {
         <img :src="user.avatar" alt="avatar" class="profile-avatar" />
         <div>
           <h2 class="profile-name">{{ user.name }}</h2>
-          <div class="profile-role">{{ user.role }}</div>
+          <div class="profile-role">Estudiante</div>
         </div>
       </div>
 
-      <div class="profile-actions">
+      <div class="profile-actions" v-if="role == 'estudiante'" >
         <button class="btn-edit" @click="toggleEdit">
           <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
           {{ editing ? " Cancelar" : " Editar perfil" }}

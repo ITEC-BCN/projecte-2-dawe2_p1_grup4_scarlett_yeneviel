@@ -79,6 +79,10 @@ onMounted(async() => {
   await obtenerPostulaciones();
 });
 
+//Ver perfil de los estudiantes postulados
+const verDetallePerfil = (id) => {
+  router.push({ name: 'perfilId', params: { id: id } });
+};
 </script>
 
 <template>
@@ -142,11 +146,6 @@ onMounted(async() => {
                 <strong>Expira el</strong>
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
-
-              <button class="btn-apply">
-                Inscribirme
-              </button>
-
             </div>
           </aside>
 
@@ -186,7 +185,7 @@ onMounted(async() => {
 
           <div class="candidato-actions">
             <button @click="modalEstadoCandi(Number(route.params.id), item.usuario_estudiante.id)" class="btn-view">Actualizar estado</button>
-            <button class="btn-view">Ver perfil</button>
+            <button @click="verDetallePerfil(item.usuario_estudiante.id)" class="btn-view">Ver perfil</button>
             <button class="btn-view">Ver CV</button>
           </div>
         </div>

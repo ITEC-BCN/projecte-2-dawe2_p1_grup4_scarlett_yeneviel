@@ -96,7 +96,8 @@ export const crearEstudiante = async (nuevoEstudiante) => {
       estado: nuevoEstudiante.estado || 'pendiente',
       password_hash: nuevoEstudiante.password_hash
     }])
-    .select();
+    .select()
+    .single();
 
   if (error) throw error;
   return data;
@@ -145,6 +146,24 @@ export const actualizarEstudiante = async (id, datosActualizados) => {
   return data;
 };
 
+
+export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
+   const { data, error} = await supabase
+   .from('postulaciones')
+   .insert([{
+      id_oferta:parseInt(id_oferta),
+      id_usuario_estudiante:parseInt(id_usuario_estudiante),
+      estado: 'En proceso'
+   }]).select()
+
+  if (error) {
+    console.error("Error al actualizar el estado de la candidatura:", error.message);
+    throw error;
+  }
+
+  return data
+}
+
 // ====================== Adminsitrador ==========================
 // --- FUNCIONES PARA USUARIO_ADMI ---
 
@@ -154,8 +173,8 @@ export const crearAdmin = async (nuevoAdmin) => {
     .from('usuario_admi')
     .insert([{
       nombre_centro: nuevoAdmin.nombre_centro,
-      nombre_admi: nuevoAdmin.nombre,
-      apellido_admin: nuevoAdmin.apellido,
+      nombre: nuevoAdmin.nombre,
+      apellido: nuevoAdmin.apellido,
       telefono: nuevoAdmin.telefono,
       email: nuevoAdmin.email,
       password_hash: nuevoAdmin.password_hash // Ya debe venir hasheada desde el app.js

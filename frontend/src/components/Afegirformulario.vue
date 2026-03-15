@@ -152,13 +152,16 @@ const submitFormulario = async () => {
   }
 };
 
-
+const volver = () => router.push({ name: "ofertas" });
 
 </script>
 
 
 <template>
   <div class="form-wrapper">
+    <button @click="volver" class="btn-volver">
+      ← Volver al detalle
+    </button>
     <div class="form-container">
       <h1 class="title">Nueva Oferta</h1>
 
@@ -235,12 +238,29 @@ const submitFormulario = async () => {
 
 
 <style scoped>
+/* Botón Volver */
+.btn-volver {
+  background: none;
+  border: none;
+  color: black;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: color 0.3s;
+}
+
+.btn-volver:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
 /* Wrapper centrado */
 .form-wrapper {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   padding: 40px 20px;
   background: #f3f4f6;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

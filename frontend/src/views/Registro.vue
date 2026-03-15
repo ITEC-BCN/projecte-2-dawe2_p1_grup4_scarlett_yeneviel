@@ -4,12 +4,11 @@ import { URL_BACK } from '../../../config';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-
-
 const urlNewStudent=ref (`${URL_BACK}/estudiantes`)
 const router=useRouter()
-const userFetch=useFetchUser(URL_BACK)
+const {NewStudent }=useFetchUser(URL_BACK)
 
+const error=ref(null)
 const form={}
 const password2=ref(null)
 
@@ -21,11 +20,19 @@ const password2=ref(null)
             throw new Error('Las contraseñas no coinciden')
         }
         
-        await userFetch.NewStudent(form, urlNewStudent.value);
+       const data = await NewStudent(form, urlNewStudent.value);
+          // --- LÓGICA DE GUARDADO CORREGIDA ---
+      const userId = data.user?.id 
+      const userToken = data.token
 
-        router.push('/perfil')
-    } catch (error) {
-        console.error("Fallo en el registro:",error);
+      localStorage.setItem('token', userToken)
+      localStorage.setItem('role','estudiante')
+      localStorage.setItem('studentId', userId)
+
+      router.push(`/perfil`)
+
+    }catch (error) {
+        console.error("Error de conexión con el servidor: ",error);
     }
 }
 </script>
@@ -34,6 +41,9 @@ const password2=ref(null)
   <div class="login-page">
     <div class="login-card">
       <h1>Registro</h1>
+
+      <!-- Mostrar errores -->
+      <div v-if="error" class="error-message">{{ error }}</div>
 
       <form class="login-form" @submit.prevent="InsertNewStudent">
         <label for="nombre">Nombre</label>

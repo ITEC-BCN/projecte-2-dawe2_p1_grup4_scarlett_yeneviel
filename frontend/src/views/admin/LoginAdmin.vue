@@ -1,64 +1,40 @@
 <script setup>
+import { URL_BACK } from '../../../../config'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-
-import { URL_BACK } from '../../../config'
-
-const router = useRouter()
 
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
-const loading = ref(false)
 const error = ref('')
+const loading = ref(false)
+const router = useRouter()
 
-const handleLogin = async (e) => {
+const handleLoginAdmin = async(e) => {
   e.preventDefault()
-  loading.value = true
   error.value = ''
-
+  loading.value = true
   try {
-    const response = await fetch(`${URL_BACK}/login`, {
+    const response = await fetch(`${URL_BACK}/login-admin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value
-      })
+      body: JSON.stringify({ email: email.value, password: password.value })
     })
-
     const data = await response.json()
-
     if (!response.ok) {
       error.value = data.error || 'Error al iniciar sesión'
+      loading.value = false
       return
     }
-
-    // --- LÓGICA DE GUARDADO CORREGIDA ---
-    const userId = data.user?.id || data.id
-    const userToken = data.token
-
-    if (userToken) {
-      localStorage.setItem('token', userToken)
-      localStorage.setItem('role','estudiante')
-      // Guardamos la cookie para el middleware del backend
-      document.cookie = `access_token=${userToken}; path=/; SameSite=None; Secure`
-    } else {
-      console.error("EL BACKEND NO ENVIÓ TOKEN")
-    }
-
-    if (userId) {
-      localStorage.setItem('studentId', userId)
-    }
-
-    // Redirigir al perfil
-    router.push(`/perfil`)
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('userId', data.user.id)
+    localStorage.setItem('role', 'admin')
+    router.push({ name: 'ofertas' })
 
   } catch (err) {
     error.value = 'Error de conexión con el servidor'
-    console.error(err)
   } finally {
     loading.value = false
   }
@@ -68,13 +44,13 @@ const handleLogin = async (e) => {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1>Iniciar sesión</h1>
+      <h1>Iniciar sesión - Administración</h1>
 
       <!-- Mostrar errores -->
       <div v-if="error" class="error-message">{{ error }}</div>
 
       <!-- Formulario conectado al backend -->
-      <form class="login-form" @submit="handleLogin" novalidate>
+      <form class="login-form" @submit="handleLoginAdmin" novalidate>
         <label for="email">Correo electrónico</label>
         <input 
           id="email" 
@@ -241,4 +217,6 @@ input:disabled {
   }
 }
 </style>
+
+
 

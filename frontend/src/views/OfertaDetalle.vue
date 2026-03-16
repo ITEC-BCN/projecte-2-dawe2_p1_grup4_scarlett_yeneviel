@@ -42,22 +42,41 @@ onMounted(() => {
 
 const postularOferta = async () => {
 
-  try {
+  if(idEstudiante){
+    try {
 
-    const res = await estudiantePostula(bodyPostulacion.value, `${URL_BACK}/estudiante/postular`)
+      const res = await estudiantePostula(bodyPostulacion.value, `${URL_BACK}/estudiante/postular`)
 
-    alert("inscripción hecha correctamente")
-    verificarPostulacion()
+      alert("inscripción hecha correctamente")
+      verificarPostulacion()
 
-  } catch (error) {
-    console.error("Error al hacer la incripción: ", error)
-    alert("Error al hacer la incripción")
+    } catch (error) {
+      console.error("Error al hacer la incripción: ", error)
+      alert("Error al hacer la incripción")
 
+    }
+  }else{
+     const hacerLogin= confirm("Inicia sesión para inscribirte en la oferta")
+
+     if(hacerLogin) router.push({ name: "login" })
+      
   }
+
+ 
 }
 
 const guardarOferta = () => {
-  alert("oferta guardada correctamente")
+
+  if(idEstudiante){
+    alert("oferta guardada correctamente")
+  }else{
+    const hacerLogin= confirm("Inicia sesión para guardar la oferta")
+
+   if(hacerLogin) router.push({ name: "login" })
+  }
+   
+    
+ 
 }
 </script>
 

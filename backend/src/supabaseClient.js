@@ -172,6 +172,7 @@ export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
       id_usuario_estudiante:parseInt(id_usuario_estudiante),
       estado: 'En proceso'
    }]).select()
+   .single()
 
   if (error) {
     console.error("Error al actualizar el estado de la candidatura:", error.message);

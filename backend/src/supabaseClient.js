@@ -95,22 +95,55 @@ export const eliminarOferta = async (id) => {
 
 // ================== OFERTAS PERSONALIZADAS ==========================
 
-export const obtenerOfertasCompatibles = async (estudianteId) => {
-  const { data, error } = await supabase
-    // Usamos rpc para llamar a la función (procedure) que creaste en Supabase
-    .rpc('obtener_ofertas_compatibles', { 
-      // Le pasamos el parámetro. Es buena idea convertirlo a número (parseInt) por si acaso
-      estudiante_id_param: parseInt(estudianteId) 
-    });
+// Añade esta función a tu archivo de controladores de base de datos
 
-  if (error) {
-    console.error("Error en Supabase RPC:", error);
-    throw error;
+export const obtenerOfertasRecomendadas = async (estudianteId) => {
+  // 1. Buscamos las skills del estudiante
+  const { data: skillsDelEstudiante, error: errEstudiante } = await supabase
+    .from('estudiante_skill')
+    .select('id_skill') 
+    .eq('id_estudiante', estudianteId); 
+
+  if (errEstudiante) throw errEstudiante;
+
+  if (!skillsDelEstudiante || skillsDelEstudiante.length === 0) {
+    return []; // Retorna array vacío si no hay skills
   }
-  
-  return data;
-};
 
+  // Convertimos a array de números
+  const idsDeSkills = skillsDelEstudiante.map(es => es.id_skill); 
+
+  // 2. Buscamos qué ofertas tienen esas skills
+  const { data: ofertasConMatch, error: errOfertas } = await supabase
+    .from('oferta_skill')
+    .select('id_oferta') 
+    .in('id_skill', idsDeSkills); 
+
+  if (errOfertas) throw errOfertas;
+
+  if (!ofertasConMatch || ofertasConMatch.length === 0) {
+    return []; // Retorna array vacío si no hay coincidencias
+  }
+
+  // Limpiamos los IDs repetidos
+  const idsDeOfertasUnicos = [...new Set(ofertasConMatch.map(o => o.id_oferta))]; 
+
+  // 3. Traemos los datos completos de las ofertas
+  const { data: ofertasFinales, error: errFinal } = await supabase
+    .from('oferta')
+    .select(`
+      *,
+      ubicacion:id_ubicacion (ciudad, comunidad),
+      tipo_jornada:id_tipo_jornada (modalidad, jornada),
+      oferta_skill (skill:id_skill (nombre))
+    `)
+    .in('id', idsDeOfertasUnicos)
+    .order('fecha_publicacion', { ascending: false });
+
+  if (errFinal) throw errFinal;
+
+  return ofertasFinales; // Devolvemos los datos limpios a la ruta
+};
 // ================== USUARIOS =======================
 
 export const crearEstudiante = async (nuevoEstudiante) => {

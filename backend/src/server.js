@@ -32,7 +32,7 @@ import {
   obtenerAdminPorEmail,
   VerPostulacionesAdmin,
   postularOferta,
-  obtenerOfertasCompatibles,
+  obtenerOfertasRecomendadas,
   actualizarEstadoOferta,
   guardarOferta 
 
@@ -142,19 +142,20 @@ app.delete('/ofertas/:id', async (req, res) => {
 });
 
 /*========OFERTAS Filtradas=========*/
+
 app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
   try {
     const estudianteId = req.params.id;
-
-    // Llamamos a la función que acabamos de crear en supabaseCliente.js
-    const data = await obtenerOfertasCompatibles(estudianteId);
-
-    // Devolvemos la magia al frontend
-    res.json(data);
+    
+    // Llamamos a la función limpia
+    const ofertas = await obtenerOfertasRecomendadas(estudianteId);
+    
+    // Devolvemos el resultado al frontend
+    res.json(ofertas);
 
   } catch (err) {
-    console.error("Error en endpoint de ofertas recomendadas:", err);
-    res.status(500).json({ error: err.message });
+    console.error("🔥 Error en el endpoint de recomendaciones:", err);
+    res.status(500).json({ error: err.message || "Error interno del servidor" });
   }
 });
 

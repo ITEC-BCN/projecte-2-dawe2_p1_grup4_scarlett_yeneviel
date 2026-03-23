@@ -116,7 +116,7 @@ const router = createRouter({
     meta: { requiresAdmin: true }
   },
   {
-    path:"/estudiante/:id/ofertasrecomendadas",
+    path:"/estudiantes/:id/ofertas-recomendadas",
     name:"ofertasRecomendadas",
     component:() => import('@/views/OfertasPersonalizadas.vue'),
     props: true,

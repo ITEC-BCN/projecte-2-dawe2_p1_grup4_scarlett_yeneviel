@@ -62,14 +62,14 @@ const router = createRouter({
              {
       path: "/oferta/actualizar/:id",
       name: "ActualizarOferta",
-      component: () => import('@/views/ActualizarOferta.vue'),
+      component: () => import('@/views/admin/ActualizarOferta.vue'),
       props: true,
       meta: { requiresAdmin: true }
     },
     {
     path: "/crear",
     name: "CrearOferta",
-    component: () => import('@/views/AfegirOferta.vue'),
+    component: () => import('@/views/admin/AfegirOferta.vue'),
     props: true,
     meta: { requiresAdmin: true }
   },

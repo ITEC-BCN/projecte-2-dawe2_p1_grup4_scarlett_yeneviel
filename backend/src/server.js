@@ -34,7 +34,8 @@ import {
   postularOferta,
   obtenerOfertasCompatibles,
   actualizarEstadoOferta,
-  guardarOferta 
+  guardarOferta,
+  obtenerOfertasGuardadas
 
 
 } from './supabaseClient.js'
@@ -256,6 +257,26 @@ app.post("/guardar-oferta", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
+  try {
+    const estudianteId = req.params.id;
+
+    if (!estudianteId) {
+      return res.status(400).json({ error: "Falta el id del estudiante en la URL" });
+    }
+    // Llamamos a la función  de supabaseCliente.js
+    const data = await obtenerOfertasGuardadas(estudianteId);
+
+    // Devolvemos al frontend
+    res.json(data);
+
+  } catch (err) {
+    console.error("Error en endpoint de ofertas guardadas:", err);
+    res.status(500).json({ error: err.message });
+  }
+
 });
 
 

@@ -209,6 +209,24 @@ export const guardarOferta = async (id_estudiante, id_oferta) => {
   return data;
 };
 
+export const obtenerOfertasGuardadas = async (id_estudiante) => {
+  const { data, error } = await supabase
+    .from('oferta_guardada')
+    .select(`
+      *,
+      oferta (
+        id,
+        nombre_empresa,
+        tipo_puesto,
+        fecha_expiracion
+      )
+    `)
+    .eq('id_usuario_estudiante', id_estudiante);
+
+  if (error) throw error;
+  return data;
+}
+
 // ====================== Adminsitrador ==========================
 // --- FUNCIONES PARA USUARIO_ADMI ---
 

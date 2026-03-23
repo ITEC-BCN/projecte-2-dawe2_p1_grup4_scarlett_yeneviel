@@ -1,4 +1,5 @@
 import { onMounted, ref, watch } from "vue";
+import { URL_BACK } from "../../../config";
 
 export function useFetchUser(url) {
 
@@ -30,6 +31,23 @@ export function useFetchUser(url) {
             error.value = err.message
         } finally {
             loading.value = false
+        }
+    }
+
+    const OfertasGuardadasUser = async (id_estudiante) => {
+
+        try {
+            const res = await fetch(`${URL_BACK}/estudiante/ofertas-guardadas/${id_estudiante}`);
+
+            // Guardamos los datos para que los componentes los usen
+            const resultado= await res.json()
+            if (!res.ok) {
+                throw new Error('Error a la petició: ' + res.status)
+            }
+
+            return resultado
+        } catch (err) {
+            throw err 
         }
     }
 
@@ -82,10 +100,29 @@ export function useFetchUser(url) {
             loading.value = false;
         }
     }
+
+    const guardarOferta = async (id_estudiante, id_oferta) => {
+        try {
+            const res = await fetch(`${URL_BACK}/guardar-oferta`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_estudiante, id_oferta })
+            });
+
+            const resultado = await res.json();
+            if (!res.ok) {
+                throw new Error(resultado.error || "Error en el servidor");
+            }
+            return resultado; // Devolvemos el resultado para que quien llame lo pueda usar
+            
+        } catch (err) {
+            throw err; // Re-lanzamos para que el componente sepa que hubo fallo
+        }
+    };
     //Disparador: cuando el componente que use este archivo se monte, pedimos los datos
     onMounted(fetchData);//Ejecuta la función
 
     // Si cambia la URL (por ejemplo otro ID), volvemos a pedir los datos
     watch(url, fetchData)//Necesario para cada vez que se cambie el parametro se redenrise la página
-    return { data, error, loading, fetchData, NewStudent }
+    return { data, error, loading, fetchData, NewStudent, guardarOferta, getOneStudent,OfertasGuardadasUser }
 }

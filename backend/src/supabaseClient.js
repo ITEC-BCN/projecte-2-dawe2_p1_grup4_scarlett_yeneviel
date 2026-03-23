@@ -178,7 +178,6 @@ export const actualizarEstudiante = async (id, datosActualizados) => {
   return data;
 };
 
-
 export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
    const { data, error} = await supabase
    .from('postulaciones')
@@ -187,6 +186,7 @@ export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
       id_usuario_estudiante:parseInt(id_usuario_estudiante),
       estado: 'En proceso'
    }]).select()
+   .single()
 
   if (error) {
     console.error("Error al actualizar el estado de la candidatura:", error.message);
@@ -195,6 +195,19 @@ export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
 
   return data
 }
+export const guardarOferta = async (id_estudiante, id_oferta) => {
+  const { data, error } = await supabase
+    .from('oferta_guardada')
+    .insert([{
+      id_usuario_estudiante: id_estudiante,
+      id_oferta: id_oferta
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
 
 // ====================== Adminsitrador ==========================
 // --- FUNCIONES PARA USUARIO_ADMI ---
@@ -278,7 +291,7 @@ export const obtenerAdminPorEmail = async (email) => {
 };
 
 
-// =============== FUNCIONALIDADES DEL ADMINISTRADOR ===============
+// =============== FUNCIONALIDADES DEL COORDINADOR DE PRACTICAS ===============
 
 export const VerPostulacionesAdmin = async (idOferta) => {
   const { data, error } = await supabase
@@ -303,7 +316,7 @@ export const VerPostulacionesAdmin = async (idOferta) => {
 };
 
 
-export const actulizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado) => {
+export const actualizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado) => {
   
   const {data, error} = await supabase
     .from('postulaciones')

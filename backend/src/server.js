@@ -31,9 +31,11 @@ import {
   obtenerEstudiantePorEmail,
   obtenerAdminPorEmail,
   VerPostulacionesAdmin,
-  actulizarEstadoOferta,
   postularOferta,
-  obtenerOfertasCompatibles
+  obtenerOfertasCompatibles,
+  actualizarEstadoOferta,
+  guardarOferta 
+
 
 } from './supabaseClient.js'
 import requireAuth from './middleware/requireAuth.js';
@@ -238,6 +240,25 @@ app.post("/estudiante/postular", async (req, res)=>{
   }
 })
 
+app.post("/guardar-oferta", async (req, res) => {
+  try {
+    const { id_estudiante, id_oferta } = req.body;
+
+    if (!id_estudiante || !id_oferta) {
+      return res.status(400).json({ error: "Falta id del estudiante o id de la oferta en el body" });
+    }
+
+    const resultado = await guardarOferta(id_estudiante, id_oferta);
+    res.status(200).json({
+      message: "Oferta guardada exitosamente",
+      data: resultado
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 //================ Adminsitrador ====================
 
 // --- RUTAS PARA ADMINISTRADORES ---
@@ -427,7 +448,7 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
       return res.status(400).json({ error: "Falta el campo 'estado' en el body" });
     }
 
-    const datos = await actulizarEstadoOferta(ofertaId, estudianteId, estado);
+    const datos = await actualizarEstadoOferta(ofertaId, estudianteId, estado);
     res.json(datos);
   } catch (err) {
     console.error(err);

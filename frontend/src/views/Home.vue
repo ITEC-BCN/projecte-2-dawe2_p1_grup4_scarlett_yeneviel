@@ -70,6 +70,9 @@ main {
   padding: 1.5rem;
   gap: 2rem;
   margin: 2rem 0; 
+  width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
 
 }
 
@@ -78,6 +81,7 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center; /* Centra el texto verticalmente respecto a la imagen */
+  align-items: center;
 }
 
 .home-img {
@@ -107,6 +111,9 @@ main p {
   gap: 1rem; /* Espacio entre botones más limpio */
   margin-bottom: 2rem; /* Espacio antes de los avatares */
   max-width: 400px; /* Opcional: limita el ancho de la botonera */
+      width: 100%;
+    padding: 0 2rem;
+    box-sizing: border-box;
 }
 
 .btn-link {
@@ -170,8 +177,11 @@ main p {
 /* --- SECCIÓN PERFILES (Cards) --- */
 .perfiles {
   text-align: left;
-  padding: 0 1.5rem; /* Alineado con el padding del main */
+  padding: 0 1.5rem; 
   margin-bottom: 3rem;
+  width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .perfiles h1 {

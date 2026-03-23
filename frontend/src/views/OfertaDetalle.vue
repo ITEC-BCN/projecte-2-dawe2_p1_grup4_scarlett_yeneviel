@@ -12,6 +12,7 @@ const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+const mensajePersonalizado = ref("");
 const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);
 const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
 
@@ -65,8 +66,9 @@ const postularOferta = async () => {
         return
       }
 
-      alert("inscripción hecha correctamente")
-      // Corregimos el nombre de la función para re-comprobar el estado
+      
+      mensajePersonalizado.value = "¡Inscripción hecha correctamente!"
+      modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
       verificarEstado(idEstudiante, "postulacion")
 
     } catch (error) {
@@ -97,6 +99,7 @@ const funGuardarOferta = async() => {
     }
     // Actualizamos el estado local inmediatamente para que el botón se deshabilite sin esperar la recarga
     ofertaYaGuardada.value = true
+    mensajePersonalizado.value = "¡Oferta guardada correctamente!"
     modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
     verificarEstado(idEstudiante, "guardado")
   }else{
@@ -111,7 +114,7 @@ const funGuardarOferta = async() => {
 const modalEstadoRef = ref(null);
 
 const modalInformativoEstado = () => {
-  modalEstadoRef.value?.openModal();//modalEstadoRef es una instancia del componente ModalInformativo por eso puedo llamar openModal().
+  modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
 };
 </script>
 
@@ -200,7 +203,7 @@ const modalInformativoEstado = () => {
   </div>
 
   <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
-  <modal-informativo ref="modalEstadoRef" :mensaje="'¡Oferta guardada correctamente!'" />
+  <modal-informativo ref="modalEstadoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>

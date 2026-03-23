@@ -9,35 +9,35 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, defineExpose } from "vue";
+import { ref, defineProps, defineExpose, computed } from "vue";
 
 // Props para mensaje personalizado
 const props = defineProps({
-  mensaje: String,
+  mensaje: {
+    type: String,
+    default: ''
+  },
 });
 
+// Exponer la prop como un computed para garantizar reactividad en la plantilla
+const mensaje = computed(() => props.mensaje);
 
 const isModalOpen = ref(false);
 const estado = ref("");
-const mensaje = ref("");
 const loading = ref(false);
 
 const openModal = () => {
   // reset state when opening
   estado.value = "";
-  mensaje.value = props.mensaje ;
   isModalOpen.value = true;
 };
 const closeModal = () => {
   isModalOpen.value = false;
-  emits("cerrar");
+
 };
 const closeMensaje = () => {
-     mensaje.value=""
   closeModal();
 };
-
-
 
 // Exponer función para abrir modal desde el padre
 defineExpose({ openModal });
@@ -60,6 +60,6 @@ defineExpose({ openModal });
 
 .modal-buttons { margin-top: 20px; display: flex; justify-content: space-around; }
 
-.btn-confirm { background: #dc2626; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+.btn-confirm { background: #059669; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
 
 </style>

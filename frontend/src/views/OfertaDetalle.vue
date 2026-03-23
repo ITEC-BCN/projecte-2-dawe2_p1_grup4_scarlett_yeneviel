@@ -186,9 +186,9 @@ const modalInformativoEstado = () => {
                 {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
               </button>
 
-              <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
+             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
                 {{ ofertaYaGuardada ? 'Oferta guardada' : '🤍 Guardar oferta' }}
-              </button>
+             </button>
 
             </div>
           </aside>

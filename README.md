@@ -224,6 +224,52 @@ HU09.2 Postula a ofertas
 - Funcionalidades del perfil de estudiante
 - El administrador puede actualizar los estados de las candidaturas
 
+## Dia 17 - 16/03/2026 
+- No hubo clase:vaga de profes
+
+## Dia 18 - 17/03/2026 
+- Presentación de prototipos
+
+## Dia 19 - 23/03/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala
+
+## Retrospective
+**Asistencia:** Scarlett Toala y Yeneviel Roberts
+| Qué ha ido bien | Qué hace falta mejorar | Qué he aprendido | Dificultat |
+|-----------------|------------------------|------------------|------------|
+|Tener el MVP hecho para la fecha establecida|Cambiar el código hardcodeado por uno dinámico  | Diferenciar las funcionalidades según el rol del usuario|Inclución del chatbot en la web |
+
+# Sprint 6 Daylies 
+
+**Planificación del sprint:**
+Cambiar el código hardcodeado por uno que obtenga los datos dínamicos de la base de datos, mejorar el chatbot y hacer los filtros de busqueda de las ofertas
+
+ - **HU14-Vista Perfil**
+3. HU14.3 Creación del dashboard de ofertas
+   
+- **HU09 - Ver ofertas iniciales home page**
+HU09.2 Postula a ofertas
+HU09.3 Guardar ofertas
+
+- **HU19 - Chat IA**
+1. HU19.1 Chatbot
+
+- **HU06 - Filtros de busqueda**
+HU06.1 - Crear un buscador con filtros donde se muestran las ofertas
+HU06.2 -  Mostrar la información de la base de datos 
+
+ - **HU08-añadir datos al perfil**
+1. HU08.1 El usuario puede modifcar los datos de su perfil
+
+
+## Dia 19 - 23/03/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala
+
+**Temas tratados**
+- Realizar el filtro de busqueda de las ofertas
+- El usuario puede guardar una oferta y luego verla
+
+
 
 
 

@@ -2,7 +2,9 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetchOfertas';
+import { useFetchUser } from '../composables/userFetchUser';
 import { URL_BACK } from '../../../config';
+import ModalInformativo from '../components/ModalInformativo.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -10,7 +12,9 @@ const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+const mensajePersonalizado = ref("");
 const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);
+const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
 
 const volver = () => router.push({ name: "ofertas" });
 
@@ -21,23 +25,33 @@ const bodyPostulacion = ref({
 })
 
 const yaPostulado = ref(false);
-const verificarPostulacion = async () => {
+const ofertaYaGuardada = ref(false);
 
-  try {
-    const listaPostulados = await postulaciones(`${URL_BACK}/postulaciones/${route.params.id}`)
+//función que verifica tanto si el estudiante ya postuló a la oferta como si ya la guardó, para actualizar ambos estados al cargar la página y desabilitar botones
+const verificarEstado= async (idEstudiante, estado) => {
 
+    try {
 
-    // Usamos .some para saber si existe al menos uno 
-    yaPostulado.value = listaPostulados.some(p => parseInt(p.id_usuario_estudiante) == parseInt(idEstudiante))
+      if(estado=="postulacion"){
+        const listaPostulados = await postulaciones(`${URL_BACK}/postulaciones/${route.params.id}`)
+        yaPostulado.value = listaPostulados.some(p => parseInt(p.id_usuario_estudiante) == parseInt(idEstudiante))
+      }else if(estado=="guardado"){
+        const listaOfertasGuardadas = await OfertasGuardadasUser(idEstudiante);
+        // Asegurarnos de comparar los mismos tipos (string/number) para que la búsqueda funcione
+        ofertaYaGuardada.value = listaOfertasGuardadas.some(o => String(o.id_oferta) === String(route.params.id));
+      }
+
   } catch (err) {
 
-    console.error("Error obteniendo las postulaciones: ", err)
+    console.error("Error comprobando estado postulaciones y guardados: ", err)
   }
+  
 }
 
 // Llamamos a la función cuando el componente se carga
 onMounted(() => {
-  verificarPostulacion();
+  verificarEstado(idEstudiante, "postulacion");
+  verificarEstado(idEstudiante, "guardado");
 });
 
 const postularOferta = async () => {
@@ -46,9 +60,16 @@ const postularOferta = async () => {
     try {
 
       const res = await estudiantePostula(bodyPostulacion.value, `${URL_BACK}/estudiante/postular`)
+      if (res.error) {
+        console.error("Error al hacer la incripción: ", res.error)
+        alert("Error al hacer la incripción")
+        return
+      }
 
-      alert("inscripción hecha correctamente")
-      verificarPostulacion()
+      
+      mensajePersonalizado.value = "¡Inscripción hecha correctamente!"
+      modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
+      verificarEstado(idEstudiante, "postulacion")
 
     } catch (error) {
       console.error("Error al hacer la incripción: ", error)
@@ -65,19 +86,36 @@ const postularOferta = async () => {
  
 }
 
-const guardarOferta = () => {
+const funGuardarOferta = async() => {
 
   if(idEstudiante){
-    alert("oferta guardada correctamente")
+
+    const response = await guardarOferta(idEstudiante, route.params.id)
+
+    if(response.error){
+      console.error("Error al guardar la oferta: ", response.error)
+      alert("Error al guardar la oferta")
+      return
+    }
+    // Actualizamos el estado local inmediatamente para que el botón se deshabilite sin esperar la recarga
+    ofertaYaGuardada.value = true
+    mensajePersonalizado.value = "¡Oferta guardada correctamente!"
+    modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
+    verificarEstado(idEstudiante, "guardado")
   }else{
     const hacerLogin= confirm("Inicia sesión para guardar la oferta")
 
    if(hacerLogin) router.push({ name: "login" })
   }
    
-    
- 
 }
+
+//Estado de modal para abrir el modal informativo 
+const modalEstadoRef = ref(null);
+
+const modalInformativoEstado = () => {
+  modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+};
 </script>
 
 <template>
@@ -147,13 +185,13 @@ const guardarOferta = () => {
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
 
-              <button @click="postularOferta" :disabled="yaPostulado" class="btn-primary-new">
+              <button @click="postularOferta" :disabled="yaPostulado" class="btn-postular">
                 {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
               </button>
 
-              <button @click="guardarOferta" class="btn-secondary-new">
-                🤍 Guardar oferta
-              </button>
+             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
+                {{ ofertaYaGuardada ? 'Oferta guardada' : '🤍 Guardar oferta' }}
+             </button>
 
             </div>
           </aside>
@@ -163,6 +201,9 @@ const guardarOferta = () => {
 
     </div>
   </div>
+
+  <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
+  <modal-informativo ref="modalEstadoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>
@@ -281,7 +322,7 @@ const guardarOferta = () => {
 }
 
 /* Botones */
-.btn-primary-new {
+.btn-postular {
   width: 100%;
   margin-top: 15px;
   padding: 15px;
@@ -295,18 +336,12 @@ const guardarOferta = () => {
   transition: all 0.2s ease;
 }
 
-.btn-primary-new:hover {
+.btn-postular:hover {
   background: #3b1675;
   transform: translateY(-2px);
 }
 
-.btn-primary-new:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-secondary-new {
+.btn-guardar-oferta {
   width: 100%;
   margin-top: 10px;
   padding: 12px;
@@ -315,6 +350,7 @@ const guardarOferta = () => {
   background: transparent;
   color: #4C1D95; /* Texto Morado */
   font-weight: 700;
+   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -323,10 +359,18 @@ const guardarOferta = () => {
   gap: 8px;
 }
 
-.btn-secondary-new:hover {
+.btn-guardar-oferta:hover {
   background: #f3f4f6;
   transform: translateY(-1px);
 }
+
+ button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  border: none;
+}
+
 
 .btn-back {
   background: none;

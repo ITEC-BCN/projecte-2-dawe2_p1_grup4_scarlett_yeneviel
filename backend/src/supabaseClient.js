@@ -36,7 +36,22 @@ export const crearOferta = async (nuevaOferta) => {
 export const obtenerOfertas = async () => {
   const { data, error } = await supabase
     .from('oferta')
-    .select('*')
+    .select(`
+      *,
+      ubicacion (
+        ciudad,
+        comunidad
+      ),
+      tipo_jornada (
+        modalidad,
+        jornada
+      ),
+      oferta_skill (
+        skill (
+          nombre
+        )
+      )
+    `)
     .order('fecha_publicacion', { ascending: false });
 
   if (error) throw error;

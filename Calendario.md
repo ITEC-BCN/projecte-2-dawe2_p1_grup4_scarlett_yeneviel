@@ -49,6 +49,8 @@ Detalle del perfil:Información básica
 
 - **16/03/2026 - 20/03/2026: Presentacions i avaluacions primer prototip**
 - 23/03/2026 - 05/04/2026 - Sprint 6 (17h)
+
+
 - 13/04/2026 - 19/04/2026 - Sprint 7 (22h)
 - 27/04/2026 - 03/05/2026 - Sprint 8 (22h)
 - 11/05/2026 - 15/05/2026 - Darrer sprint. Preparació presentacions (11h)

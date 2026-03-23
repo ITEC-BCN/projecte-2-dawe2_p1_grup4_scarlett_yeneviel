@@ -29,7 +29,7 @@ const router = createRouter({
     {
       path: '/ofertas',
       name: 'ofertas',
-      component: () => import('@/views/Ofertas.vue'),
+      component: () => import('@/views/PRUEBABuscador.vue'),
 
     },
     {

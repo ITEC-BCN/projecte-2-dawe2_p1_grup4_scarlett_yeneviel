@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetchOfertas';
 import { useFetchUser } from '../composables/userFetchUser';
 import { URL_BACK } from '../../../config';
+import ModalInformativo from '../components/ModalInformativo.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -96,7 +97,7 @@ const funGuardarOferta = async() => {
     }
     // Actualizamos el estado local inmediatamente para que el botón se deshabilite sin esperar la recarga
     ofertaYaGuardada.value = true
-    alert("oferta guardada correctamente")
+    modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
     verificarEstado(idEstudiante, "guardado")
   }else{
     const hacerLogin= confirm("Inicia sesión para guardar la oferta")
@@ -105,6 +106,13 @@ const funGuardarOferta = async() => {
   }
    
 }
+
+//Estado de modal para abrir el modal informativo 
+const modalEstadoRef = ref(null);
+
+const modalInformativoEstado = () => {
+  modalEstadoRef.value?.openModal();//modalEstadoRef es una instancia del componente ModalInformativo por eso puedo llamar openModal().
+};
 </script>
 
 <template>
@@ -190,6 +198,9 @@ const funGuardarOferta = async() => {
 
     </div>
   </div>
+
+  <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
+  <modal-informativo ref="modalEstadoRef" :mensaje="'¡Oferta guardada correctamente!'" />
 </template>
 
 <style scoped>

@@ -1,4 +1,5 @@
 <template>
+  <!--ESTE CÓDIGO YA NO ES NECESARIO, EL BOT SE LLAMA DES DE UN LINK EN EL index.html-->
   <div id="botpress-webchat-container"></div>
 </template>
 

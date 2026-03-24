@@ -29,7 +29,6 @@ export function useStudents(urlRef) {
             errorStudents.value = null;
         } catch (err) {
             errorStudents.value = err.message;
-            console.log("Token actual enviado:", localStorage.getItem('token')); // Mira si sale algo aquí
             console.error("Error detallado:", err);
         } finally {
             loadingStudents.value = false;

@@ -5,5 +5,6 @@ export const URL_FRONT = "https://expert-space-robot-97j5v99r4575cr64-5173.app.g
 //export const URL_BACK= "http://localhost:3000";
 //export const URL_FRONT= "http://localhost:5173";
 
+
  export const SALT_ROUNDS=12
 

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetchOfertas';
 import { useFetchUser } from '../composables/userFetchUser';
 import { URL_BACK } from '../../../config';
+import ModalInformativo from '../components/ModalInformativo.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,6 +12,7 @@ const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+const mensajePersonalizado = ref("");
 const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);
 const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
 
@@ -64,8 +66,9 @@ const postularOferta = async () => {
         return
       }
 
-      alert("inscripción hecha correctamente")
-      // Corregimos el nombre de la función para re-comprobar el estado
+      
+      mensajePersonalizado.value = "¡Inscripción hecha correctamente!"
+      modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
       verificarEstado(idEstudiante, "postulacion")
 
     } catch (error) {
@@ -96,7 +99,8 @@ const funGuardarOferta = async() => {
     }
     // Actualizamos el estado local inmediatamente para que el botón se deshabilite sin esperar la recarga
     ofertaYaGuardada.value = true
-    alert("oferta guardada correctamente")
+    mensajePersonalizado.value = "¡Oferta guardada correctamente!"
+    modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
     verificarEstado(idEstudiante, "guardado")
   }else{
     const hacerLogin= confirm("Inicia sesión para guardar la oferta")
@@ -105,6 +109,13 @@ const funGuardarOferta = async() => {
   }
    
 }
+
+//Estado de modal para abrir el modal informativo 
+const modalEstadoRef = ref(null);
+
+const modalInformativoEstado = () => {
+  modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+};
 </script>
 
 <template>
@@ -178,9 +189,9 @@ const funGuardarOferta = async() => {
                 {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
               </button>
 
-              <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
+             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
                 {{ ofertaYaGuardada ? 'Oferta guardada' : '🤍 Guardar oferta' }}
-              </button>
+             </button>
 
             </div>
           </aside>
@@ -190,6 +201,9 @@ const funGuardarOferta = async() => {
 
     </div>
   </div>
+
+  <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
+  <modal-informativo ref="modalEstadoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>

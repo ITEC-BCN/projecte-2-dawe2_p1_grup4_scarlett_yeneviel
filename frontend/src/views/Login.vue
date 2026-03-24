@@ -53,7 +53,7 @@ const handleLogin = async (e) => {
       localStorage.setItem('studentId', userId)
     }
 
-    // Redirigir a las ofertas personalizadas
+    // Redirigir a las ofertas personalizadas con el ID del usuario
     router.push({ name: 'ofertasRecomendadas', params: { id: userId } })
 
   } catch (err) {

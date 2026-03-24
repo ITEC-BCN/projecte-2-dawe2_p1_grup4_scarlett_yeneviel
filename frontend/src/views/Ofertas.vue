@@ -89,65 +89,81 @@ const crearOferta = () => {
 </script>
 
 <template>
-    <div v-if="loading" class="estado-mensaje">
-        <p>Loading...</p>
+    <div v-if="loading" class="estado-mensaje loader">
+        <span class="spinner"></span>
+        <p>Buscando las mejores ofertas para ti...</p>
     </div>
+    
     <div v-else-if="error" class="estado-mensaje error">
-        <p>Error: {{ error }}</p>
+        <p>⚠️ Ocurrió un error: {{ error }}</p>
     </div>
 
     <section v-else class="container-ofertas">
-        <h1 class="main-title">Ofertas de Prácticas</h1>
-
-        <div class="filtros-container">
-            <input type="text" v-model="searchQuery" placeholder="🔍 Empresa o puesto..." class="input-filtro" />
-
-            <select v-model="searchUbicacion" class="input-filtro select-filtro">
-                <option value="">📍 Todas las ciudades</option>
-
-                <option v-for="ciudad in ciudadesDisponibles" :key="ciudad" :value="ciudad">
-                    {{ ciudad }}
-                </option>
-            </select>
-
-            <select v-model="searchSkill" class="input-filtro select-filtro">
-                <option value="">💻 Todas las tecnologías</option>
-
-                <option v-for="skill in skillsDisponibles" :key="skill" :value="skill">
-                    {{ skill }}
-                </option>
-            </select>
-
-            <select v-model="selectedModalidad" class="input-filtro select-filtro">
-                <option value="">Todas las modalidades</option>
-                <option value="Presencial">Presencial</option>
-                <option value="Remoto">Remoto</option>
-                <option value="Hibrido">Híbrido</option>
-            </select>
+        <div class="ofertas-header">
+            <h1 class="main-title">Ofertas de Prácticas</h1>
+            <button v-if="roleUSer === 'admin'" @click="crearOferta" class="btn-admin">
+                <span>+</span> Crear nueva oferta
+            </button>
         </div>
 
-        <div v-if="roleUSer == 'admin'">
-            <button @click="crearOferta" class="addOferta">+ Crear nueva oferta</button>
+        <div class="search-panel">
+            <div class="search-main">
+                <span class="icon-search">🔍</span>
+                <input 
+                    type="text" 
+                    v-model="searchQuery" 
+                    placeholder="Busca por empresa, puesto o palabra clave..." 
+                    class="input-main" 
+                />
+            </div>
 
-            <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
-                <CardOferta v-for="oferta in ofertasFiltradas" :key="oferta.id" :oferta="oferta"
-                    @verDetalleOferta="verDetalle(oferta.id, 'verOfertaAdmin')" />
-            </div>
-            <div v-else class="estado-mensaje">
-                <p>No se encontraron ofertas con estos filtros.</p>
-            </div>
-        </div>
+            <div class="filters-row">
+                <div class="filter-group">
+                    <select v-model="searchUbicacion" class="select-filtro">
+                        <option value="">📍 Todas las ciudades</option>
+                        <option v-for="ciudad in ciudadesDisponibles" :key="ciudad" :value="ciudad">
+                            {{ ciudad }}
+                        </option>
+                    </select>
+                </div>
 
-        <div v-else>
-            <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
-                <CardOferta v-for="oferta in ofertasFiltradas" :key="oferta.id" :oferta="oferta"
-                    @verDetalleOferta="verDetalle(oferta.id, 'OfertaDetalle')" />
-            </div>
-            <div v-else class="estado-mensaje">
-                <p>No se encontraron ofertas con estos filtros.</p>
+                <div class="filter-group">
+                    <select v-model="searchSkill" class="select-filtro">
+                        <option value="">💻 Todas las tecnologías</option>
+                        <option v-for="skill in skillsDisponibles" :key="skill" :value="skill">
+                            {{ skill }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <select v-model="selectedModalidad" class="select-filtro">
+                        <option value="">🏢 Todas las modalidades</option>
+                        <option value="Presencial">Presencial</option>
+                        <option value="Remoto">Remoto</option>
+                        <option value="Hibrido">Híbrido</option>
+                    </select>
+                </div>
             </div>
         </div>
 
+        <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
+            <CardOferta 
+                v-for="oferta in ofertasFiltradas" 
+                :key="oferta.id" 
+                :oferta="oferta"
+                @verDetalleOferta="verDetalle(oferta.id, roleUSer === 'admin' ? 'verOfertaAdmin' : 'OfertaDetalle')" 
+            />
+        </div>
+        
+        <div v-else class="empty-state">
+
+            <h3>No encontramos resultados</h3>
+            <p>Prueba a cambiar los filtros o a usar términos más generales.</p>
+            <button class="btn-clear" @click="searchQuery=''; searchUbicacion=''; searchSkill=''; selectedModalidad=''">
+                Limpiar filtros
+            </button>
+        </div>
     </section>
 </template>
 
@@ -157,97 +173,200 @@ const crearOferta = () => {
     max-width: 1200px;
     margin: 40px auto;
     padding: 0 20px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* Cabecera */
+.ofertas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .main-title {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 800;
-    color: #0d1b2a;
-    margin-bottom: 20px;
-    text-align: left;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.5px;
 }
 
-/* ESTILOS DEL BUSCADOR */
-.buscador-container {
-    margin-bottom: 30px;
-}
-
-.input-buscador {
-    width: 100%;
-    max-width: 500px;
-    padding: 12px 16px;
-    font-size: 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-
-.input-buscador:focus {
-    border-color: #512da8;
-}
-
-/* Botón admin */
-.addOferta {
-    background-color: #512da8;
+/* Botón Admin */
+.btn-admin {
+    background-color: #4d1b95; /* Morado elegante */
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 1.5rem;
-    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(77, 27, 149, 0.2);
 }
 
-.addOferta:hover {
-    background-color: #4527a0;
+.btn-admin:hover {
+    background-color: #3b1473;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(77, 27, 149, 0.3);
 }
 
-/* Grid */
+/* === PANEL DE BÚSQUEDA === */
+.search-panel {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f5f9;
+    margin-bottom: 40px;
+}
+
+/* Buscador de texto (Principal) */
+.search-main {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px 16px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.search-main:focus-within {
+    border-color: #4d1b95;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(77, 27, 149, 0.1);
+}
+
+.icon-search {
+    font-size: 20px;
+    color: #64748b;
+    margin-right: 12px;
+}
+
+.input-main {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+    font-size: 16px;
+    color: #1e293b;
+    outline: none;
+}
+
+.input-main::placeholder {
+    color: #94a3b8;
+}
+
+/* Filtros secundarios (Selects) */
+.filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 220px;
+}
+
+.select-filtro {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    color: #475569;
+    background-color: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    /* Flechita personalizada para el select */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+}
+
+.select-filtro:focus {
+    border-color: #4d1b95;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(77, 27, 149, 0.1);
+}
+
+/* === GRID DE OFERTAS === */
 .grid-ofertas {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
 }
 
+/* === ESTADOS (Carga, Error, Vacío) === */
 .estado-mensaje {
     text-align: center;
-    margin-top: 2rem;
-    color: #666;
+    margin-top: 60px;
+    color: #64748b;
+    font-size: 18px;
 }
 
-.filtros-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 30px;
-    background-color: #f8f9fa;
-    padding: 20px;
+.estado-mensaje.error {
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 16px;
     border-radius: 12px;
+    border: 1px solid #fca5a5;
+    display: inline-block;
 }
 
-.input-filtro {
-    flex: 1;
-    min-width: 200px;
-    padding: 12px 16px;
-    font-size: 15px;
-    border: 2px solid #e0e0e0;
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 2px dashed #e2e8f0;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    color: #0f172a;
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.btn-clear {
+    background: white;
+    border: 2px solid #e2e8f0;
+    padding: 10px 20px;
     border-radius: 8px;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-
-.input-filtro:focus {
-    border-color: #512da8;
-}
-
-.select-filtro {
+    color: #475569;
+    font-weight: 600;
     cursor: pointer;
-    background-color: white;
+    transition: all 0.2s;
 }
 
+.btn-clear:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+/* === RESPONSIVE === */
 @media (max-width: 1024px) {
     .grid-ofertas {
         grid-template-columns: repeat(2, 1fr);
@@ -255,8 +374,15 @@ const crearOferta = () => {
 }
 
 @media (max-width: 768px) {
+    .ofertas-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
     .grid-ofertas {
         grid-template-columns: 1fr;
+    }
+    .filter-group {
+        min-width: 100%;
     }
 }
 </style>

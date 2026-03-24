@@ -1,120 +1,50 @@
-<!-- <script setup>
+<script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-// Asegúrate de que las rutas a tus componentes y config sean correctas
 import CardOferta from '../components/cardOferta.vue'; 
 import { URL_BACK } from '../../../config';
 
 const router = useRouter();
 
-// Variables reactivas para guardar los datos y el estado de la pantalla
+// Variables reactivas
 const ofertasRecomendadas = ref([]);
 const cargando = ref(true);
 const error = ref(null);
 
 const cargarOfertasPersonalizadas = async () => {
-  // 1. Sacamos el ID del usuario desde el localStorage (¡Asegúrate de guardarlo al hacer login!)
-  const userId = localStorage.getItem('studentId'); 
+  // 1. Sacamos el ID del usuario. Asegúrate de que al hacer el login lo guardas como 'studentId' o el nombre que uses.
+  const userId = localStorage.getItem('studentId'); // O 'studentId', el que estés usando en tu auth
 
   if (!userId) {
-    error.value = "No hemos encontrado tu sesión. Por favor, vuelve a iniciar sesión.";
+    error.value = "Inicia sesión para ver tus ofertas recomendadas.";
     cargando.value = false;
     return;
   }
 
   try {
-    // 2. Llamamos a tu endpoint personalizado
+    // 2. Llamamos a tu endpoint del backend
     const respuesta = await fetch(`${URL_BACK}/estudiantes/${userId}/ofertas-recomendadas`);
     
     if (!respuesta.ok) {
-      throw new Error("Hubo un problema al buscar tus ofertas compatibles.");
+      throw new Error("Aún no tienes skills registradas o hubo un error al buscar el match.");
     }
 
-    // 3. Guardamos la magia que devuelve tu backend
-    ofertasRecomendadas.value = await respuesta.json();
+    // 3. Guardamos la respuesta
+    const data = await respuesta.json();
+    ofertasRecomendadas.value = data;
 
   } catch (err) {
-    console.error("Error cargando las ofertas personalizadas:", err);
+    console.error("Error:", err);
     error.value = err.message;
   } finally {
-    // 4. Apagamos el estado de carga
     cargando.value = false;
   }
 };
 
-// Ejecutamos la función en cuanto el componente se monta en la pantalla
 onMounted(() => {
   cargarOfertasPersonalizadas();
 });
 
-// Función para ir al detalle de la oferta
-const verDetalle = (id) => {
-  router.push({ name: 'OfertaDetalle', params: { id: id } });
-};
-</script> -->
-
-<script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-// Asegúrate de que las rutas a tus componentes sean correctas
-import CardOferta from '../components/cardOferta.vue'; 
-
-const router = useRouter();
-
-// Variables reactivas para guardar los datos y el estado de la pantalla
-const ofertasRecomendadas = ref([]);
-const cargando = ref(true);
-const error = ref(null);
-
-const cargarOfertasPersonalizadas = async () => {
-  // 1. Verificamos que el usuario esté logueado (opcional, pero buena práctica)
-  const userId = localStorage.getItem('studentId'); 
-
-  if (!userId) {
-    error.value = "No hemos encontrado tu sesión. Por favor, vuelve a iniciar sesión.";
-    cargando.value = false;
-    return;
-  }
-
-  // 2. ¡EL TRUCO! Simulamos una llamada al servidor de 1 segundo
-  setTimeout(() => {
-    // 3. HARDCODEAMOS las ofertas (usando los datos reales que me pasaste)
-    ofertasRecomendadas.value = [
-      {
-        id: 22,
-        nombre_empresa: "SEAT CODE",
-        fecha_publicacion: "2026-02-17",
-        fecha_expiracion: "2026-03-19",
-        tipo_puesto: "Desarrollador Web Fullstack (.NET/Vue.js)",
-        descripcion: "El hub digital de SEAT busca desarrolladores para soluciones de movilidad inteligente.",
-        funciones: "Implementación de servicios backend robustos y colaboración en el diseño de interfaces de usuario.",
-        beneficios: "Salario competitivo, tickets restaurante, seguro médico y un ambiente muy dinámico.",
-        requisitos: ".NET 6+, C#, SQL y nociones de metodologías Agile (Scrum)."
-      },
-      {
-        id: 20,
-        nombre_empresa: "BETWEEN Technology",
-        fecha_publicacion: "2026-02-17",
-        fecha_expiracion: "2026-03-17",
-        tipo_puesto: "Programador .NET Core",
-        descripcion: "Consultora tecnológica con proyectos en sectores industriales y servicios.",
-        funciones: "Análisis técnico, migración de sistemas legacy y desarrollo de aplicaciones web escalables.",
-        beneficios: "Contrato indefinido, plan de carrera personalizado y certificaciones oficiales pagadas.",
-        requisitos: "C#, ASP.NET MVC, Entity Framework y conocimientos de front-end (Vue, Angular o React)."
-      }
-    ];
-
-    // 4. Apagamos el estado de carga
-    cargando.value = false;
-  }, 1000); // Tarda 1000 milisegundos (1 segundo) en mostrarse
-};
-
-// Ejecutamos la función en cuanto el componente se monta en la pantalla
-onMounted(() => {
-  cargarOfertasPersonalizadas();
-});
-
-// Función para ir al detalle de la oferta
 const verDetalle = (id) => {
   router.push({ name: 'OfertaDetalle', params: { id: id } });
 };

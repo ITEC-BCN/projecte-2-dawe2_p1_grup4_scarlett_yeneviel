@@ -200,15 +200,55 @@ export const obtenerEstudiantePorId = async (id) => {
 };
 
 //Modificar Usuario
-export const actualizarEstudiante = async (id, datosActualizados) => {
-  const { data, error } = await supabase
-    .from('usuario_estudiante')
-    .update(datosActualizados)
-    .eq('id', id)
-    .select();
+// ==========================================
+// 3. ACTUALIZAR ESTUDIANTE (Perfil, Skills y Enlaces)
+// ==========================================
+export const actualizarEstudiante = async (studentId, payload) => {
+  const { about, telefono, location, estudios, idiomas, skills_ids, enlaces } = payload;
 
-  if (error) throw error;
-  return data;
+  // A. Actualizar datos básicos
+  const { error: errorEstudiante } = await supabase
+    .from('usuario_estudiante')
+    .update({ about, telefono, location, estudios, idiomas })
+    .eq('id', studentId);
+  if (errorEstudiante) throw errorEstudiante;
+
+  // B. Actualizar Skills (Borramos las viejas, insertamos las nuevas)
+  const { error: errorDelSkills } = await supabase
+    .from('estudiante_skill')
+    .delete()
+    .eq('id_estudiante', studentId);
+  if (errorDelSkills) throw errorDelSkills;
+
+  if (skills_ids && skills_ids.length > 0) {
+    const skillsToInsert = skills_ids.map(id_skill => ({ id_estudiante: studentId, id_skill }));
+    const { error: errorInsSkills } = await supabase
+      .from('estudiante_skill')
+      .insert(skillsToInsert);
+    if (errorInsSkills) throw errorInsSkills;
+  }
+
+  // C. Actualizar Enlaces (Borramos los viejos, insertamos los nuevos)
+  const { error: errorDelEnlaces } = await supabase
+    .from('enlaces')
+    .delete()
+    .eq('id_estudiante', studentId);
+  if (errorDelEnlaces) throw errorDelEnlaces;
+
+  if (enlaces && enlaces.length > 0) {
+    const enlacesToInsert = enlaces.map(link => ({
+      id_estudiante: studentId,
+      name: link.name || link.label,
+      url: link.url,
+      tipo: link.tipo
+    }));
+    const { error: errorInsEnlaces } = await supabase
+      .from('enlaces')
+      .insert(enlacesToInsert);
+    if (errorInsEnlaces) throw errorInsEnlaces;
+  }
+
+  return { message: "Perfil actualizado correctamente" };
 };
 
 export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
@@ -384,3 +424,12 @@ export const actualizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado
   return data;
 }
 
+//Obtener todas las skills
+export const obtenerSkills = async () => {
+  const { data, error } = await supabase
+    .from('skill')
+    .select('*');
+
+  if (error) throw error;
+  return data;
+}; 

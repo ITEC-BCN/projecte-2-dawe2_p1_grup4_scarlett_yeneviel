@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
@@ -8,31 +8,47 @@ const route = useRoute();
 const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
+const role = localStorage.getItem('role');
 
- const role = localStorage.getItem('role'); 
+const { students, loadingStudents } = useStudents(url);
 
- 
+// --- NUEVO: Estado para todas las skills de la BD ---
+const allDbSkills = ref([]);
+const selectedHardSkillId = ref("");
+const selectedSoftSkillId = ref("");
 
-const { students, loadingStudents, isCreating, createStudent } =
-  useStudents(url);
-
-const user = reactive({
-  name: "",
-  role: "",
-  avatar: "",
-  about: "",
+// Cargar todas las skills al montar el componente
+onMounted(async () => {
+  try {
+    const res = await fetch(`${URL_BACK}/skills`);
+    const data = await res.json();
+    allDbSkills.value = data;
+  } catch (error) {
+    console.error("Error cargando skills de la BD:", error);
+  }
 });
 
+// Filtramos las skills para los selects (solo mostrar las que no se han añadido aún)
+const availableHardSkills = computed(() => {
+  return allDbSkills.value.filter(s =>
+    s.tipo === 'hard skill' && !hardSkills.value.some(hs => hs.id === s.id)
+  );
+});
 
+const availableSoftSkills = computed(() => {
+  return allDbSkills.value.filter(s =>
+    s.tipo === 'soft skill' && !softSkills.value.some(ss => ss.id === s.id)
+  );
+});
+// ----------------------------------------------------
+
+const user = reactive({ name: "", role: "", avatar: "", about: "" });
+const contact = reactive({ email: "", phone: "", location: "" });
+
+// Ahora estos arrays guardarán objetos: { id: 1, nombre: 'Vue.js' }
 const hardSkills = ref([]);
 const softSkills = ref([]);
 const languages = ref([]);
-const contact = reactive({
-  email: "",
-  phone: "",
-  location: "",
-});
-
 const documents = ref([]);
 const academicBackground = ref([]);
 
@@ -40,89 +56,41 @@ watch(
   () => students.value,
   (newStudents) => {
     if (newStudents) {
-      Object.assign(user, {
-        name: newStudents.nombre + " " + newStudents.apellido || "Sin nombre",
-        role: newStudents.role || "Sin rol",
-        avatar: newStudents.avatar || "/img/avatarGroup.png",
-        about: newStudents.about || "Sin descripción.",
-      });
+      user.name = (newStudents.nombre || "") + " " + (newStudents.apellido || "");
+      user.role = newStudents.role || "Estudiante";
+      user.avatar = newStudents.foto_perfil || "/img/avatarGroup.png";
+      user.about = newStudents.about || "";
+      contact.email = newStudents.email || "";
+      contact.phone = newStudents.telefono || "";
+      contact.location = newStudents.location || "";
 
-      /* 1. Limpiamos los arrays antes de llenarlos */
       hardSkills.value = [];
       softSkills.value = [];
 
-      /* 2. Clasificar las skills */
-      if (newStudents.estudiante_skill && Array.isArray(newStudents.estudiante_skill)) {
-        console.log("Procesando skills:", newStudents.estudiante_skill);
-        
+      if (newStudents.estudiante_skill) {
         newStudents.estudiante_skill.forEach((item) => {
-          // Accedemos de forma segura a item.skill
-          const datosSkill = item.skill; 
-          
-          if (datosSkill && datosSkill.nombre) {
-            // Limpiamos el tipo para evitar errores de mayúsculas o espacios
+          const datosSkill = item.skill;
+          if (datosSkill) {
             const tipoSkill = datosSkill.tipo ? datosSkill.tipo.toLowerCase().trim() : '';
-
+            // AHORA GUARDAMOS EL OBJETO ENTERO PARA TENER EL ID
             if (tipoSkill === 'hard skill') {
-              hardSkills.value.push(datosSkill.nombre);
+              hardSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
             } else if (tipoSkill === 'soft skill') {
-              softSkills.value.push(datosSkill.nombre);
+              softSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
             }
           }
         });
       }
-      console.log("¿Hay skills en el estudiante?:", newStudents.estudiante_skill);
 
-      /* Añadimos los idiomas del estudiante */
-      if (
-        newStudents.idiomas &&
-        newStudents.idiomas.idiomas &&
-        newStudents.idiomas.idiomas.length > 0
-      ) {
-        languages.value = newStudents.idiomas.idiomas.map((lang) => ({
-          name: lang.name,
-          level: lang.level,
-        }));
-      }
+      if (newStudents.idiomas?.idiomas) languages.value = [...newStudents.idiomas.idiomas];
+      if (newStudents.estudios?.formacion) academicBackground.value = [...newStudents.estudios.formacion];
 
-      /* Cargamos los datos de contacto del estudiante */
-      if (newStudents.email) {
-        contact.email = newStudents.email;
-      }
-
-      if (newStudents.telefono) {
-        contact.phone = newStudents.telefono;
-      }
-
-      if (newStudents.location) {
-        contact.location = newStudents.location;
-      }
-
-      /* Añadimos los links del estudiante */
-      if (newStudents.enlaces && newStudents.enlaces.length > 0) {
-        // 1. Un console.log para ver exactamente qué nos manda Supabase
-        console.log("Enlaces recibidos del back:", newStudents.enlaces);
-
-        // 2. Procesar los enlaces mapeando el ID y cubriendo name/nombre
-        documents.value = newStudents.enlaces.map((enlace, index) => ({
-          id: enlace.id || Date.now() + index, // <-- ¡CRÍTICO! Añadimos un ID para el v-for
-          label: enlace.nombre || enlace.name || `Enlace ${index + 1}`, // <-- Cubrimos 'nombre' y 'name'
-          tipo: enlace.tipo || "Enlace",
-          url: enlace.url || "#",
-        }));
-      } else {
-        console.log("El backend no envió enlaces o el array está vacío.");
-      }
-
-      // Función segura para obtener el icono
-      
-
-      /* Añadimos la formación académica del estudiante */
-      if (newStudents.estudios && Array.isArray(newStudents.estudios.formacion)) {
-        academicBackground.value = newStudents.estudios.formacion.map((f) => ({
-          centro: f.centro || "Centro no especificado",
-          anio: f.anio || "N/A",
-          titulo: f.titulo || "Título no especificado",
+      if (newStudents.enlaces) {
+        documents.value = newStudents.enlaces.map((e, i) => ({
+          id: e.id || Date.now() + i,
+          label: e.nombre || e.name || `Enlace ${i + 1}`,
+          tipo: e.tipo || "Portfolio",
+          url: e.url || "#",
         }));
       }
     }
@@ -131,80 +99,88 @@ watch(
 );
 
 const editing = ref(false);
-const form = reactive({ name: user.name, role: user.role, about: user.about });
-
-const newHard = ref("");
-const newSoft = ref("");
-const newDocLabel = ref("");
-const newDocURL = ref("");
-const newLangName = ref("");
-const newLangLevel = ref("");
 
 function toggleEdit() {
   editing.value = !editing.value;
-  if (!editing.value) {
-    form.name = user.name;
-    form.role = user.role;
-    form.about = user.about;
+}
+
+// --- FUNCIONES DE SKILLS CON LÍMITE DE 10 ---
+function addHardFromSelect() {
+  if (hardSkills.value.length >= 10) {
+    alert("Has alcanzado el límite máximo de 10 Hard Skills.");
+    return;
+  }
+  const skill = allDbSkills.value.find(s => s.id === selectedHardSkillId.value);
+  if (skill) {
+    hardSkills.value.push({ id: skill.id, nombre: skill.nombre });
+    selectedHardSkillId.value = "";
   }
 }
 
-function saveProfile() {
-  user.name = form.name;
-  user.role = form.role;
-  user.about = form.about;
-  editing.value = false;
-}
-
-function addHard() {
-  const v = newHard.value && newHard.value.trim();
-  if (v) {
-    hardSkills.value.push(v);
-    newHard.value = "";
+function addSoftFromSelect() {
+  if (softSkills.value.length >= 10) {
+    alert("Has alcanzado el límite máximo de 10 Soft Skills.");
+    return;
+  }
+  const skill = allDbSkills.value.find(s => s.id === selectedSoftSkillId.value);
+  if (skill) {
+    softSkills.value.push({ id: skill.id, nombre: skill.nombre });
+    selectedSoftSkillId.value = "";
   }
 }
-function removeHard(i) {
-  hardSkills.value.splice(i, 1);
-}
 
-function addSoft() {
-  const v = newSoft.value && newSoft.value.trim();
-  if (v) {
-    softSkills.value.push(v);
-    newSoft.value = "";
+function removeHard(i) { hardSkills.value.splice(i, 1); }
+function removeSoft(i) { softSkills.value.splice(i, 1); }
+
+// --- EL BOTÓN DE GUARDAR AHORA ENVÍA DATOS AL BACKEND ---
+async function saveProfile() {
+  // Extraemos solo los IDs de las skills que el usuario tiene ahora
+  const allSelectedSkillIds = [
+    ...hardSkills.value.map(s => s.id),
+    ...softSkills.value.map(s => s.id)
+  ];
+
+  const payload = {
+    about: user.about,
+    telefono: contact.phone,
+    location: contact.location,
+    estudios: { formacion: academicBackground.value },
+    idiomas: { idiomas: languages.value },
+    skills_ids: allSelectedSkillIds,
+    enlaces: documents.value
+  };
+
+  try {
+    const response = await fetch(`${URL_BACK}/estudiantes/${studentId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      editing.value = false;
+      alert("¡Perfil actualizado con éxito!");
+    } else {
+      const err = await response.json();
+      alert("Error al guardar: " + err.error);
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Error de conexión al guardar el perfil.");
   }
 }
-function removeSoft(i) {
-  softSkills.value.splice(i, 1);
-}
+// Función para obtener el icono según el tipo de enlace
+const getDocIcon = (tipo) => {
+  if (!tipo) return 'fa-solid fa-file-lines';
 
-function addDocument() {
-  const label = newDocLabel.value && newDocLabel.value.trim();
-  const url = newDocURL.value && newDocURL.value.trim();
-  if (label && url) {
-    documents.value.push({ id: Date.now(), label, url });
-    newDocLabel.value = "";
-    newDocURL.value = "";
-  }
-}
-function removeDocument(id) {
-  documents.value = documents.value.filter((d) => d.id !== id);
-}
+  const tipoFormat = tipo.toLowerCase();
+  if (tipoFormat.includes('github')) return 'fa-brands fa-github';
+  if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
 
-function addLanguage() {
-  const name = newLangName.value && newLangName.value.trim();
-  const level = newLangLevel.value && newLangLevel.value.trim();
-  if (name) {
-    languages.value.push({ id: Date.now(), name, level: level || "Básico" });
-    newLangName.value = "";
-    newLangLevel.value = "";
-  }
-}
-function removeLanguage(i) {
-  languages.value.splice(i, 1);
-}
+  return 'fa-solid fa-file-lines';
+};
 
-// Funciones para editar
+// --- VARIABLES Y FUNCIONES PARA AÑADIR EDUCACIÓN ---
 const newEdu = reactive({ centro: "", anio: "", titulo: "" });
 
 function addEducation() {
@@ -220,22 +196,55 @@ function removeEducation(index) {
   academicBackground.value.splice(index, 1);
 }
 
-// Función segura para obtener el icono
-const getDocIcon = (tipo) => {
-  if (!tipo) return 'fa-solid fa-file-lines';
+// --- VARIABLES Y FUNCIONES PARA AÑADIR IDIOMAS ---
+const newLangName = ref("");
+const newLangLevel = ref("");
 
-  const tipoFormat = tipo.toLowerCase();
-  if (tipoFormat.includes('github')) return 'fa-brands fa-github';
-  if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
+function addLanguage() {
+  const name = newLangName.value && newLangName.value.trim();
+  const level = newLangLevel.value && newLangLevel.value.trim();
+  if (name) {
+    languages.value.push({ id: Date.now(), name, level: level || "Básico" });
+    newLangName.value = "";
+    newLangLevel.value = "";
+  }
+}
 
-  return 'fa-solid fa-file-lines';
-};
+function removeLanguage(i) {
+  languages.value.splice(i, 1);
+}
 
+// --- VARIABLES Y FUNCIONES PARA AÑADIR ENLACES ---
+const newDocName = ref(""); // Usamos 'name' como en tu BD
+const newDocURL = ref("");
+const newDocTipo = ref(""); // Para elegir si es Linkedin o Github
+
+// --- FUNCIÓN DE ENLACES CON LÍMITE DE 3 ---
+function addDocument() {
+  if (documents.value.length >= 3) {
+    alert("Solo puedes añadir un máximo de 3 enlaces.");
+    return;
+  }
+  const name = newDocName.value && newDocName.value.trim();
+  const url = newDocURL.value && newDocURL.value.trim();
+  const tipo = newDocTipo.value;
+
+  if (name && url && tipo) {
+    documents.value.push({ id: Date.now(), name, url, tipo });
+    newDocName.value = "";
+    newDocURL.value = "";
+    newDocTipo.value = "";
+  }
+}
+
+function removeDocument(id) {
+  documents.value = documents.value.filter((d) => d.id !== id);
+}
 </script>
 
 <template>
   <div class="profile-page">
-    
+
     <aside class="profile-card">
       <div class="profile-header">
         <div class="avatar-container">
@@ -268,7 +277,9 @@ const getDocIcon = (tipo) => {
 
       <div class="sidebar-block">
         <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
-        <p class="sidebar-text">{{ user.about }}</p>
+        <textarea v-if="editing" v-model="user.about" class="input" rows="4"
+          placeholder="Escribe algo sobre ti..."></textarea>
+        <p v-else class="sidebar-text">{{ user.about || 'Aún no has escrito nada sobre ti.' }}</p>
       </div>
 
       <div class="sidebar-block">
@@ -278,20 +289,25 @@ const getDocIcon = (tipo) => {
             <i class="fa-solid fa-envelope"></i>
             <span>{{ contact.email || 'Sin email' }}</span>
           </a>
+
           <div class="contact-item">
             <i class="fa-solid fa-phone"></i>
-            <span>{{ contact.phone || 'Sin teléfono' }}</span>
+            <input v-if="editing" v-model="contact.phone" type="text" class="input input-sm" placeholder="Tu teléfono">
+            <span v-else>{{ contact.phone || 'Sin teléfono' }}</span>
           </div>
+
           <div class="contact-item">
             <i class="fa-solid fa-location-dot"></i>
-            <span>{{ contact.location || 'Sin ubicación' }}</span>
+            <input v-if="editing" v-model="contact.location" type="text" class="input input-sm"
+              placeholder="Tu ciudad/ubicación">
+            <span v-else>{{ contact.location || 'Sin ubicación' }}</span>
           </div>
         </div>
       </div>
     </aside>
 
     <main class="profile-main">
-      
+
       <section class="section">
         <h2 class="section-title">
           <i class="fa-solid fa-graduation-cap icon-green"></i> Formación Académica
@@ -334,20 +350,36 @@ const getDocIcon = (tipo) => {
         <h2 class="section-title">
           <i class="fa-solid fa-bolt icon-purple"></i> Habilidades y Competencias
         </h2>
-        
+
         <div class="skills-grid">
           <div class="skill-group">
             <h3 class="skill-subtitle">Hard Skills</h3>
             <div class="skill-list">
               <span v-for="(s, i) in hardSkills" :key="i" class="skill-chip hard">
-                {{ s }}
-                <button v-if="editing" @click="removeHard(i)" class="btn-remove-chip"><i class="fa-solid fa-xmark"></i></button>
+                {{ s.nombre }}
+                <button v-if="editing" @click="removeHard(i)" class="btn-remove-chip"><i
+                    class="fa-solid fa-xmark"></i></button>
               </span>
               <span v-if="hardSkills.length === 0" class="empty-state">No hay hard skills.</span>
             </div>
-            <div v-if="editing" class="add-inline">
-              <input v-model="newHard" class="input" placeholder="Añadir..." @keyup.enter="addHard" />
-              <button class="btn-add-small" @click.prevent="addHard">Añadir</button>
+
+            <div v-if="editing" class="add-inline" style="margin-top: 10px;">
+              <p v-if="hardSkills.length >= 10" class="empty-state" style="color: #e74c3c;">
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de 10 hard skills alcanzado.
+              </p>
+              <p v-else-if="availableHardSkills.length === 0" class="empty-state">
+                <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las hard skills disponibles!
+              </p>
+              <template v-else>
+                <select v-model="selectedHardSkillId" class="input">
+                  <option value="" disabled>Selecciona una skill...</option>
+                  <option v-for="skill in availableHardSkills" :key="skill.id" :value="skill.id">
+                    {{ skill.nombre }}
+                  </option>
+                </select>
+                <button class="btn-add-small" @click.prevent="addHardFromSelect"
+                  :disabled="!selectedHardSkillId">Añadir</button>
+              </template>
             </div>
           </div>
 
@@ -355,14 +387,30 @@ const getDocIcon = (tipo) => {
             <h3 class="skill-subtitle">Soft Skills</h3>
             <div class="skill-list">
               <span v-for="(s, i) in softSkills" :key="i" class="skill-chip soft">
-                {{ s }}
-                <button v-if="editing" @click="removeSoft(i)" class="btn-remove-chip"><i class="fa-solid fa-xmark"></i></button>
+                {{ s.nombre }}
+                <button v-if="editing" @click="removeSoft(i)" class="btn-remove-chip"><i
+                    class="fa-solid fa-xmark"></i></button>
               </span>
               <span v-if="softSkills.length === 0" class="empty-state">No hay soft skills.</span>
             </div>
-            <div v-if="editing" class="add-inline">
-              <input v-model="newSoft" class="input" placeholder="Añadir..." @keyup.enter="addSoft" />
-              <button class="btn-add-small" @click.prevent="addSoft">Añadir</button>
+
+            <div v-if="editing" class="add-inline" style="margin-top: 10px;">
+              <p v-if="softSkills.length >= 10" class="empty-state" style="color: #e74c3c;">
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de 10 soft skills alcanzado.
+              </p>
+              <p v-else-if="availableSoftSkills.length === 0" class="empty-state">
+                <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las soft skills disponibles!
+              </p>
+              <template v-else>
+                <select v-model="selectedSoftSkillId" class="input">
+                  <option value="" disabled>Selecciona una skill...</option>
+                  <option v-for="skill in availableSoftSkills" :key="skill.id" :value="skill.id">
+                    {{ skill.nombre }}
+                  </option>
+                </select>
+                <button class="btn-add-small" @click.prevent="addSoftFromSelect"
+                  :disabled="!selectedSoftSkillId">Añadir</button>
+              </template>
             </div>
           </div>
         </div>
@@ -374,25 +422,54 @@ const getDocIcon = (tipo) => {
           <div class="skill-list">
             <span v-for="(lang, i) in languages" :key="i" class="skill-chip lang">
               <strong>{{ lang.name }}</strong> <span class="badge-level">{{ lang.level }}</span>
-              <button v-if="editing" @click="removeLanguage(i)" class="btn-remove-chip"><i class="fa-solid fa-xmark"></i></button>
+              <button v-if="editing" @click="removeLanguage(i)" class="btn-remove-chip"><i
+                  class="fa-solid fa-xmark"></i></button>
             </span>
             <span v-if="languages.length === 0" class="empty-state">Sin idiomas registrados.</span>
+          </div>
+
+          <div v-if="editing" class="add-inline" style="margin-top: 1rem;">
+            <input v-model="newLangName" class="input input-sm" placeholder="Idioma (Ej: Inglés)" />
+            <input v-model="newLangLevel" class="input input-sm" placeholder="Nivel (Ej: B2)" />
+            <button class="btn-add-small" @click.prevent="addLanguage">Añadir</button>
           </div>
         </section>
 
         <section class="section">
           <h2 class="section-title"><i class="fa-solid fa-link icon-purple"></i> Enlaces</h2>
+
           <div class="links-list">
             <div v-for="doc in documents" :key="doc.id" class="link-item">
               <a :href="doc.url" target="_blank" class="link-content">
                 <i :class="getDocIcon(doc.tipo)" class="link-icon"></i>
-                <span class="link-label">{{ doc.label }}</span>
+                <span class="link-label">{{ doc.name }}</span>
               </a>
               <button v-if="editing" class="btn-icon-danger-small" @click="removeDocument(doc.id)">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
             <div v-if="documents.length === 0" class="empty-state">Aún no hay enlaces.</div>
+          </div>
+
+          <div v-if="editing" class="add-box" style="margin-top: 1rem;">
+            <p v-if="documents.length >= 3" class="empty-state" style="color: #e74c3c; text-align: center;">
+              <i class="fa-solid fa-lock"></i> Has alcanzado el límite máximo de 3 enlaces.
+            </p>
+
+            <div v-else class="edit-row">
+              <input v-model="newDocName" class="input input-sm" placeholder="Nombre (Ej: Mi perfil)" />
+
+              <select v-model="newDocTipo" class="input input-sm">
+                <option value="" disabled>Tipo...</option>
+                <option value="Github">Github</option>
+                <option value="Linkedin">Linkedin</option>
+                <option value="Portfolio">Portfolio</option>
+              </select>
+
+              <input v-model="newDocURL" class="input" placeholder="URL (https://...)" />
+
+              <button class="btn-icon-success" @click.prevent="addDocument"><i class="fa-solid fa-plus"></i></button>
+            </div>
           </div>
         </section>
       </div>
@@ -409,7 +486,8 @@ const getDocIcon = (tipo) => {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
-  background-color: #F3F4F6; /* Fondo gris muy suave y limpio */
+  background-color: #F3F4F6;
+  /* Fondo gris muy suave y limpio */
   min-height: 100vh;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -471,7 +549,8 @@ const getDocIcon = (tipo) => {
   gap: 10px;
 }
 
-.btn-primary, .btn-save {
+.btn-primary,
+.btn-save {
   width: 100%;
   padding: 12px;
   border: none;
@@ -491,7 +570,9 @@ const getDocIcon = (tipo) => {
   color: #334155;
 }
 
-.btn-primary:hover { background: #e2e8f0; }
+.btn-primary:hover {
+  background: #e2e8f0;
+}
 
 .btn-primary.btn-cancel {
   background: #fee2e2;
@@ -502,7 +583,10 @@ const getDocIcon = (tipo) => {
   background: var(--accent-purple);
   color: white;
 }
-.btn-save:hover { background: #7c3aed; }
+
+.btn-save:hover {
+  background: #7c3aed;
+}
 
 /* ESTADÍSTICAS */
 .profile-stats {
@@ -604,8 +688,13 @@ const getDocIcon = (tipo) => {
   padding-bottom: 15px;
 }
 
-.icon-green { color: var(--accent-green); }
-.icon-purple { color: var(--accent-purple); }
+.icon-green {
+  color: var(--accent-green);
+}
+
+.icon-purple {
+  color: var(--accent-purple);
+}
 
 /* LÍNEA DE TIEMPO (FORMACIÓN) */
 .education-timeline {
@@ -722,7 +811,7 @@ const getDocIcon = (tipo) => {
 }
 
 .badge-level {
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
   padding: 2px 6px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -748,7 +837,7 @@ const getDocIcon = (tipo) => {
 
 .link-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .link-content {
@@ -788,9 +877,14 @@ const getDocIcon = (tipo) => {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
-.input-sm { width: 80px; flex: none; }
+.input-sm {
+  width: 80px;
+  flex: none;
+}
 
-.btn-icon-danger, .btn-icon-success, .btn-remove-chip {
+.btn-icon-danger,
+.btn-icon-success,
+.btn-remove-chip {
   background: #fee2e2;
   color: #ef4444;
   border: none;
@@ -816,7 +910,10 @@ const getDocIcon = (tipo) => {
   opacity: 0.7;
   padding: 0;
 }
-.btn-remove-chip:hover { opacity: 1; }
+
+.btn-remove-chip:hover {
+  opacity: 1;
+}
 
 .add-inline {
   display: flex;
@@ -848,10 +945,28 @@ const getDocIcon = (tipo) => {
 
 /* RESPONSIVE */
 @media (max-width: 860px) {
-  .profile-page { flex-direction: column; }
-  .profile-card { width: 100%; box-sizing: border-box; position: static; }
-  .grid-two-cols, .skills-grid { grid-template-columns: 1fr; }
-  .edit-row { flex-direction: column; align-items: stretch; }
-  .input-sm { width: 100%; }
+  .profile-page {
+    flex-direction: column;
+  }
+
+  .profile-card {
+    width: 100%;
+    box-sizing: border-box;
+    position: static;
+  }
+
+  .grid-two-cols,
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-sm {
+    width: 100%;
+  }
 }
 </style>

@@ -13,7 +13,7 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
-
+.032
 import { 
   obtenerOfertas, 
   crearOferta, 
@@ -35,7 +35,8 @@ import {
   obtenerOfertasRecomendadas,
   actualizarEstadoOferta,
   guardarOferta,
-  obtenerOfertasGuardadas
+  obtenerOfertasGuardadas,
+  obtenerSkills,
 
 
 } from './supabaseClient.js'
@@ -210,21 +211,24 @@ app.get("/estudiantes", async (req, res) => {
 });
 
 // GET: Obtener un estudiante por ID
-app.get("/estudiantes/:id", requireAuth ,async (req, res) => {
+// GET: Obtener un estudiante por ID
+app.get("/estudiantes/:id", requireAuth, async (req, res) => {
   try {
     const estudiante = await obtenerEstudiantePorId(req.params.id);
     res.json(estudiante);
   } catch (err) {
+    console.error("Error obteniendo estudiante:", err);
     res.status(404).json({ error: err.message || "Estudiante no encontrado" });
   }
 });
 
-// PUT: Actualizar datos (por ejemplo, cambiar el estado de 'pendiente' a 'aprobado')
+// PUT: Actualizar datos completos del estudiante
 app.put("/estudiantes/:id", async (req, res) => {
   try {
     const actualizado = await actualizarEstudiante(req.params.id, req.body);
     res.json(actualizado);
   } catch (err) {
+    console.error("Error actualizando estudiante:", err);
     res.status(400).json({ error: err.message || String(err) });
   }
 });
@@ -481,3 +485,13 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
 app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
 
 
+// GET: Obtener todas las skills para el menú desplegable del frontend
+app.get("/skills", async (req, res) => {
+  try {
+    const skills = await obtenerSkills();
+    res.json(skills);
+  } catch (err) {
+    console.error("Error obteniendo skills:", err);
+    res.status(500).json({ error: err.message });
+  }
+});

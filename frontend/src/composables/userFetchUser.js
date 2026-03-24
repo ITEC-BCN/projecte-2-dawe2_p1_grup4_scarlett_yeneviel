@@ -51,30 +51,7 @@ export function useFetchUser(url) {
         }
     }
 
-    //ACTIONS
-
-    // POST
-    const NewStudent = async (body, urlAlternativa) => {
-        // body = datos del registr. urlAlternativa = ruta donde enviarlo .
-        try {
-            const res = await fetch(urlAlternativa, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            const resultado = await res.json();
-            if (!res.ok) {
-                throw new Error(error.value);
-            }
-            return resultado // Devolvemos el resultado para que quien llame lo pueda usar
-            
-        } catch (err) {
-            throw err; // Re-lanzamos para que el componente sepa que hubo fallo
-        }
-    };
-
-    const getOneStudent=async()=>{
+     const getOneStudent=async()=>{
 
               try {
             const res = await fetch(urlAlternativa, {
@@ -100,6 +77,30 @@ export function useFetchUser(url) {
             loading.value = false;
         }
     }
+
+    //ACTIONS
+
+    // POST
+    const NewStudent = async (body, urlAlternativa) => {
+        // body = datos del registr. urlAlternativa = ruta donde enviarlo .
+        try {
+            const res = await fetch(urlAlternativa, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const resultado = await res.json();
+            if (!res.ok) {
+                throw new Error(error.value);
+            }
+            return resultado // Devolvemos el resultado para que quien llame lo pueda usar
+            
+        } catch (err) {
+            throw err; // Re-lanzamos para que el componente sepa que hubo fallo
+        }
+    };
+
 
     const guardarOferta = async (id_estudiante, id_oferta) => {
         try {

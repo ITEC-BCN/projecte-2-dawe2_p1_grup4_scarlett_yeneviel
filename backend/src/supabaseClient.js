@@ -180,8 +180,7 @@ export const obtenerEstudiantes = async () => {
 
 //Obtener 1 usuario 
 export const obtenerEstudiantePorId = async (id) => {
-  console.log("1. Buscando estudiante con ID:", id); 
-
+  //console.log("1. Buscando estudiante con ID:", id);
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .select(`
@@ -189,13 +188,25 @@ export const obtenerEstudiantePorId = async (id) => {
         enlaces(*),
         estudiante_skill(
           skill(*)
+        ),
+        postulaciones(
+        *,
+          oferta(
+            id,
+            nombre_empresa,
+            tipo_puesto,
+            fecha_expiracion
+          )
+        ),
+        oferta_guardada(
+          id_oferta
         )
       `)
     .eq('id', id)
     .single();
 
   if (error) throw new Error("No encontrado");
-  console.log("3. Enlaces encontrados en la BD:", data.enlaces);
+  //console.log("3. Enlaces encontrados en la BD:", data.enlaces);
   return data;
 };
 

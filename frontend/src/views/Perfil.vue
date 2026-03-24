@@ -23,7 +23,7 @@ const user = reactive({
   about: "",
 });
 
-
+console.log("Datos del estudiante desde el composable:", students);
 const hardSkills = ref([]);
 const softSkills = ref([]);
 const languages = ref([]);
@@ -53,7 +53,7 @@ watch(
 
       /* 2. Clasificar las skills */
       if (newStudents.estudiante_skill && Array.isArray(newStudents.estudiante_skill)) {
-        console.log("Procesando skills:", newStudents.estudiante_skill);
+        console.log("Procesando skills:");
         
         newStudents.estudiante_skill.forEach((item) => {
           // Accedemos de forma segura a item.skill
@@ -71,7 +71,7 @@ watch(
           }
         });
       }
-      console.log("¿Hay skills en el estudiante?:", newStudents.estudiante_skill);
+      //console.log("¿Hay skills en el estudiante?:", newStudents.estudiante_skill);
 
       /* Añadimos los idiomas del estudiante */
       if (
@@ -100,8 +100,6 @@ watch(
 
       /* Añadimos los links del estudiante */
       if (newStudents.enlaces && newStudents.enlaces.length > 0) {
-        // 1. Un console.log para ver exactamente qué nos manda Supabase
-        console.log("Enlaces recibidos del back:", newStudents.enlaces);
 
         // 2. Procesar los enlaces mapeando el ID y cubriendo name/nombre
         documents.value = newStudents.enlaces.map((enlace, index) => ({

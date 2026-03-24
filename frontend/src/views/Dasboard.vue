@@ -1,17 +1,46 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, watch,computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { URL_BACK } from "../../../config";
+import { useStudents } from "../composables/useStudents";
 
 const userRole = ref('estudiante') 
 const userName = ref('Alex ITB')
 
+const route = useRoute();
+const router = useRouter();
+const studentId = route.params.id || localStorage.getItem("studentId");
+const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
+
+
+const { students, loadingStudents, isCreating, createStudent } =
+  useStudents(url);
+
+  const ofertasIncritas = ref([]);
+  const ofertasGuardadas = ref([]);
+  const documentos = ref([]);
+  const user=reactive({
+    name:"",
+    role:localStorage.getItem('role')
+  })
+
+  watch(students, (newStudents) => {
+    if (newStudents) {
+      user.name = newStudents.nombre || "Usuario";
+      user.role = newStudents.rol || "estudiante";
+      ofertasIncritas.value = newStudents.postulaciones || [];
+      ofertasGuardadas.value = newStudents.oferta_guardada || [];
+      documentos.value = newStudents.enlaces || [];
+    }
+  }, { immediate: true });
 // Datos de estadísticas
 const stats = computed(() => {
-  if (userRole.value === 'estudiante') {
+  if (user.role === 'estudiante') {
     return [
-      { label: 'Inscritas', valor: 12, icon: '📝' },
-      { label: 'Guardadas', valor: 5, icon: '⭐' },
-      { label: 'Mensajes', valor: 3, icon: '💬' },
-      { label: 'Entrevistas', valor: 1, icon: '📅' }
+      { label: 'Inscritas', valor: ofertasIncritas.value.length, icon: '📝' },
+      { label: 'Guardadas', valor: ofertasGuardadas.value.length, icon: '⭐' },
+      { label: 'CV', valor: 1, icon: '📝' },
+      { label: 'Otros documentos', valor: documentos.value.length, icon: '📝' }
     ]
   }
   return [
@@ -26,13 +55,6 @@ const quickActions = computed(() => {
   return ['Publicar Oferta', 'Ver Candidatos', 'Chat IA']
 })
 
-// Lista limitada de candidaturas
-const candidaturas = ref([
-  { cargo: 'Frontend Developer', empresa: 'TechSolutions', estado: 'En proceso', clase: 'status-1' },
-  { cargo: 'Backend Junior', empresa: 'Node-IT', estado: 'CV Leído', clase: 'status-2' },
-  { cargo: 'UI Designer Prácticas', empresa: 'CreativApp', estado: 'Finalista', clase: 'status-3' },
-  { cargo: 'Data Analyst', empresa: 'DataCorp', estado: 'En proceso', clase: 'status-1' }
-])
 </script>
 
 <template>
@@ -41,8 +63,8 @@ const candidaturas = ref([
       
       <header class="main-header">
         <div class="header-text">
-          <h1>Hola, <span class="resaltar">{{ userName }}</span></h1>
-          <p>Resumen de actividad: <strong>{{ userRole }}</strong></p>
+          <h1>Hola, <span class="resaltar">{{ user.name }}</span></h1>
+          <p>Resumen de actividad: <strong>{{ user.role }}</strong></p>
         </div>
         <button class="btn-primary">Cerrar Sesión</button>
       </header>
@@ -65,12 +87,12 @@ const candidaturas = ref([
             <a href="#" class="ver-mas">Ver todas</a>
           </div>
           <div class="items-list">
-            <div v-for="(item, index) in candidaturas" :key="index" class="item-row">
+            <div v-for="(item, index) in ofertasIncritas" :key="index" class="item-row">
               <div class="item-info">
-                <strong>{{ item.cargo }}</strong>
-                <span>{{ item.empresa }}</span>
+                <strong>{{ item.oferta.tipo_puesto }}</strong>
+                <span>{{ item.oferta.nombre_empresa }}</span>
               </div>
-              <span class="pill" :class="item.clase">{{ item.estado }}</span>
+              <span class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' : 'status-3'">{{ item.estado }}</span>
             </div>
           </div>
         </section>

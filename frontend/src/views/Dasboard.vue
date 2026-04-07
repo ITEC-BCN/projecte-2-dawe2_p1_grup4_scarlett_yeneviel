@@ -38,9 +38,7 @@ const stats = computed(() => {
   if (user.role === 'estudiante') {
     return [
       { label: 'Inscritas', valor: ofertasIncritas.value.length, icon: '📝' },
-      { label: 'Guardadas', valor: ofertasGuardadas.value.length, icon: '⭐' },
-      { label: 'CV', valor: 1, icon: '📝' },
-      { label: 'Otros documentos', valor: documentos.value.length, icon: '📝' }
+      { label: 'Guardadas', valor: ofertasGuardadas.value.length, icon: '⭐' }
     ]
   }
   return [
@@ -51,7 +49,7 @@ const stats = computed(() => {
 })
 
 const quickActions = computed(() => {
-  if (userRole.value === 'estudiante') return ['Editar CV', 'Mis Candidaturas', 'Filtros']
+  if (userRole.value === 'estudiante') return ['Editar CV', 'Filtros']
   return ['Publicar Oferta', 'Ver Candidatos', 'Chat IA']
 })
 
@@ -66,7 +64,6 @@ const quickActions = computed(() => {
           <h1>Hola, <span class="resaltar">{{ user.name }}</span></h1>
           <p>Resumen de actividad: <strong>{{ user.role }}</strong></p>
         </div>
-        <button class="btn-primary">Cerrar Sesión</button>
       </header>
 
       <section class="stats-row">
@@ -84,7 +81,6 @@ const quickActions = computed(() => {
         <section class="panel list-panel">
           <div class="panel-header">
             <h3>{{ userRole === 'estudiante' ? 'Candidaturas' : 'Últimas' }} <strong class="resaltar">{{ userRole === 'estudiante' ? 'Recientes' : 'Publicaciones' }}</strong></h3>
-            <a href="#" class="ver-mas">Ver todas</a>
           </div>
           <div class="items-list">
             <div v-for="(item, index) in ofertasIncritas" :key="index" class="item-row">
@@ -92,11 +88,11 @@ const quickActions = computed(() => {
                 <strong>{{ item.oferta.tipo_puesto }}</strong>
                 <span>{{ item.oferta.nombre_empresa }}</span>
               </div>
-              <span class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' : 'status-3'">{{ item.estado }}</span>
+              <span class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' :item.estado==='Descartado' ? 'status-4' : 'status-3'">{{ item.estado }}</span>
             </div>
           </div>
         </section>
-
+<!--
         <section class="panel actions-panel">
           <h3>Gestión <strong class="resaltar">Rápida</strong></h3>
           <div class="actions-grid">
@@ -109,7 +105,7 @@ const quickActions = computed(() => {
             <p>Sugerencia: Tu perfil encaja con 2 nuevas ofertas de <strong>Frontend</strong> en Barcelona.</p>
           </div>
         </section>
-
+-->
       </div>
     </main>
   </div>
@@ -181,7 +177,7 @@ h3 .resaltar {
 .stat-box {
   background: white;
   flex: 1;
-  min-width: 180px;
+  max-width: 200px;
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid #eee;
@@ -197,9 +193,10 @@ h3 .resaltar {
 /* GRID */
 .main-grid {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
+  /*grid-template-columns: 1.8fr 1fr;*/
   gap: 1.5rem;
   margin-bottom: 2rem;
+
 }
 
 .panel {
@@ -242,6 +239,7 @@ h3 .resaltar {
 .status-1 { background: #f0fdf4; color: #10b981; }
 .status-2 { background: #eff6ff; color: #3b82f6; }
 .status-3 { background: #faf5ff; color: #a855f7; }
+.status-4 { background: #faf5ff; color: #f00; }
 
 /* ACCIONES */
 .actions-grid {

@@ -147,27 +147,41 @@ const modalInformativoEstado = () => {
           </div>
 
           <h1 class="empresa-new">
-            {{ oferta.nombre_empresa }}
+            {{ oferta.tipo_puesto }}
           </h1>
+          <h2>
+         {{ oferta.nombre_empresa }}
+        </h2>
         </header>
-
+        
         <div class="contenido-grid-new">
 
           <main class="info-principal-new">
-            
             <section class="seccion-detalle-new">
-              <h3>Tus responsabilidades día a día</h3>
+              <p>{{ oferta.descripcion }}</p>
+            </section>
+            <div class="detalle-meta">
+               <p>{{ oferta.jornada }}</p>
+               <p>{{ oferta.modalidad }}</p>
+            </div>
+            <section class="seccion-detalle-new">
+              <h3>Tus responsabilidades</h3>
               <p>{{ oferta.funciones }}</p>
             </section>
 
             <section class="seccion-detalle-new">
-              <h3>Qué buscamos en ti</h3>
+              <h3>Requisitos</h3>
               <p>{{ oferta.requisitos }}</p>
             </section>
 
             <section class="seccion-detalle-new">
               <h3>Nuestra oferta</h3>
               <p>{{ oferta.beneficios }}</p>
+            </section>
+
+            <section class="seccion-detalle-new">
+              <h3>Contenido adicional</h3>
+              <p>{{ oferta.contenido_extra }}</p>
             </section>
 
           </main>
@@ -321,6 +335,13 @@ const modalInformativoEstado = () => {
   font-size: 1.1rem;
 }
 
+.detalle-meta{
+  display: flex;
+  gap: 20px;
+  color: black;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
 /* Botones */
 .btn-postular {
   width: 100%;

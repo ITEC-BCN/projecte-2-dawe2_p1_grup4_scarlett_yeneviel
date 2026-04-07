@@ -12,6 +12,8 @@ const role = localStorage.getItem('role');
 
 const { students, loadingStudents } = useStudents(url);
 
+const hasUnsavedChanges = ref(false); //Conocer si hay cambios sin guardar
+
 // --- NUEVO: Estado para todas las skills de la BD ---
 const allDbSkills = ref([]);
 const selectedHardSkillId = ref("");
@@ -104,10 +106,10 @@ function toggleEdit() {
   editing.value = !editing.value;
 }
 
-// --- FUNCIONES DE SKILLS CON LÍMITE DE 10 ---
+// --- FUNCIONES DE SKILLS CON LÍMITE DE 6 ---
 function addHardFromSelect() {
-  if (hardSkills.value.length >= 10) {
-    alert("Has alcanzado el límite máximo de 10 Hard Skills.");
+  if (hardSkills.value.length >= 6) {
+    alert("Has alcanzado el límite máximo de 6 Hard Skills.");
     return;
   }
   const skill = allDbSkills.value.find(s => s.id === selectedHardSkillId.value);
@@ -115,11 +117,12 @@ function addHardFromSelect() {
     hardSkills.value.push({ id: skill.id, nombre: skill.nombre });
     selectedHardSkillId.value = "";
   }
+  hasUnsavedChanges.value = true;
 }
 
 function addSoftFromSelect() {
-  if (softSkills.value.length >= 10) {
-    alert("Has alcanzado el límite máximo de 10 Soft Skills.");
+  if (softSkills.value.length >= 6) {
+    alert("Has alcanzado el límite máximo de 6 Soft Skills.");
     return;
   }
   const skill = allDbSkills.value.find(s => s.id === selectedSoftSkillId.value);
@@ -127,10 +130,11 @@ function addSoftFromSelect() {
     softSkills.value.push({ id: skill.id, nombre: skill.nombre });
     selectedSoftSkillId.value = "";
   }
+  hasUnsavedChanges.value = true;
 }
 
-function removeHard(i) { hardSkills.value.splice(i, 1); }
-function removeSoft(i) { softSkills.value.splice(i, 1); }
+function removeHard(i) { hardSkills.value.splice(i, 1); hasUnsavedChanges.value = true; }
+function removeSoft(i) { softSkills.value.splice(i, 1); hasUnsavedChanges.value = true; }
 
 // --- EL BOTÓN DE GUARDAR AHORA ENVÍA DATOS AL BACKEND ---
 async function saveProfile() {
@@ -160,6 +164,8 @@ async function saveProfile() {
     if (response.ok) {
       editing.value = false;
       alert("¡Perfil actualizado con éxito!");
+      // Recargar datos del estudiante para reflejar cambios
+      hasUnsavedChanges.value = false;
     } else {
       const err = await response.json();
       alert("Error al guardar: " + err.error);
@@ -190,28 +196,47 @@ function addEducation() {
     newEdu.anio = "";
     newEdu.titulo = "";
   }
+  hasUnsavedChanges.value = true;
 }
 
 function removeEducation(index) {
   academicBackground.value.splice(index, 1);
+  hasUnsavedChanges.value = true;
 }
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR IDIOMAS ---
 const newLangName = ref("");
 const newLangLevel = ref("");
+const languageLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 function addLanguage() {
-  const name = newLangName.value && newLangName.value.trim();
-  const level = newLangLevel.value && newLangLevel.value.trim();
-  if (name) {
-    languages.value.push({ id: Date.now(), name, level: level || "Básico" });
-    newLangName.value = "";
-    newLangLevel.value = "";
+  const name = newLangName.value?.trim();
+  const level = newLangLevel.value?.trim() || "A1";
+
+  if (!name) return;
+
+  if (languages.value.length >= 5) {
+    alert("Has alcanzado el límite máximo de 5 idiomas.");
+    return;
   }
+
+  languages.value.push({ id: Date.now(), name, level });
+  newLangName.value = "";
+  newLangLevel.value = "";
+  hasUnsavedChanges.value = true;
 }
+
+const availableLanguages = computed(() => {
+  // Si quieres controlar idiomas duplicados, por ejemplo:
+  return languageLevels.filter(lvl =>
+    !languages.value.some(lang => lang.level === lvl)
+  );
+});
 
 function removeLanguage(i) {
   languages.value.splice(i, 1);
+  hasUnsavedChanges.value = true;
+
 }
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR ENLACES ---
@@ -228,7 +253,7 @@ const availableLinkTypes = computed(() => {
   );
 });
 
-// 👇 AHORA SÍ funciona
+// AHORA SÍ funciona
 watch(documents, () => {
   if (!availableLinkTypes.value.includes(newDocTipo.value)) {
     newDocTipo.value = "";
@@ -258,10 +283,12 @@ function addDocument() {
     newDocURL.value = "";
     newDocTipo.value = "";
   }
+  hasUnsavedChanges.value = true;
 }
 
 function removeDocument(id) {
   documents.value = documents.value.filter((d) => d.id !== id);
+  hasUnsavedChanges.value = true;
 }
 
 
@@ -301,7 +328,11 @@ function removeDocument(id) {
       </div>
 
       <div class="sidebar-block">
+
         <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
+        <p v-if="editing && hasUnsavedChanges" class="alert-warning">
+          ⚠️ No olvides dar al botón <strong>Guardar</strong> para que los cambios se registren.
+        </p>
         <textarea v-if="editing" v-model="user.about" class="input" rows="4"
           placeholder="Escribe algo sobre ti..."></textarea>
         <p v-else class="sidebar-text">{{ user.about || 'Aún no has escrito nada sobre ti.' }}</p>
@@ -453,10 +484,22 @@ function removeDocument(id) {
             <span v-if="languages.length === 0" class="empty-state">Sin idiomas registrados.</span>
           </div>
 
-          <div v-if="editing" class="add-inline" style="margin-top: 1rem;">
-            <input v-model="newLangName" class="input input-sm" placeholder="Idioma (Ej: Inglés)" />
-            <input v-model="newLangLevel" class="input input-sm" placeholder="Nivel (Ej: B2)" />
-            <button class="btn-add-small" @click.prevent="addLanguage">Añadir</button>
+          <div v-if="editing" class="add-inline">
+            <p v-if="languages.length >= 5" class="empty-state" style="color: #e74c3c;">
+              <i class="fa-solid fa-circle-exclamation"></i> Límite de 5 idiomas alcanzado.
+            </p>
+            <p v-else-if="availableLanguages.length === 0" class="empty-state">
+              <i class="fa-solid fa-check-double"></i> ¡Has añadido todos los idiomas disponibles!
+            </p>
+            <template v-else>
+              <input v-model="newLangName" class="input input-sm" placeholder="Idioma (Ej: Inglés)" />
+              <select v-model="newLangLevel" class="input input-sm">
+                <option v-for="lvl in languageLevels" :key="lvl" :value="lvl">
+                  {{ lvl }}
+                </option>
+              </select>
+              <button class="btn-add-small" @click.prevent="addLanguage">Añadir</button>
+            </template>
           </div>
         </section>
 
@@ -992,6 +1035,16 @@ function removeDocument(id) {
 
   .input-sm {
     width: 100%;
+  }
+
+  .alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>

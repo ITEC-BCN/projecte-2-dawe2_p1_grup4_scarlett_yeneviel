@@ -88,7 +88,7 @@ watch(
       if (newStudents.enlaces) {
         documents.value = newStudents.enlaces.map((e, i) => ({
           id: e.id || Date.now() + i,
-          label: e.nombre || e.name || `Enlace ${i + 1}`,
+          name: e.nombre || e.name || `Enlace ${i + 1}`,
           tipo: e.tipo || "Portfolio",
           url: e.url || "#",
         }));
@@ -215,22 +215,45 @@ function removeLanguage(i) {
 }
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR ENLACES ---
-const newDocName = ref(""); // Usamos 'name' como en tu BD
+const newDocName = ref("");
 const newDocURL = ref("");
-const newDocTipo = ref(""); // Para elegir si es Linkedin o Github
+const newDocTipo = ref("");
 
-// --- FUNCIÓN DE ENLACES CON LÍMITE DE 3 ---
+const allLinkTypes = ["Github", "Linkedin", "Portfolio"];
+
+const availableLinkTypes = computed(() => {
+  const usados = documents.value.map(d => d.tipo?.toLowerCase().trim());
+  return allLinkTypes.filter(tipo =>
+    !usados.includes(tipo.toLowerCase())
+  );
+});
+
+// 👇 AHORA SÍ funciona
+watch(documents, () => {
+  if (!availableLinkTypes.value.includes(newDocTipo.value)) {
+    newDocTipo.value = "";
+  }
+});
+
+// --- FUNCIÓN DE ENLACES ---
 function addDocument() {
   if (documents.value.length >= 3) {
     alert("Solo puedes añadir un máximo de 3 enlaces.");
     return;
   }
-  const name = newDocName.value && newDocName.value.trim();
-  const url = newDocURL.value && newDocURL.value.trim();
+
+  const name = newDocName.value?.trim();
+  const url = newDocURL.value?.trim();
   const tipo = newDocTipo.value;
 
   if (name && url && tipo) {
-    documents.value.push({ id: Date.now(), name, url, tipo });
+    documents.value.push({
+      id: Date.now(),
+      name,
+      url,
+      tipo
+    });
+
     newDocName.value = "";
     newDocURL.value = "";
     newDocTipo.value = "";
@@ -240,6 +263,8 @@ function addDocument() {
 function removeDocument(id) {
   documents.value = documents.value.filter((d) => d.id !== id);
 }
+
+
 </script>
 
 <template>
@@ -364,14 +389,14 @@ function removeDocument(id) {
             </div>
 
             <div v-if="editing" class="add-inline" style="margin-top: 10px;">
-              <p v-if="hardSkills.length >= 10" class="empty-state" style="color: #e74c3c;">
-                <i class="fa-solid fa-circle-exclamation"></i> Límite de 10 hard skills alcanzado.
+              <p v-if="hardSkills.length >= 6" class="empty-state" style="color: #e74c3c;">
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 hard skills alcanzado.
               </p>
               <p v-else-if="availableHardSkills.length === 0" class="empty-state">
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las hard skills disponibles!
               </p>
               <template v-else>
-                <select v-model="selectedHardSkillId" class="input">
+                <select v-model="selectedHardSkillId" class="input" :disabled="hardSkills.length >= 6">
                   <option value="" disabled>Selecciona una skill...</option>
                   <option v-for="skill in availableHardSkills" :key="skill.id" :value="skill.id">
                     {{ skill.nombre }}
@@ -395,8 +420,8 @@ function removeDocument(id) {
             </div>
 
             <div v-if="editing" class="add-inline" style="margin-top: 10px;">
-              <p v-if="softSkills.length >= 10" class="empty-state" style="color: #e74c3c;">
-                <i class="fa-solid fa-circle-exclamation"></i> Límite de 10 soft skills alcanzado.
+              <p v-if="softSkills.length >= 6" class="empty-state" style="color: #e74c3c;">
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 soft skills alcanzado.
               </p>
               <p v-else-if="availableSoftSkills.length === 0" class="empty-state">
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las soft skills disponibles!
@@ -461,9 +486,9 @@ function removeDocument(id) {
 
               <select v-model="newDocTipo" class="input input-sm">
                 <option value="" disabled>Tipo...</option>
-                <option value="Github">Github</option>
-                <option value="Linkedin">Linkedin</option>
-                <option value="Portfolio">Portfolio</option>
+                <option v-for="tipo in availableLinkTypes" :key="tipo" :value="tipo">
+                  {{ tipo }}
+                </option>
               </select>
 
               <input v-model="newDocURL" class="input" placeholder="URL (https://...)" />

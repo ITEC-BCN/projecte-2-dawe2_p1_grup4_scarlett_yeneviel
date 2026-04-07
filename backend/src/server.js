@@ -482,7 +482,7 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   }
 });
 
-app.listen(4000, () => console.log('Servidor en http://localhost:4000'));
+app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
 
 
 // GET: Obtener todas las skills para el menú desplegable del frontend

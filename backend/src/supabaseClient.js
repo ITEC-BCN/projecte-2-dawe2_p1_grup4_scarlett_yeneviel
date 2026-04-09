@@ -198,7 +198,12 @@ export const obtenerEstudiantePorId = async (id) => {
           )
         ),
         oferta_guardada(
-          id_oferta
+          id_oferta,
+          oferta(
+            id,
+            nombre_empresa,
+            tipo_puesto
+          )
         )
       `)
     .eq('id', id)

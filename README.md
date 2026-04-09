@@ -290,9 +290,9 @@ Vuelta de las vacaciones de semana santa
 **Asistencia:** Yeneviel Roberts, Scarlett Toala
 
 **Temas tratados**
-- Creación del dashboard de ofertas con datos dinámicos (continuación)
-- Ver detalle de la oferta postulada
-- Ver detalle de las ofertas guardadas
+- El usuario puede modifcar los datos de su perfil (continuación)
+- Ver detalle de la oferta postulada desde el dashboard
+- Ver detalle de las ofertas guardadas desde el dashboard
 
 
 

@@ -162,6 +162,7 @@ const modalInformativoEstado = () => {
             </section>
             <div class="detalle-meta">
                <p>{{ oferta.jornada }}</p>
+               <p>-</p>
                <p>{{ oferta.modalidad }}</p>
             </div>
             <section class="seccion-detalle-new">
@@ -338,7 +339,7 @@ const modalInformativoEstado = () => {
 .detalle-meta{
   display: flex;
   gap: 20px;
-  color: black;
+  color: #2E7D32;
   font-size: 0.9rem;
   font-weight: bold;
 }

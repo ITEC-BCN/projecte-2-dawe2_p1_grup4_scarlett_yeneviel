@@ -262,14 +262,37 @@ HU06.2 -  Mostrar la información de la base de datos
 1. HU08.1 El usuario puede modifcar los datos de su perfil
 
 
-## Dia 19 - 23/03/2026 
+## Dia 20 - 23/03/2026 
 **Asistencia:** Yeneviel Roberts, Scarlett Toala
 
 **Temas tratados**
 - Realizar el filtro de busqueda de las ofertas
 - El usuario puede guardar una oferta y luego verla
 
+## Dia 21 - 24/03/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala
+Úñtimo día antes de las vacaciones de semana santa
 
+**Temas tratados**
+- Realizar el filtro de busqueda de las ofertas (continuación)
+- Creación del dashboard de ofertas con datos dinámicos
+
+## Dia 22 - 07/04/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala
+Vuelta de las vacaciones de semana santa
+
+**Temas tratados**
+-  El usuario puede modifcar los datos de su perfil
+- Creación del dashboard de ofertas con datos dinámicos (continuación)
+
+
+## Dia 23 - 08/04/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala
+
+**Temas tratados**
+- Creación del dashboard de ofertas con datos dinámicos (continuación)
+- Ver detalle de la oferta postulada
+- Ver detalle de las ofertas guardadas
 
 
 

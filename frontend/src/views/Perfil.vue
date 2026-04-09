@@ -14,7 +14,7 @@ const { students, loadingStudents } = useStudents(url);
 
 const hasUnsavedChanges = ref(false); //Conocer si hay cambios sin guardar
 
-// --- NUEVO: Estado para todas las skills de la BD ---
+// --- Estado para todas las skills de la BD ---
 const allDbSkills = ref([]);
 const selectedHardSkillId = ref("");
 const selectedSoftSkillId = ref("");
@@ -30,7 +30,7 @@ onMounted(async () => {
   }
 });
 
-// Filtramos las skills para los selects (solo mostrar las que no se han añadido aún)
+// Filtramos las skills para los selects
 const availableHardSkills = computed(() => {
   return allDbSkills.value.filter(s =>
     s.tipo === 'hard skill' && !hardSkills.value.some(hs => hs.id === s.id)
@@ -42,60 +42,76 @@ const availableSoftSkills = computed(() => {
     s.tipo === 'soft skill' && !softSkills.value.some(ss => ss.id === s.id)
   );
 });
-// ----------------------------------------------------
 
 const user = reactive({ name: "", role: "", avatar: "", about: "" });
 const contact = reactive({ email: "", phone: "", location: "" });
 
-// Ahora estos arrays guardarán objetos: { id: 1, nombre: 'Vue.js' }
 const hardSkills = ref([]);
 const softSkills = ref([]);
 const languages = ref([]);
 const documents = ref([]);
 const academicBackground = ref([]);
 
+// --- NUEVO: Función para cargar/restaurar los datos originales ---
+const restoreOriginalData = () => {
+  const source = students.value;
+  if (!source) return;
+
+  user.name = (source.nombre || "") + " " + (source.apellido || "");
+  user.role = source.role || "Estudiante";
+  user.avatar = source.foto_perfil || "/img/avatarGroup.png";
+  user.about = source.about || "";
+  contact.email = source.email || "";
+  contact.phone = source.telefono || "";
+  contact.location = source.location || "";
+
+  hardSkills.value = [];
+  softSkills.value = [];
+
+  if (source.estudiante_skill) {
+    source.estudiante_skill.forEach((item) => {
+      const datosSkill = item.skill;
+      if (datosSkill) {
+        const tipoSkill = datosSkill.tipo ? datosSkill.tipo.toLowerCase().trim() : '';
+        if (tipoSkill === 'hard skill') {
+          hardSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
+        } else if (tipoSkill === 'soft skill') {
+          softSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
+        }
+      }
+    });
+  }
+
+  // IMPORTANTE: Hacemos copias profundas (JSON parse/stringify) para romper la 
+  // referencia de los objetos. Así, si el usuario edita un input y luego cancela,
+  // el objeto original de 'students' se mantiene intacto.
+  languages.value = source.idiomas?.idiomas
+    ? JSON.parse(JSON.stringify(source.idiomas.idiomas))
+    : [];
+
+  academicBackground.value = source.estudios?.formacion
+    ? JSON.parse(JSON.stringify(source.estudios.formacion))
+    : [];
+
+  if (source.enlaces) {
+    documents.value = source.enlaces.map((e, i) => ({
+      id: e.id || Date.now() + i,
+      name: e.nombre || e.name || `Enlace ${i + 1}`,
+      tipo: e.tipo || "Portfolio",
+      url: e.url || "#",
+    }));
+  } else {
+    documents.value = [];
+  }
+
+  hasUnsavedChanges.value = false;
+};
+
+// El watch ahora simplemente llama a nuestra función cuando llegan los datos
 watch(
   () => students.value,
-  (newStudents) => {
-    if (newStudents) {
-      user.name = (newStudents.nombre || "") + " " + (newStudents.apellido || "");
-      user.role = newStudents.role || "Estudiante";
-      user.avatar = newStudents.foto_perfil || "/img/avatarGroup.png";
-      user.about = newStudents.about || "";
-      contact.email = newStudents.email || "";
-      contact.phone = newStudents.telefono || "";
-      contact.location = newStudents.location || "";
-
-      hardSkills.value = [];
-      softSkills.value = [];
-
-      if (newStudents.estudiante_skill) {
-        newStudents.estudiante_skill.forEach((item) => {
-          const datosSkill = item.skill;
-          if (datosSkill) {
-            const tipoSkill = datosSkill.tipo ? datosSkill.tipo.toLowerCase().trim() : '';
-            // AHORA GUARDAMOS EL OBJETO ENTERO PARA TENER EL ID
-            if (tipoSkill === 'hard skill') {
-              hardSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
-            } else if (tipoSkill === 'soft skill') {
-              softSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
-            }
-          }
-        });
-      }
-
-      if (newStudents.idiomas?.idiomas) languages.value = [...newStudents.idiomas.idiomas];
-      if (newStudents.estudios?.formacion) academicBackground.value = [...newStudents.estudios.formacion];
-
-      if (newStudents.enlaces) {
-        documents.value = newStudents.enlaces.map((e, i) => ({
-          id: e.id || Date.now() + i,
-          name: e.nombre || e.name || `Enlace ${i + 1}`,
-          tipo: e.tipo || "Portfolio",
-          url: e.url || "#",
-        }));
-      }
-    }
+  () => {
+    restoreOriginalData();
   },
   { immediate: true }
 );
@@ -103,6 +119,10 @@ watch(
 const editing = ref(false);
 
 function toggleEdit() {
+  if (editing.value) {
+    // Si estaba editando y decide cancelar, restauramos todo a como estaba
+    restoreOriginalData();
+  }
   editing.value = !editing.value;
 }
 
@@ -138,7 +158,6 @@ function removeSoft(i) { softSkills.value.splice(i, 1); hasUnsavedChanges.value 
 
 // --- EL BOTÓN DE GUARDAR AHORA ENVÍA DATOS AL BACKEND ---
 async function saveProfile() {
-  // Extraemos solo los IDs de las skills que el usuario tiene ahora
   const allSelectedSkillIds = [
     ...hardSkills.value.map(s => s.id),
     ...softSkills.value.map(s => s.id)
@@ -164,8 +183,10 @@ async function saveProfile() {
     if (response.ok) {
       editing.value = false;
       alert("¡Perfil actualizado con éxito!");
-      // Recargar datos del estudiante para reflejar cambios
       hasUnsavedChanges.value = false;
+
+      // NOTA: Aquí lo ideal sería volver a ejecutar tu 'useStudents(url)' o recargar 
+      // los datos del backend para que 'students.value' tenga la información fresca.
     } else {
       const err = await response.json();
       alert("Error al guardar: " + err.error);
@@ -175,6 +196,7 @@ async function saveProfile() {
     alert("Error de conexión al guardar el perfil.");
   }
 }
+
 // Función para obtener el icono según el tipo de enlace
 const getDocIcon = (tipo) => {
   if (!tipo) return 'fa-solid fa-file-lines';
@@ -227,7 +249,6 @@ function addLanguage() {
 }
 
 const availableLanguages = computed(() => {
-  // Si quieres controlar idiomas duplicados, por ejemplo:
   return languageLevels.filter(lvl =>
     !languages.value.some(lang => lang.level === lvl)
   );
@@ -236,7 +257,6 @@ const availableLanguages = computed(() => {
 function removeLanguage(i) {
   languages.value.splice(i, 1);
   hasUnsavedChanges.value = true;
-
 }
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR ENLACES ---
@@ -253,14 +273,12 @@ const availableLinkTypes = computed(() => {
   );
 });
 
-// AHORA SÍ funciona
 watch(documents, () => {
   if (!availableLinkTypes.value.includes(newDocTipo.value)) {
     newDocTipo.value = "";
   }
 });
 
-// --- FUNCIÓN DE ENLACES ---
 function addDocument() {
   if (documents.value.length >= 3) {
     alert("Solo puedes añadir un máximo de 3 enlaces.");
@@ -290,8 +308,6 @@ function removeDocument(id) {
   documents.value = documents.value.filter((d) => d.id !== id);
   hasUnsavedChanges.value = true;
 }
-
-
 </script>
 
 <template>
@@ -301,6 +317,15 @@ function removeDocument(id) {
       <div class="profile-header">
         <div class="avatar-container">
           <img :src="user.avatar" alt="avatar" class="profile-avatar" />
+
+          <div v-if="editing" class="upload-section" style="margin-top: 10px;">
+            <label for="avatar-upload" class="btn-primary" style="cursor: pointer; font-size: 0.8rem;">
+              <i class="fa-solid fa-camera"></i> Cambiar foto
+            </label>
+            <input id="avatar-upload" type="file" accept="image/*" style="display: none;" @change="uploadAvatar"
+              :disabled="uploadingFile" />
+            <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray;">Subiendo...</span>
+          </div>
         </div>
         <h2 class="profile-name">{{ user.name }}</h2>
         <div class="profile-role">Estudiante</div>

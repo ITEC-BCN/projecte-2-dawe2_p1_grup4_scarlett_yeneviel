@@ -310,6 +310,35 @@ export const obtenerOfertasGuardadas = async (id_estudiante) => {
   return data;
 }
 
+// ---------------------------------------------------------
+// NUEVO: SUBIR FOTO DE PERFIL (STORAGE)
+// ---------------------------------------------------------
+export const subirFotoPerfil = async (studentId, file) => {
+  // 1. Obtenemos la extensión del archivo (ej: jpg, png)
+  const fileExt = file.name.split('.').pop();
+  
+  // 2. Creamos un nombre único: avatar_ID_numeros.jpg
+  const fileName = `avatar_${studentId}_${Date.now()}.${fileExt}`;
+
+  // 3. Subimos el archivo a Supabase Storage (al bucket llamado 'avatars')
+  const { data, error } = await supabase.storage
+    .from('avatars') // ¡Asegúrate de crear este bucket en el panel de Supabase!
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false // false para que no sobreescriba si por milagro hay otro igual
+    });
+
+  if (error) throw error; // Si falla, lanzamos el error para que Vue lo atrape
+
+  // 4. Si se subió bien, le pedimos a Supabase la URL pública de esa imagen
+  const { data: urlData } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(fileName);
+
+  // Devolvemos el enlace (ej: "https://...supabase.co/.../avatar_1_123.jpg")
+  return urlData.publicUrl;
+};
+
 // ====================== Adminsitrador ==========================
 // --- FUNCIONES PARA USUARIO_ADMI ---
 

@@ -11,6 +11,7 @@ import cors from 'cors'
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
 import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
 .032
@@ -284,6 +285,61 @@ app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
 
 });
 
+/*================Subir foto de perfil y cvs =====================*/
+// Guardamos archivo en memoria (no en disco)
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.post('/upload-avatar', upload.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    const studentId = req.body.studentId;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Validaciones
+    if (!file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ error: 'Only images allowed' });
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Max size is 2MB' });
+    }
+
+    // Nombre único
+    const fileExt = file.originalname.split('.').pop();
+    const fileName = `avatar_${studentId}_${Date.now()}.${fileExt}`;
+
+    // Subida a Supabase
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    // URL pública
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    return res.json({
+      message: 'Upload successful',
+      url: urlData.publicUrl
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: 'Upload failed',
+      details: error.message
+    });
+  }
+});
 
 //================ Adminsitrador ====================
 

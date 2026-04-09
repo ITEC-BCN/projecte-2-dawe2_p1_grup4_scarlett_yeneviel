@@ -42,7 +42,6 @@ export const obtenerOfertas = async () => {
         ciudad,
         comunidad
       ),
-      tipo_jornada (
         modalidad,
         jornada
       ),

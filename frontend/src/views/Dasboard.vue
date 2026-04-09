@@ -5,7 +5,6 @@ import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 
 const userRole = ref('estudiante') 
-const userName = ref('Alex ITB')
 
 const route = useRoute();
 const router = useRouter();
@@ -53,6 +52,25 @@ const quickActions = computed(() => {
   return ['Publicar Oferta', 'Ver Candidatos', 'Chat IA']
 })
 
+// PAGINACIÓN CANDIDATURAS
+const currentPage = ref(1)
+const pageSize = ref(5) // elementos por página
+
+const totalPages = computed(() => Math.max(1, Math.ceil(ofertasIncritas.value.length / pageSize.value)))
+const ofertasPaginadas = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return ofertasIncritas.value.slice(start, start + pageSize.value)
+})
+
+// Reinicia página cuando cambian las candidaturas
+watch(ofertasIncritas, () => {
+  currentPage.value = 1
+})
+
+const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
+const goToPage = (p) => { currentPage.value = p }
+
 </script>
 
 <template>
@@ -83,12 +101,23 @@ const quickActions = computed(() => {
             <h3>{{ userRole === 'estudiante' ? 'Candidaturas' : 'Últimas' }} <strong class="resaltar">{{ userRole === 'estudiante' ? 'Recientes' : 'Publicaciones' }}</strong></h3>
           </div>
           <div class="items-list">
-            <div v-for="(item, index) in ofertasIncritas" :key="index" class="item-row">
-              <div class="item-info">
-                <strong>{{ item.oferta.tipo_puesto }}</strong>
-                <span>{{ item.oferta.nombre_empresa }}</span>
+            <div v-if="ofertasIncritas.length === 0" class="empty-list">
+              <p>No tienes candidaturas todavía.</p>
+            </div>
+            <div v-else>
+              <div v-for="(item, index) in ofertasPaginadas" :key="item.id || index" class="item-row">
+                <div class="item-info">
+                  <strong>{{ item.oferta.tipo_puesto }}</strong>
+                  <span>{{ item.oferta.nombre_empresa }}</span>
+                </div>
+                <span class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' :item.estado==='Descartado' ? 'status-4' : 'status-3'">{{ item.estado }}</span>
               </div>
-              <span class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' :item.estado==='Descartado' ? 'status-4' : 'status-3'">{{ item.estado }}</span>
+  
+              <div class="pagination" v-if="ofertasIncritas.length > pageSize">
+                <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>
+                <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }" @click="goToPage(p)">{{ p }}</button>
+                <button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">Siguiente</button>
+              </div>
             </div>
           </div>
         </section>
@@ -275,6 +304,35 @@ h3 .resaltar {
 
 .resaltar-ia { color: #10b981; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; }
 .ia-box p { font-size: 0.88rem; color: #666; margin: 8px 0 0; line-height: 1.4; }
+
+/* PAGINACIÓN */
+.pagination {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1rem;
+}
+.page-btn, .page-number {
+  border: 1px solid #eee;
+  background: white;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #4C1D95;
+}
+.page-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.page-number.active {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.empty-list { color: #666; padding: 1rem 0; }
 
 /* RESPONSIVO */
 @media (max-width: 900px) {

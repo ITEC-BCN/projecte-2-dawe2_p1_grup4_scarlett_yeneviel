@@ -42,9 +42,6 @@ export const obtenerOfertas = async () => {
         ciudad,
         comunidad
       ),
-        modalidad,
-        jornada
-      ),
       oferta_skill (
         skill (
           nombre
@@ -133,7 +130,6 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
     .select(`
       *,
       ubicacion:id_ubicacion (ciudad, comunidad),
-      tipo_jornada:id_tipo_jornada (modalidad, jornada),
       oferta_skill (skill:id_skill (nombre))
     `)
     .in('id', idsDeOfertasUnicos)

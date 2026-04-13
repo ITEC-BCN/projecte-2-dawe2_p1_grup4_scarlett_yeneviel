@@ -52,24 +52,38 @@ const quickActions = computed(() => {
   return ['Publicar Oferta', 'Ver Candidatos', 'Chat IA']
 })
 
-// PAGINACIÓN CANDIDATURAS
+// NUEVO: vista actual ('postulaciones' o 'guardadas')
+const currentView = ref('postulaciones')
+const setView = (v) => { currentView.value = v; currentPage.value = 1 }
+
+// PAGINACIÓN GENERALIZADA (para postulaciones o guardadas)
 const currentPage = ref(1)
 const pageSize = ref(5) // elementos por página
 
-const totalPages = computed(() => Math.max(1, Math.ceil(ofertasIncritas.value.length / pageSize.value)))
+const displayedList = computed(() => currentView.value === 'guardadas' ? ofertasGuardadas.value : ofertasIncritas.value)
+const totalPages = computed(() => Math.max(1, Math.ceil(displayedList.value.length / pageSize.value)))
 const ofertasPaginadas = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
-  return ofertasIncritas.value.slice(start, start + pageSize.value)
+  return displayedList.value.slice(start, start + pageSize.value)
 })
 
-// Reinicia página cuando cambian las candidaturas
-watch(ofertasIncritas, () => {
+// Reinicia página cuando cambian la lista mostrada
+watch(displayedList, () => {
   currentPage.value = 1
 })
 
 const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
 const goToPage = (p) => { currentPage.value = p }
+
+// Maneja click en las estadísticas
+const statClick = (stat) => {
+  if (stat.label && stat.label.toLowerCase().includes('guardad')) {
+    setView('guardadas')
+  } else {
+    setView('postulaciones')
+  }
+}
 
 </script>
 
@@ -85,7 +99,7 @@ const goToPage = (p) => { currentPage.value = p }
       </header>
 
       <section class="stats-row">
-        <div v-for="stat in stats" :key="stat.label" class="stat-box">
+        <div v-for="stat in stats" :key="stat.label" class="stat-box clickable" @click="statClick(stat)">
           <span class="stat-icon">{{ stat.icon }}</span>
           <div class="stat-info">
             <span class="stat-value">{{ stat.valor }}</span>
@@ -98,29 +112,30 @@ const goToPage = (p) => { currentPage.value = p }
         
         <section class="panel list-panel">
           <div class="panel-header">
-            <h3>{{ userRole === 'estudiante' ? 'Candidaturas' : 'Últimas' }} <strong class="resaltar">{{ userRole === 'estudiante' ? 'Recientes' : 'Publicaciones' }}</strong></h3>
+            <h3 v-if="currentView === 'postulaciones'">Candidaturas <strong class="resaltar">Recientes</strong></h3>
+            <h3 v-else>Ofertas <strong class="resaltar">Guardadas</strong></h3>
           </div>
           <div class="items-list">
-            <div v-if="ofertasIncritas.length === 0" class="empty-list">
-              <p>No tienes candidaturas todavía.</p>
+            <div v-if="displayedList.length === 0" class="empty-list">
+              <p v-if="currentView === 'postulaciones'">No tienes candidaturas todavía.</p>
+              <p v-else>No tienes ofertas guardadas.</p>
             </div>
             <div v-else>
-              <div v-for="(item, index) in ofertasPaginadas" :key="item.id || index" class="item-row">
-                <div class="item-info">
-                  <strong>{{ item.oferta.tipo_puesto }}</strong>
-                  <span>{{ item.oferta.nombre_empresa }}</span>
+              <div v-for="(item, index) in ofertasPaginadas" :key="(item.oferta?.id) || index" class="item-row">
+                <div class="item-info" @click="router.push(`/oferta/${item.oferta.id}`)" style="cursor: pointer;">
+                  <strong>{{ (item.oferta || item).tipo_puesto }}</strong>
+                  <span>{{ (item.oferta || item).nombre_empresa }}</span>
                 </div>
-                <span class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' :item.estado==='Descartado' ? 'status-4' : 'status-3'">{{ item.estado }}</span>
+                <span v-if="currentView === 'postulaciones'" class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' :item.estado==='Descartado' ? 'status-4' : 'status-3'">{{ item.estado }}</span>
               </div>
-  
-              <div class="pagination" v-if="ofertasIncritas.length > pageSize">
-                <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>
-                <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }" @click="goToPage(p)">{{ p }}</button>
-                <button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">Siguiente</button>
+             <div class="pagination" v-if="displayedList.length > pageSize">
+                <!--<button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>-->
+               <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }" @click="goToPage(p)">{{ p }}</button>
+                <!--<button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">Siguiente</button>-->
               </div>
-            </div>
-          </div>
-        </section>
+           </div>
+           </div>
+         </section>
 <!--
         <section class="panel actions-panel">
           <h3>Gestión <strong class="resaltar">Rápida</strong></h3>
@@ -333,6 +348,10 @@ h3 .resaltar {
 }
 
 .empty-list { color: #666; padding: 1rem 0; }
+
+/* estadística clicable */
+.stat-box.clickable { cursor: pointer; }
+.stat-box.clickable:hover { box-shadow: 0 6px 18px rgba(16,185,129,0.08); transform: translateY(-2px); }
 
 /* RESPONSIVO */
 @media (max-width: 900px) {

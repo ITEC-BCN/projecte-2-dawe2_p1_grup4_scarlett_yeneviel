@@ -13,7 +13,7 @@ const router = useRouter();
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
 const { data: oferta, error, loading, postulaciones } = useFetch(url);
 
-const volver = () => router.push({ name: "ofertas" });
+const volver = () => router.back();
 
 const ActualizarOferta = (id) => {
   router.push({ name: "ActualizarOferta", params: { id: id } });
@@ -81,7 +81,7 @@ onMounted(async() => {
 
 //Ver perfil de los estudiantes postulados
 const verDetallePerfil = (id) => {
-  router.push({ name: 'perfilId', params: { id: id } });
+  router.push({ name: 'PerfilDetalleSolo', params: { id: id } });
 };
 </script>
 

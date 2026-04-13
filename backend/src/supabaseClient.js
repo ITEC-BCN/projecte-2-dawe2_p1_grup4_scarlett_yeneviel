@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const supabaseUrl = process.env.SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_KEY
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -14,7 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // 1. CREAR una oferta (CREATE)
 export const crearOferta = async (nuevaOferta) => {
-   console.log("OFERTA RECIBIDA:", nuevaOferta); //  DEBUG
+  console.log("OFERTA RECIBIDA:", nuevaOferta); //  DEBUG
   const { data, error } = await supabase
     .from('oferta') //nombre de la tabla
     .insert([{
@@ -41,9 +41,6 @@ export const obtenerOfertas = async () => {
       ubicacion (
         ciudad,
         comunidad
-      ),
-        modalidad,
-        jornada
       ),
       oferta_skill (
         skill (
@@ -100,8 +97,8 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
   // 1. Buscamos las skills del estudiante
   const { data: skillsDelEstudiante, error: errEstudiante } = await supabase
     .from('estudiante_skill')
-    .select('id_skill') 
-    .eq('id_estudiante', estudianteId); 
+    .select('id_skill')
+    .eq('id_estudiante', estudianteId);
 
   if (errEstudiante) throw errEstudiante;
 
@@ -110,13 +107,13 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
   }
 
   // Convertimos a array de números
-  const idsDeSkills = skillsDelEstudiante.map(es => es.id_skill); 
+  const idsDeSkills = skillsDelEstudiante.map(es => es.id_skill);
 
   // 2. Buscamos qué ofertas tienen esas skills
   const { data: ofertasConMatch, error: errOfertas } = await supabase
     .from('oferta_skill')
-    .select('id_oferta') 
-    .in('id_skill', idsDeSkills); 
+    .select('id_oferta')
+    .in('id_skill', idsDeSkills);
 
   if (errOfertas) throw errOfertas;
 
@@ -125,7 +122,7 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
   }
 
   // Limpiamos los IDs repetidos
-  const idsDeOfertasUnicos = [...new Set(ofertasConMatch.map(o => o.id_oferta))]; 
+  const idsDeOfertasUnicos = [...new Set(ofertasConMatch.map(o => o.id_oferta))];
 
   // 3. Traemos los datos completos de las ofertas
   const { data: ofertasFinales, error: errFinal } = await supabase
@@ -133,7 +130,6 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
     .select(`
       *,
       ubicacion:id_ubicacion (ciudad, comunidad),
-      tipo_jornada:id_tipo_jornada (modalidad, jornada),
       oferta_skill (skill:id_skill (nombre))
     `)
     .in('id', idsDeOfertasUnicos)
@@ -172,7 +168,7 @@ export const obtenerEstudiantes = async () => {
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .select('*');
-  
+
   if (error) throw error;
   return data;
 };
@@ -266,15 +262,15 @@ export const actualizarEstudiante = async (studentId, payload) => {
   return { message: "Perfil actualizado correctamente" };
 };
 
-export const postularOferta= async (id_oferta, id_usuario_estudiante) =>{
-   const { data, error} = await supabase
-   .from('postulaciones')
-   .insert([{
-      id_oferta:parseInt(id_oferta),
-      id_usuario_estudiante:parseInt(id_usuario_estudiante),
+export const postularOferta = async (id_oferta, id_usuario_estudiante) => {
+  const { data, error } = await supabase
+    .from('postulaciones')
+    .insert([{
+      id_oferta: parseInt(id_oferta),
+      id_usuario_estudiante: parseInt(id_usuario_estudiante),
       estado: 'En proceso'
-   }]).select()
-   .single()
+    }]).select()
+    .single()
 
   if (error) {
     console.error("Error al actualizar el estado de la candidatura:", error.message);
@@ -318,30 +314,38 @@ export const obtenerOfertasGuardadas = async (id_estudiante) => {
 // ---------------------------------------------------------
 // NUEVO: SUBIR FOTO DE PERFIL (STORAGE)
 // ---------------------------------------------------------
-export const subirFotoPerfil = async (studentId, file) => {
-  // 1. Obtenemos la extensión del archivo (ej: jpg, png)
-  const fileExt = file.name.split('.').pop();
-  
-  // 2. Creamos un nombre único: avatar_ID_numeros.jpg
-  const fileName = `avatar_${studentId}_${Date.now()}.${fileExt}`;
-
-  // 3. Subimos el archivo a Supabase Storage (al bucket llamado 'avatars')
+export const subirAvatarStorage = async (fileName, fileBuffer, mimeType) => {
+  // 1. Subimos el archivo al bucket 'avatars'
   const { data, error } = await supabase.storage
-    .from('avatars') // ¡Asegúrate de crear este bucket en el panel de Supabase!
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false // false para que no sobreescriba si por milagro hay otro igual
+    .from('avatars')
+    .upload(fileName, fileBuffer, {
+      contentType: mimeType,
+      upsert: true // ⚠️ mejor true para evitar errores si existe
     });
 
-  if (error) throw error; // Si falla, lanzamos el error para que Vue lo atrape
+  if (error) {
+  console.error("ERROR SUBIENDO:", error);
+  throw error;
+}
 
-  // 4. Si se subió bien, le pedimos a Supabase la URL pública de esa imagen
+  // 2. Si se subió bien, pedimos la URL pública
   const { data: urlData } = supabase.storage
     .from('avatars')
     .getPublicUrl(fileName);
 
-  // Devolvemos el enlace (ej: "https://...supabase.co/.../avatar_1_123.jpg")
+  console.log("Archivo recibido:", urlData);
+
+  // Devolvemos solo el texto de la URL para usarlo donde queramos
   return urlData.publicUrl;
+};
+
+export const guardarFotoPerfil = async (studentId, urlPublica) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .update({ foto_perfil: urlPublica })
+    .eq('id', studentId);
+  if (error) throw error;
+  return data;
 };
 
 // ====================== Adminsitrador ==========================
@@ -370,7 +374,7 @@ export const obtenerAdmins = async () => {
   const { data, error } = await supabase
     .from('usuario_admi')
     .select('*');
-  
+
   if (error) throw error;
   return data;
 };
@@ -446,16 +450,16 @@ export const VerPostulacionesAdmin = async (idOferta) => {
     console.error("Error al obtener postulaciones:", error.message);
     throw error;
   }
-  
+
   return data;
 };
 
 
-export const actualizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado) => {
-  
-  const {data, error} = await supabase
+export const actualizarEstadoOferta = async (idOferta, id_estudiante, nuevoEstado) => {
+
+  const { data, error } = await supabase
     .from('postulaciones')
-    .update({estado: nuevoEstado})
+    .update({ estado: nuevoEstado })
     .eq('id_oferta', idOferta)
     .eq('id_usuario_estudiante', id_estudiante)
 
@@ -464,7 +468,7 @@ export const actualizarEstadoOferta = async(idOferta, id_estudiante, nuevoEstado
     console.error("Error al actualizar el estado de la candidatura:", error.message);
     throw error;
   }
-  
+
   return data;
 }
 
@@ -477,3 +481,18 @@ export const obtenerSkills = async () => {
   if (error) throw error;
   return data;
 }; 
+
+
+export const actualizarSolicitudPendiente= async(id_estudiante,estado) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .update({ estado: estado })
+    .eq('id', id_estudiante)  
+
+  if (error) {
+    console.error("Error al actualizar el estado de la solicitud:", error.message);
+    throw error;
+  }
+
+  return data;
+}

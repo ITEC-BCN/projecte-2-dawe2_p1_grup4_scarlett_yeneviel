@@ -47,7 +47,7 @@ const router = createRouter({
     },
       {
       path: "/perfil/:id",
-      name: "perfilId",
+      name: "PerfilDetalleSolo",
       component: () => import('@/views/Perfil.vue'),
       props: true,
       meta: { requiresAdmin: true }
@@ -59,10 +59,24 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true }
     },
-             {
+    {
       path: "/oferta/actualizar/:id",
       name: "ActualizarOferta",
       component: () => import('@/views/admin/ActualizarOferta.vue'),
+      props: true,
+      meta: { requiresAdmin: true }
+    },
+    {
+      path: "/admin/panel",
+      name: "PanelAdmin",
+      component: () => import('@/views/admin/PanelAdmin.vue'),
+      props: true,
+      meta: { requiresAdmin: true }
+    },
+    {
+      path: "/admin/panelOfertas",
+      name: "PanelOfertasAdmin",
+      component: () => import('@/views/admin/GestorOfertas.vue'),
       props: true,
       meta: { requiresAdmin: true }
     },

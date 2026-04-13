@@ -41,6 +41,11 @@ const logout = () => {
   }
   
   checkAuthStatus(); // Actualizamos las variables
+
+  if(userRole.value == 'admin'){
+    router.push('/admin/login'); // Si era admin, lo mandamos al login de admin
+    return; // Salimos de la función para no ejecutar el push general
+  }
   router.push('/login'); // Lo mandamos de vuelta al login
 };
 </script>
@@ -73,11 +78,19 @@ const logout = () => {
             Dashboard
           </router-link>
 
+
+          <router-link v-if="userRole === 'admin'" to="/admin/panel">
+            Panel de Administración
+          </router-link>
+
+          <p v-if="userRole =='admin'">User: Administrador</p>
+
           <a href="#" @click.prevent="logout" class="btn-logout">
             Cerrar sesión
           </a>
 
-          <p v-if="userRole =='admin'">User: Administrador</p>
+
+
         </template>
       </div>
     </div>

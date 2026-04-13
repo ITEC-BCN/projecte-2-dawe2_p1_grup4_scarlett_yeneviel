@@ -11,22 +11,23 @@ import cors from 'cors'
 import bcrypt from 'bcryptjs';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
-import multer from 'multer';
+import multer from 'multer';  //esto es para subir archivos, lo usaremos para subir fotos de perfil y cvs
 import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
+
 .032
-import { 
-  obtenerOfertas, 
-  crearOferta, 
-  obtenerOfertaPorId, 
-  actualizarOferta, 
+import {
+  obtenerOfertas,
+  crearOferta,
+  obtenerOfertaPorId,
+  actualizarOferta,
   eliminarOferta,
-  crearEstudiante, 
-  obtenerEstudiantes, 
-  obtenerEstudiantePorId, 
+  crearEstudiante,
+  obtenerEstudiantes,
+  obtenerEstudiantePorId,
   actualizarEstudiante,
-  crearAdmin, 
-  obtenerAdmins, 
+  crearAdmin,
+  obtenerAdmins,
   obtenerAdminPorId,
   actualizarAdmin,
   obtenerEstudiantePorEmail,
@@ -38,6 +39,8 @@ import {
   guardarOferta,
   obtenerOfertasGuardadas,
   obtenerSkills,
+  subirAvatarStorage,
+  guardarFotoPerfil
 
 
 } from './supabaseClient.js'
@@ -72,7 +75,7 @@ app.post("/ofertas", async (req, res) => {
       requisitos: req.body.requisitos,
       beneficios: req.body.beneficios || null,
     });
-      console.log("BODY:", req.body); // prueba esto
+    console.log("BODY:", req.body); // prueba esto
 
     res.status(201).json(nuevaOferta);
   } catch (err) {
@@ -93,11 +96,11 @@ app.get('/ofertas/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const oferta = await obtenerOfertaPorId(id);
-    
+
     if (!oferta) {
       return res.status(404).json({ error: "Oferta no encontrada" });
     }
-    
+
     res.json(oferta);
   } catch (err) {
     res.status(500).json({ error: err.message || String(err) });
@@ -105,13 +108,13 @@ app.get('/ofertas/:id', async (req, res) => {
 });
 
 //Actualiza las ofertas
-app.put('/oferta/:id',async (req, res)=>{
+app.put('/oferta/:id', async (req, res) => {
 
-  try{
+  try {
 
-    const body=req.body;
-    const id=req.params.id;
-    const oferta=await actualizarOferta (id, body)
+    const body = req.body;
+    const id = req.params.id;
+    const oferta = await actualizarOferta(id, body)
 
     //Valido que exista la oferta
     // Supabase devuelve un array vacío [] si no encuentra el ID al usar .select()
@@ -125,8 +128,8 @@ app.put('/oferta/:id',async (req, res)=>{
       data: oferta[0] // Devolvemos el registro actualizado
     });
 
-  }catch (err){
-    res.status(500).json({error: err.message || String(err) })
+  } catch (err) {
+    res.status(500).json({ error: err.message || String(err) })
   }
 })
 
@@ -149,10 +152,10 @@ app.delete('/ofertas/:id', async (req, res) => {
 app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
   try {
     const estudianteId = req.params.id;
-    
+
     // Llamamos a la función limpia
     const ofertas = await obtenerOfertasRecomendadas(estudianteId);
-    
+
     // Devolvemos el resultado al frontend
     res.json(ofertas);
 
@@ -168,11 +171,11 @@ app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
 // POST: Registrar un nuevo estudiante
 app.post("/estudiantes", async (req, res) => {
   try {
-    const newPassword_hash =  bcrypt.hashSync(req.body.password_hash, 12);
-    req.body.password_hash=newPassword_hash
+    const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
+    req.body.password_hash = newPassword_hash
     const nuevoEstudiante = await crearEstudiante(req.body);
 
-      // 3. GENERAR EL TOKEN JWT
+    // 3. GENERAR EL TOKEN JWT
     // Guardamos el ID y el email dentro del token
     const token = jwt.sign(
       { id: nuevoEstudiante.id, email: nuevoEstudiante.email },
@@ -191,8 +194,8 @@ app.post("/estudiantes", async (req, res) => {
     res.status(201).json({
       message: "Registro exitoso",
       user: {
-        id:nuevoEstudiante.id,
-        email:nuevoEstudiante.email
+        id: nuevoEstudiante.id,
+        email: nuevoEstudiante.email
       },
       token: token
     });
@@ -234,15 +237,15 @@ app.put("/estudiantes/:id", async (req, res) => {
   }
 });
 
-app.post("/estudiante/postular", async (req, res)=>{
+app.post("/estudiante/postular", async (req, res) => {
 
-  try{
-    const { id_oferta, id_estudiante} = req.body
-    const postulacion = await postularOferta (id_oferta, id_estudiante)
+  try {
+    const { id_oferta, id_estudiante } = req.body
+    const postulacion = await postularOferta(id_oferta, id_estudiante)
     res.json(postulacion);
     console.log("inscripción hecha correctamente")
 
-  }catch (err){
+  } catch (err) {
     res.status(400).json({ error: err.message || String(err) });
   }
 })
@@ -285,8 +288,7 @@ app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
 
 });
 
-/*================Subir foto de perfil y cvs =====================*/
-// Guardamos archivo en memoria (no en disco)
+// Multer guarda la foto temporalmente en memoria
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post('/upload-avatar', upload.single('file'), async (req, res) => {
@@ -295,51 +297,36 @@ app.post('/upload-avatar', upload.single('file'), async (req, res) => {
     const studentId = req.body.studentId;
 
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ error: 'No se subió ningún archivo' });
     }
+    if (!file.mimetype.startsWith('image/')) return res.status(400).json({ error: 'Solo se permiten imágenes' });
+    if (file.size > 2 * 1024 * 1024) return res.status(400).json({ error: 'El tamaño máximo es 2MB' });
 
-    // Validaciones
-    if (!file.mimetype.startsWith('image/')) {
-      return res.status(400).json({ error: 'Only images allowed' });
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      return res.status(400).json({ error: 'Max size is 2MB' });
-    }
-
-    // Nombre único
     const fileExt = file.originalname.split('.').pop();
     const fileName = `avatar_${studentId}_${Date.now()}.${fileExt}`;
 
-    // Subida a Supabase
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file.buffer, {
-        contentType: file.mimetype,
-        cacheControl: '3600',
-        upsert: false
-      });
+    // 1. Subir a Supabase Storage
+    const urlPublica = await subirAvatarStorage(
+      fileName,
+      file.buffer,
+      file.mimetype
+    );
 
-    if (error) throw error;
-
-    // URL pública
-    const { data: urlData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
+    // 2. GUARDAR EN LA BASE DE DATOS (AQUÍ, NO EN VUE)
+    await guardarFotoPerfil(studentId, urlPublica);
 
     return res.json({
-      message: 'Upload successful',
-      url: urlData.publicUrl
+      message: 'Subida exitosa',
+      url: urlPublica,
+      studentId
     });
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      error: 'Upload failed',
-      details: error.message
-    });
+    return res.status(500).json({ error: 'Falló la subida', details: error.message }); 
   }
-});
+  });
+
 
 //================ Adminsitrador ====================
 
@@ -348,8 +335,8 @@ app.post('/upload-avatar', upload.single('file'), async (req, res) => {
 // POST: Registrar un nuevo administrador
 app.post("/admin/registro", async (req, res) => {
   try {
-    const newPassword_hash =  bcrypt.hashSync(req.body.password_hash, 12);
-    req.body.password_hash=newPassword_hash
+    const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
+    req.body.password_hash = newPassword_hash
     const nuevo = await crearAdmin(req.body);
     res.status(201).json({
       message: "Registro de administrador exitoso",
@@ -385,11 +372,11 @@ app.put("/admins/:id", async (req, res) => {
   try {
     const actualizado = await actualizarAdmin(req.params.id, req.body);
     if (!actualizado || actualizado.length === 0) {
-        return res.status(404).json({ error: "Administrador no encontrado" });
+      return res.status(404).json({ error: "Administrador no encontrado" });
     }
     res.json({
-        message: "Administrador actualizado con éxito",
-        data: actualizado[0]
+      message: "Administrador actualizado con éxito",
+      data: actualizado[0]
     });
   } catch (err) {
     res.status(400).json({ error: err.message || String(err) });

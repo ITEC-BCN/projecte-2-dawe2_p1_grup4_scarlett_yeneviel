@@ -51,6 +51,47 @@ const softSkills = ref([]);
 const languages = ref([]);
 const documents = ref([]);
 const academicBackground = ref([]);
+const uploadingFile = ref(false);
+
+//Añadir la FOTO DE PERFIL
+
+const uploadAvatar = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  uploadingFile.value = true; 
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('studentId', students.value.id); 
+
+  try {
+    const response = await fetch(`${URL_BACK}/upload-avatar`, {
+      method: 'POST',
+      body: formData 
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Como Node ya actualizó Supabase, solo actualizamos la pantalla
+      user.avatar = data.url; 
+
+      if (students.value) {
+        students.value.foto_perfil = data.url;
+      }
+
+      alert('¡Foto actualizada con éxito!');
+    } else {
+      alert('Error al subir: ' + data.error);
+    }
+
+  } catch (error) {
+    console.error('Error de conexión:', error);
+  } finally {
+    uploadingFile.value = false;
+  }
+};
 
 // --- NUEVO: Función para cargar/restaurar los datos originales ---
 const restoreOriginalData = () => {
@@ -164,6 +205,7 @@ async function saveProfile() {
   ];
 
   const payload = {
+    foto_perfil: user.avatar,
     about: user.about,
     telefono: contact.phone,
     location: contact.location,

@@ -481,3 +481,18 @@ export const obtenerSkills = async () => {
   if (error) throw error;
   return data;
 }; 
+
+
+export const actualizarSolicitudPendiente= async(id_estudiante,estado) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .update({ estado: estado })
+    .eq('id', id_estudiante)  
+
+  if (error) {
+    console.error("Error al actualizar el estado de la solicitud:", error.message);
+    throw error;
+  }
+
+  return data;
+}

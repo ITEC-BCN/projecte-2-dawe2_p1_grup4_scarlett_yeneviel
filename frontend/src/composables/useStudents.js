@@ -43,6 +43,6 @@ export function useStudents(urlRef) {
         students,
         loadingStudents,
         errorStudents,
-        refreshStudents: fetchAllReq
+        refreshStudents: fetchAllReq,
     };
 }

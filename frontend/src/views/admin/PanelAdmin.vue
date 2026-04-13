@@ -1,14 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useFetch } from '../../composables/useFetchOfertas';
+import { useFetchUser } from '../../composables/userFetchUser';
 import { URL_BACK } from '../../../../config';
 
 const router = useRouter();
 
 // Usuarios
 const urlUsers = ref(`${URL_BACK}/estudiantes`);
-const { data: users, error: usersError, loading: loadingUsers, fetchData: fetchUsers } = useFetch(urlUsers);
+const { data: users, error: usersError, loading: loadingUsers, fetchData: fetchUsers, actualizarEstado } = useFetchUser(urlUsers);
 
 // pagination usuarios
 const currentUserPage = ref(1);
@@ -29,16 +29,12 @@ const pendingCount = computed(() => (users.value || []).filter(u => (u.estado ||
 // actions
 const viewUser = (id) => { router.push({ name: 'PerfilDetalleSolo', params: { id } }); };
 const updateUserEstado = async (id, newEstado) => {
+
   try {
-    const res = await fetch(`${URL_BACK}/estudiantes/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado: newEstado })
-    });
-    if (!res.ok) throw new Error('Error actualizando usuario');
+    await actualizarEstado(id, newEstado);
     await fetchUsers();
   } catch (err) {
-    console.error(err);
+    console.error('Error actualizando estado', err);
     alert('No se pudo actualizar el estado del usuario');
   }
 };

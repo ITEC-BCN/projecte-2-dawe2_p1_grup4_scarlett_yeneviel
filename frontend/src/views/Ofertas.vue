@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useFetch } from "../composables/useFetchOfertas";
 import CardOferta from "../components/cardOferta.vue";
@@ -48,34 +48,61 @@ const skillsDisponibles = computed(() => {
 const ofertasFiltradas = computed(() => {
     if (!data.value) return [];
 
+    const q = (searchQuery.value || '').toLowerCase().trim();
+    const selectedMod = (selectedModalidad.value || '').toLowerCase().trim();
+    const selectedCity = (searchUbicacion.value || '').toLowerCase().trim();
+    const selectedSk = (searchSkill.value || '').toLowerCase().trim();
+
     return data.value.filter((oferta) => {
-        // --- A. Buscador Genérico (Empresa o Puesto) ---
-        const query = searchQuery.value.toLowerCase();
-        const empresa = (oferta.nombre_empresa || "").toLowerCase();
-        const puesto = (oferta.tipo_puesto || "").toLowerCase();
-        const coincideGenerico = empresa.includes(query) || puesto.includes(query);
+        const empresa = (oferta.nombre_empresa || '').toLowerCase();
+        const puesto = (oferta.tipo_puesto || '').toLowerCase();
+        const modalidad = (oferta.tipo_jornada?.modalidad || oferta.modalidad || '').toLowerCase();
+        const ciudadOferta = (oferta.ubicacion?.ciudad || '').toLowerCase();
 
-        // --- B. Filtro Modalidad (Hibrido, Presencial, Remoto) ---
-        const modalidad = oferta.tipo_jornada?.modalidad || "";
-        const coincideModalidad = selectedModalidad.value === "" || modalidad === selectedModalidad.value;
+        // Buscador genérico
+        const coincideGenerico = q === '' || empresa.includes(q) || puesto.includes(q);
 
-        // --- C. Filtro Ubicación (Ciudad) - OPTIMIZADO PARA EL SELECT ---
-        const ciudadOferta = oferta.ubicacion?.ciudad || "";
-        // Si no hay ciudad seleccionada, mostramos todas. Si hay, comparamos que sea exactamente igual.
-        const coincideUbicacion = searchUbicacion.value === "" || ciudadOferta === searchUbicacion.value;
+        // Modalidad
+        const coincideModalidad = selectedMod === '' || modalidad === selectedMod;
 
-        // --- D. Filtro Skills ---
-        // --- D. Filtro Skills - OPTIMIZADO PARA EL SELECT ---
-        const coincideSkill = searchSkill.value === "" || (
-            oferta.oferta_skill && oferta.oferta_skill.some(os =>
-                os.skill?.nombre === searchSkill.value
-            )
-        );
+        // Ubicación
+        const coincideUbicacion = selectedCity === '' || ciudadOferta === selectedCity;
 
-        // La oferta debe cumplir con TODOS los filtros activos para mostrarse
+        // Skill
+        let coincideSkill = true;
+        if (selectedSk !== '') {
+            coincideSkill = false;
+            if (oferta.oferta_skill && Array.isArray(oferta.oferta_skill)) {
+                for (const os of oferta.oferta_skill) {
+                    const nombreSkill = (os.skill?.nombre || '').toLowerCase();
+                    if (nombreSkill === selectedSk) { coincideSkill = true; break; }
+                }
+            }
+        }
+
         return coincideGenerico && coincideModalidad && coincideUbicacion && coincideSkill;
     });
 });
+
+// --- PAGINACIÓN CLIENT-SIDE ---
+const currentPage = ref(1);
+const pageSize = ref(9); // items por página
+
+const totalPages = computed(() => Math.max(1, Math.ceil(ofertasFiltradas.value.length / pageSize.value)));
+const ofertasPaginadas = computed(() => {
+    const page = Math.max(1, Math.min(currentPage.value, totalPages.value || 1));
+    const start = (page - 1) * pageSize.value;
+    return ofertasFiltradas.value.slice(start, start + pageSize.value);
+});
+
+// Watchers para mantener la página en rango y reiniciar al cambiar filtros
+watch([searchQuery, searchUbicacion, searchSkill, selectedModalidad], () => { currentPage.value = 1; });
+watch(ofertasFiltradas, () => { currentPage.value = 1; });
+watch(totalPages, (tp) => { if (currentPage.value > tp) currentPage.value = tp; });
+
+const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
+const goToPage = (p) => { currentPage.value = p; };
 
 const verDetalle = (id, namePath) => {
     router.push({ name: namePath, params: { id: id } });
@@ -149,15 +176,23 @@ const crearOferta = () => {
 
         <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
             <CardOferta 
-                v-for="oferta in ofertasFiltradas" 
+                v-for="oferta in ofertasPaginadas" 
                 :key="oferta.id" 
                 :oferta="oferta"
                 @verDetalleOferta="verDetalle(oferta.id, roleUSer === 'admin' ? 'verOfertaAdmin' : 'OfertaDetalle')" 
             />
         </div>
-        
-        <div v-else class="empty-state">
 
+        <!-- paginación -->
+        <div v-if="totalPages > 1" class="pagination-container">
+            <div class="pagination">
+                <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>
+                <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }" @click="goToPage(p)">{{ p }}</button>
+                <button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">Siguiente</button>
+            </div>
+        </div>
+
+        <div v-if="ofertasFiltradas.length === 0" class="empty-state">
             <h3>No encontramos resultados</h3>
             <p>Prueba a cambiar los filtros o a usar términos más generales.</p>
             <button class="btn-clear" @click="searchQuery=''; searchUbicacion=''; searchSkill=''; selectedModalidad=''">
@@ -364,6 +399,18 @@ const crearOferta = () => {
 .btn-clear:hover {
     background: #f1f5f9;
     color: #0f172a;
+}
+
+/* === PAGINACIÓN === */
+.pagination-container { display:flex; justify-content:center; margin-top:20px; }
+.pagination { display:flex; gap:8px; align-items:center; }
+.page-btn, .page-number { border: 1px solid #e6e6e6; background: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight:700; color:#4d1b95; }
+.page-btn[disabled] { opacity:0.45; cursor:not-allowed; }
+.page-number.active { background:#10b981; color:white; border-color:#10b981; }
+
+/* Ajuste responsive para los botones */
+@media (max-width:600px) {
+    .page-number { padding:6px 8px; }
 }
 
 /* === RESPONSIVE === */

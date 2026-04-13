@@ -294,6 +294,39 @@ Vuelta de las vacaciones de semana santa
 - Ver detalle de la oferta postulada desde el dashboard
 - Ver detalle de las ofertas guardadas desde el dashboard
 
+## Dia 24 - 13/04/2026 
+## Retrospective
+**Asistencia:** Yeneviel Roberts, Scarlett Toala y Silvia Serra
+
+| Qué ha ido bien | Qué hace falta mejorar | Qué he aprendido | Dificultat |
+|-----------------|------------------------|------------------|------------|
+|Realización de las HU en el tiempo establecido| |Intengrar un chatbot en la web | |
+
+# Sprint 7 Daylies 
+
+**Planificación del sprint:**
+**HU14.5 - Mostrar archivos**
+ - HU12.1 El estudiante puede ver su CV
+ - HU14.2 El admin puede ver el CV del estudiante
+ - HU14.3 Foto de perfil
+
+**HU15-notificación de la postulación**
+ - HU15.1 Notificación de postulación para admin
+   
+**HU21-Panel de administrador**
+ - HU21.1 Diseño del panel del administrador
+
+**HU08-añadir datos al perfil**
+1. HU08.1 El usuario puede modifcar los datos de su perfil
+
+**Temas tratados**
+- Planificación del sprint 7
+- Revisión sobre donde estamos con el proyecto y que falta para acabar
+- Assignación de tareas
+
+
+
+
 
 
 

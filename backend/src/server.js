@@ -40,7 +40,8 @@ import {
   obtenerOfertasGuardadas,
   obtenerSkills,
   subirAvatarStorage,
-  guardarFotoPerfil
+  guardarFotoPerfil,
+  updatedRequestRegistration
 
 
 } from './supabaseClient.js'
@@ -165,7 +166,6 @@ app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
   }
 });
 
-
 //====================== Usuario Estudiante =======================
 
 // POST: Registrar un nuevo estudiante
@@ -252,13 +252,13 @@ app.post("/estudiante/postular", async (req, res) => {
 
 app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
   try {
-    const {  id_estudiante, estado } = req.body;
-
-    if (!id_estudiante || !estado) {
+    const { estado } = req.body;
+    const id_estudiante = req.params.idEstudiante;
+    if (!estado) {
       return res.status(400).json({ error: "Faltan datos en el body" });
     }
 
-    const resultado = await actualizarSolicitudPendiente(id_estudiante, estado);
+    const resultado = await updatedRequestRegistration(id_estudiante, estado);
     res.status(200).json({
       message: "Solicitud actualizada exitosamente",
       data: resultado
@@ -414,11 +414,22 @@ app.post("/login", async (req, res) => {
     }
 
     // 1. Buscar estudiante
-    const estudiante = await obtenerEstudiantePorEmail(email);
+    let estudiante;
+    try {
+      estudiante = await obtenerEstudiantePorEmail(email);
+    } catch (err) {
+      // Manejar caso específico de PostgREST cuando no hay filas (PGRST116)
+      if (err && err.code === 'PGRST116') {
+        return res.status(401).json({ error: "Email o contraseña incorrectos" });
+      }
+      throw err; // re-lanzar para que el catch exterior lo trate
+    }
 
-    if (!estudiante) {
+    // Normalizar diferentes retornos: objeto o array
+    if (!estudiante || (Array.isArray(estudiante) && estudiante.length === 0)) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
+    if (Array.isArray(estudiante)) estudiante = estudiante[0];
 
     // 2. Comparar contraseñas
     const isSuccess = await bcrypt.compare(password, estudiante.password_hash);
@@ -468,11 +479,20 @@ app.post("/login-admin", async (req, res) => {
     }
 
     // Buscar admin por email
-    const admin = await obtenerAdminPorEmail(email);
+    let admin;
+    try {
+      admin = await obtenerAdminPorEmail(email);
+    } catch (err) {
+      if (err && err.code === 'PGRST116') {
+        return res.status(401).json({ error: "Email o contraseña incorrectos" });
+      }
+      throw err;
+    }
 
-    if (!admin) {
+    if (!admin || (Array.isArray(admin) && admin.length === 0)) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
+    if (Array.isArray(admin)) admin = admin[0];
 
     // Comparar contraseñas
     const isSuccess = await bcrypt.compare(password, admin.password_hash);
@@ -523,7 +543,6 @@ app.get("/postulaciones/:id", async (req, res) => {
     res.status(404).json({ error: err.message || "Postulaciones para esta ofert no encontradas" });
   }
 });
-
 
 // PUT: Actualizar el estado de una candidatura (ahora acepta ofertaId y estudianteId por la URL)
 app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {

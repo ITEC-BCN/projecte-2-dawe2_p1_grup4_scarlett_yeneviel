@@ -483,7 +483,7 @@ export const obtenerSkills = async () => {
 }; 
 
 
-export const actualizarSolicitudPendiente= async(id_estudiante,estado) => {
+export const updatedRequestRegistration= async(id_estudiante,estado) => {
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .update({ estado: estado })

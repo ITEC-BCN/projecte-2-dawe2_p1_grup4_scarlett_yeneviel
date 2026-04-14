@@ -134,6 +134,9 @@ const restoreOriginalData = () => {
     ? JSON.parse(JSON.stringify(source.estudios.formacion))
     : [];
 
+  // Ordenar por año descendente (más recientes primero)
+  academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
+
   if (source.enlaces) {
     documents.value = source.enlaces.map((e, i) => ({
       id: e.id || Date.now() + i,
@@ -227,6 +230,9 @@ async function saveProfile() {
       alert("¡Perfil actualizado con éxito!");
       hasUnsavedChanges.value = false;
 
+      // Ordenar academicBackground después de guardar para asegurar el orden
+      academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
+
       // NOTA: Aquí lo ideal sería volver a ejecutar tu 'useStudents(url)' o recargar 
       // los datos del backend para que 'students.value' tenga la información fresca.
     } else {
@@ -256,6 +262,8 @@ const newEdu = reactive({ centro: "", anio: "", titulo: "" });
 function addEducation() {
   if (newEdu.centro && newEdu.titulo) {
     academicBackground.value.push({ ...newEdu });
+    // Ordenar por año descendente después de añadir
+    academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
     newEdu.centro = "";
     newEdu.anio = "";
     newEdu.titulo = "";
@@ -265,6 +273,8 @@ function addEducation() {
 
 function removeEducation(index) {
   academicBackground.value.splice(index, 1);
+  // Reordenar por año descendente después de remover
+  academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
   hasUnsavedChanges.value = true;
 }
 
@@ -359,8 +369,8 @@ function removeDocument(id) {
       <div class="profile-header">
         <div class="avatar-container">
           <img :src="user.avatar" alt="avatar" class="profile-avatar" />
-
-          <div v-if="editing" class="upload-section" style="margin-top: 10px;">
+        </div>
+        <div v-if="editing" class="upload-section" style="margin-top: 10px;">
             <label for="avatar-upload" class="btn-primary" style="cursor: pointer; font-size: 0.8rem;">
               <i class="fa-solid fa-camera"></i> Cambiar foto
             </label>
@@ -368,7 +378,7 @@ function removeDocument(id) {
               :disabled="uploadingFile" />
             <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray;">Subiendo...</span>
           </div>
-        </div>
+
         <h2 class="profile-name">{{ user.name }}</h2>
         <div class="profile-role">Estudiante</div>
       </div>
@@ -394,36 +404,49 @@ function removeDocument(id) {
         </div>
       </div>
 
-      <div class="sidebar-block">
-
+      <div class="sidebar-block about-block">
         <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
-        <p v-if="editing && hasUnsavedChanges" class="alert-warning">
-          ⚠️ No olvides dar al botón <strong>Guardar</strong> para que los cambios se registren.
-        </p>
-        <textarea v-if="editing" v-model="user.about" class="input" rows="4"
+
+        <textarea v-if="editing" v-model="user.about" class="input about-input" rows="4"
           placeholder="Escribe algo sobre ti..."></textarea>
-        <p v-else class="sidebar-text">{{ user.about || 'Aún no has escrito nada sobre ti.' }}</p>
+        <p v-else class="sidebar-text">
+          {{ user.about || 'Aún no has escrito nada sobre ti.' }}
+        </p>
       </div>
 
-      <div class="sidebar-block">
+      <div class="sidebar-block contact-block">
         <h3 class="sidebar-title"><i class="fa-solid fa-address-book"></i> Contacto</h3>
         <div class="contact-links">
           <a :href="`mailto:${contact.email}`" class="contact-item">
-            <i class="fa-solid fa-envelope"></i>
-            <span>{{ contact.email || 'Sin email' }}</span>
+            <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="contact-content">
+              <span class="contact-label">Email</span>
+              <span class="contact-value">{{ contact.email || 'Sin email' }}</span>
+            </div>
           </a>
 
           <div class="contact-item">
-            <i class="fa-solid fa-phone"></i>
-            <input v-if="editing" v-model="contact.phone" type="text" class="input input-sm" placeholder="Tu teléfono">
-            <span v-else>{{ contact.phone || 'Sin teléfono' }}</span>
+            <div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="contact-content">
+              <span class="contact-label">Teléfono</span>
+              <template v-if="editing">
+                <input v-model="contact.phone" type="text" class="input input-sm contact-input"
+                  placeholder="Tu teléfono" />
+              </template>
+              <span v-else class="contact-value">{{ contact.phone || 'Sin teléfono' }}</span>
+            </div>
           </div>
 
           <div class="contact-item">
-            <i class="fa-solid fa-location-dot"></i>
-            <input v-if="editing" v-model="contact.location" type="text" class="input input-sm"
-              placeholder="Tu ciudad/ubicación">
-            <span v-else>{{ contact.location || 'Sin ubicación' }}</span>
+            <div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="contact-content">
+              <span class="contact-label">Ubicación</span>
+              <template v-if="editing">
+                <input v-model="contact.location" type="text" class="input input-sm contact-input"
+                  placeholder="Tu ciudad/ubicación" />
+              </template>
+              <span v-else class="contact-value">{{ contact.location || 'Sin ubicación' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -451,19 +474,37 @@ function removeDocument(id) {
         </div>
 
         <div v-else class="edit-education">
-          <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-row">
-            <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
+          <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-grid-row">
+            <input v-model="edu.anio" placeholder="Año" class="input" />
             <input v-model="edu.titulo" placeholder="Título" class="input" />
             <input v-model="edu.centro" placeholder="Centro" class="input" />
-            <button @click="removeEducation(index)" class="btn-icon-danger"><i class="fa-solid fa-trash"></i></button>
+            <button @click="removeEducation(index)" class="btn-icon-danger" title="Eliminar">
+              <i class="fa-solid fa-trash"></i>
+            </button>
           </div>
-          <div class="add-box">
-            <p class="subtitle">Añadir nueva titulación</p>
-            <div class="edit-row">
-              <input v-model="newEdu.anio" placeholder="Ej: 2024" class="input input-sm" />
-              <input v-model="newEdu.titulo" placeholder="Título" class="input" />
-              <input v-model="newEdu.centro" placeholder="Centro" class="input" />
-              <button @click.prevent="addEducation" class="btn-icon-success"><i class="fa-solid fa-plus"></i></button>
+
+          <div class="add-box new-education-box">
+            <p class="subtitle"> Añadir nueva titulación</p>
+            
+            <div class="edit-grid-row form-labels-top">
+              <div class="input-col">
+                <label for="edu-anio">Año</label>
+                <input id="edu-anio" v-model="newEdu.anio" placeholder="Ej: 2026" class="input" />
+              </div>
+              
+              <div class="input-col">
+                <label for="edu-titulo">Título</label>
+                <input id="edu-titulo" v-model="newEdu.titulo" placeholder="Ej: Programación Web" class="input" />
+              </div>
+              
+              <div class="input-col">
+                <label for="edu-centro">Centro</label>
+                <input id="edu-centro" v-model="newEdu.centro" placeholder="Ej: ITB" class="input" />
+              </div>
+              
+              <button @click.prevent="addEducation" class="btn-icon-success btn-align-bottom" title="Añadir">
+                <i class="fa-solid fa-plus"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -579,7 +620,7 @@ function removeDocument(id) {
                 <i :class="getDocIcon(doc.tipo)" class="link-icon"></i>
                 <span class="link-label">{{ doc.name }}</span>
               </a>
-              <button v-if="editing" class="btn-icon-danger-small" @click="removeDocument(doc.id)">
+              <button v-if="editing" class="btn-icon-danger" @click="removeDocument(doc.id)">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -611,6 +652,18 @@ function removeDocument(id) {
 
     </main>
   </div>
+
+  <Transition name="toast">
+      <div v-if="editing && hasUnsavedChanges" class="toast-notification">
+        <div class="toast-icon">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="toast-content">
+          <strong>Cambios sin guardar</strong>
+          <p>No olvides dar al botón <strong>Guardar</strong> para que se registren.</p>
+        </div>
+      </div>
+    </Transition>
 </template>
 
 <style scoped>
@@ -629,7 +682,7 @@ function removeDocument(id) {
 
 /* SIDEBAR CARD */
 .profile-card {
-  width: 320px;
+  width: clamp(260px, 28%, 340px);
   background: #ffffff;
   border-radius: 20px;
   padding: 30px;
@@ -650,7 +703,7 @@ function removeDocument(id) {
   padding: 4px;
   background: linear-gradient(135deg, var(--accent-green), var(--accent-purple));
   border-radius: 50%;
-  margin-bottom: 15px;
+
 }
 
 .profile-avatar {
@@ -663,6 +716,7 @@ function removeDocument(id) {
 }
 
 .profile-name {
+  padding-top: 15px;
   font-size: 1.5rem;
   font-weight: 800;
   color: #111827;
@@ -756,43 +810,96 @@ function removeDocument(id) {
   font-size: 1rem;
   font-weight: 700;
   color: #111827;
-  margin: 0 0 10px 0;
+  margin: 0 0 14px 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .sidebar-text {
   font-size: 0.95rem;
   color: #475569;
-  line-height: 1.6;
+  line-height: 1.7;
   margin: 0;
   text-align: left;
+  min-height: 90px;
+}
+
+.about-block,
+.contact-block {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.about-input {
+  min-height: 100px;
+
 }
 
 .contact-links {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 12px;
 }
 
 .contact-item {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: 12px;
-  color: #475569;
-  font-size: 0.9rem;
+  align-items: center;
+  min-height: 56px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   text-decoration: none;
 }
 
-.contact-item i {
-  color: var(--accent-purple);
-  width: 16px;
-  text-align: center;
+.contact-item:hover {
+  background: #eef2ff;
 }
 
-.contact-item span {
-  word-break: break-all;
+.contact-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  color: #4338ca;
+  flex-shrink: 0;
+}
+
+.contact-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-label {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.contact-value {
+  font-size: 0.95rem;
+  color: #111827;
+  word-break: break-word;
+}
+
+.contact-input {
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+}
+
+.sidebar-text:empty {
+  opacity: 0.7;
 }
 
 /* CONTENIDO PRINCIPAL */
@@ -900,8 +1007,8 @@ function removeDocument(id) {
 /* SKILLS CHIPS */
 .skills-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
 }
 
 .skill-subtitle {
@@ -982,6 +1089,7 @@ function removeDocument(id) {
   text-decoration: none;
   color: #1e293b;
   font-weight: 600;
+  width: 100%;
 }
 
 .link-icon {
@@ -1004,6 +1112,7 @@ function removeDocument(id) {
   border: 1px solid #cbd5e1;
   font-family: inherit;
   font-size: 0.95rem;
+  min-width: 0; /* evita overflow en flex/grid */
 }
 
 .input:focus {
@@ -1078,6 +1187,135 @@ function removeDocument(id) {
   gap: 25px;
 }
 
+/* --- MEJORAS DE LA EDICIÓN DE FORMACIÓN --- */
+
+.edit-education {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Usamos Grid para que las columnas siempre midan lo mismo */
+.edit-grid-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+/* Estilo para destacar la caja de añadir nuevo elemento */
+.new-education-box {
+  background-color: #f8fafc;
+  border: 2px dashed #e2e8f0;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.new-education-box .subtitle {
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 15px 0;
+  font-size: 0.95rem;
+}
+
+/* Colocamos los labels encima de los inputs */
+.input-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-col label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Alinea el botón '+' abajo del todo para que cuadre con los inputs y no con los labels */
+.form-labels-top {
+  align-items: flex-end; 
+}
+
+.btn-align-bottom {
+  height: 40px; /* Esto asegura que el botón no se estire */
+}
+
+/* --- NOTIFICACIÓN EMERGENTE (TOAST) --- */
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  left: 30px; /* ¡Aquí está el cambio principal! */
+  background-color: #ffffff;
+  border-left: 5px solid #f59e0b;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  z-index: 9999;
+  max-width: 320px;
+}
+
+.toast-icon {
+  color: #f59e0b;
+  font-size: 1.4rem;
+  margin-top: 2px;
+}
+
+.toast-content strong {
+  display: block;
+  color: #1e293b;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.toast-content p {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Animación de entrada y salida de Vue */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto de rebote */
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(30px) scale(0.9); /* Entra desde abajo y un poco más pequeño */
+}
+
+/* Adaptación para móviles */
+@media (max-width: 768px) {
+  .toast-notification {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    max-width: none;
+    width: auto;
+  }
+}
+
+/* --- RESPONSIVE OBLIGATORIO --- */
+@media (max-width: 860px) {
+  .edit-grid-row {
+    grid-template-columns: 1fr; /* En móvil, todo se pone en una sola columna hacia abajo */
+    gap: 10px;
+  }
+  
+  .btn-icon-danger, 
+  .btn-icon-success {
+    width: 100%;
+    margin-top: 5px;
+  }
+}
+
 /* RESPONSIVE */
 @media (max-width: 860px) {
   .profile-page {
@@ -1101,7 +1339,7 @@ function removeDocument(id) {
   }
 
   .input-sm {
-    width: 100%;
+    width: 85%;
   }
 
   .alert-warning {

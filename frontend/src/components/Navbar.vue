@@ -5,49 +5,58 @@ import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 
-// Variables reactivas para saber el estado del usuario
+// Variables reactivas
 const isAuthenticated = ref(false);
 const userRole = ref('');
 
-// Función que lee el localStorage para saber quién está navegando
+// Variable para controlar el menú en móviles
+const isMenuOpen = ref(false);
+
+// Función que lee el localStorage
 const checkAuthStatus = () => {
-  const token = localStorage.getItem('token'); // Ajusta el nombre si usas otro
-  const role = localStorage.getItem('role');   // Ej: 'admin' o 'estudiante'
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
   
-  isAuthenticated.value = !!token; // Si hay token es true, si no, false
+  isAuthenticated.value = !!token;
   userRole.value = role || '';
 };
 
-// 1. Revisamos al montar el componente (cuando cargas la página)
+// Alternar el estado del menú hamburguesa
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+};
+
+// 1. Revisamos al montar el componente
 onMounted(() => {
   checkAuthStatus();
 });
 
-// 2. Revisamos cada vez que cambias de página (ruta)
-// Esto es un truco para que el Navbar se actualice automáticamente tras el Login
+// 2. Revisamos cada vez que cambias de página
 watch(() => route.path, () => {
   checkAuthStatus();
+  isMenuOpen.value = false; // Cerramos el menú móvil al cambiar de página
 });
 
 // Función para cerrar sesión
 const logout = () => {
-  // Limpiamos todo el rastro del usuario
   localStorage.removeItem('token');
-  localStorage.removeItem('role'); // O los datos que guardes
-  localStorage.removeItem('studentId')
+  localStorage.removeItem('role');
+  localStorage.removeItem('studentId');
 
   if(userRole.value == 'admin'){
     localStorage.removeItem('userId');
   }
   
-  checkAuthStatus(); // Actualizamos las variables
-  router.push('/login'); // Lo mandamos de vuelta al login
+  checkAuthStatus();
+  isMenuOpen.value = false; // Cerramos el menú
+  router.push('/login');
 };
 </script>
 
 <template>
   <nav class="navbar">
     <div class="nav-container">
+      
       <div class="brand" @click="$router.push('/')">
         <picture>
           <source srcset="../../public/logos/InterniaVerde.webp" type="image/webp">
@@ -56,7 +65,13 @@ const logout = () => {
         <h2 class="brand-text">Internia</h2>
       </div>
 
-      <div class="nav-links">
+      <button class="hamburger" @click="toggleMenu" aria-label="Abrir menú">
+        <span class="bar" :class="{ 'open': isMenuOpen }"></span>
+        <span class="bar" :class="{ 'open': isMenuOpen }"></span>
+        <span class="bar" :class="{ 'open': isMenuOpen }"></span>
+      </button>
+
+      <div class="nav-links" :class="{ 'is-open': isMenuOpen }">
         <router-link to="/">Inicio</router-link>
         <router-link to="/ofertas">Ofertas</router-link>
 
@@ -77,9 +92,10 @@ const logout = () => {
             Cerrar sesión
           </a>
 
-          <p v-if="userRole =='admin'">User: Administrador</p>
+          <p v-if="userRole =='admin'" class="admin-text">User: Administrador</p>
         </template>
       </div>
+
     </div>
   </nav>
 </template>
@@ -102,7 +118,7 @@ const logout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 50px;
+  height: 60px; /* Aumentado un poco para que respire el logo */
 }
 
 /* Sección Logo */
@@ -113,7 +129,7 @@ const logout = () => {
 }
 
 .logo {
-  height: 60px;
+  height: 40px; /* Ajustado para que encaje bien en móvil y escritorio */
   width: auto;
   margin-right: 12px;
 }
@@ -126,7 +142,7 @@ const logout = () => {
   letter-spacing: -0.025em;
 }
 
-/* Enlaces */
+/* Enlaces (Estilos por defecto para Escritorio) */
 .nav-links {
   display: flex;
   align-items: center;
@@ -145,17 +161,14 @@ const logout = () => {
   color: #111827;
 }
 
-/* Link activo (Donde estás parado) */
 .router-link-active {
   color: #10b981 !important;
-  /* Verde accent */
   font-weight: 600;
 }
 
-/* Estilo especial para botones (Login y Dashboard) */
+/* Botones especiales */
 .btn-login {
   background-color: #8b5cf6;
-  /* Púrpura */
   color: white !important;
   padding: 0.5rem 1.25rem;
   border-radius: 0.5rem;
@@ -166,12 +179,91 @@ const logout = () => {
   opacity: 0.9;
 }
 
-.btn-dashboard {
-  color: #10b981 !important;
-  font-weight: 600 !important;
+.btn-logout {
+  color: #ef4444 !important; /* Rojo para cerrar sesión */
 }
 
-.btn-dashboard:hover {
-  text-decoration: underline !important;
+.admin-text {
+  margin: 0;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* --- MENÚ HAMBURGUESA Y DISEÑO RESPONSIVE --- */
+
+/* Botón oculto por defecto en escritorio */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 21px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 50; /* Por si el menú se pone por debajo */
+}
+
+.hamburger .bar {
+  height: 3px;
+  width: 100%;
+  background-color: #111827;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Animación del menú a una "X" */
+.hamburger .bar.open:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+}
+.hamburger .bar.open:nth-child(2) {
+  opacity: 0;
+}
+.hamburger .bar.open:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
+}
+
+/* Media Query para pantallas pequeñas (móviles y tablets) */
+@media (max-width: 860px) {
+  .nav-container {
+    padding: 0 1.5rem;
+  }
+
+  .hamburger {
+    display: flex; /* Mostramos el botón */
+  }
+
+  /* Transformamos el contenedor de enlaces en un menú desplegable */
+  .nav-links {
+    position: absolute;
+    top: 61px; /* Justo debajo del navbar */
+    left: 0;
+    width: 100%;
+    background-color: white;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Clase que se activa cuando isMenuOpen es true */
+  .nav-links.is-open {
+    max-height: 400px; /* Un valor alto para que quepa todo el contenido */
+     padding: 1rem 0; /* Espaciado vertical para los enlaces */
+  }
+
+  .nav-links a {
+    width: 100%;
+    text-align: center;
+
+  }
+
+  .admin-text {
+    padding-top: 10px;
+  }
 }
 </style>

@@ -324,7 +324,13 @@ Vuelta de las vacaciones de semana santa
 - Revisión sobre donde estamos con el proyecto y que falta para acabar
 - Assignación de tareas
 
+## Dia 24 - 14/04/2026 
+**Asistencia:** Yeneviel Roberts
 
+**Temas tratados**
+HU21-Panel de administrador
+- Diseño del panel del administrador
+- El admin aprueba las solicitudes de registro a la web
 
 
 

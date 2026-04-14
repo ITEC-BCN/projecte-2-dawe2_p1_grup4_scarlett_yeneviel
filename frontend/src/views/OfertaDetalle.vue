@@ -5,6 +5,8 @@ import { useFetch } from '../composables/useFetchOfertas';
 import { useFetchUser } from '../composables/userFetchUser';
 import { URL_BACK } from '../../../config';
 import ModalInformativo from '../components/ModalInformativo.vue';
+// Importar la librería para enviar un e-mail cuando el estudiante se postula a una oferta
+import emailjs from "@emailjs/browser";
 
 const route = useRoute();
 const router = useRouter();
@@ -66,6 +68,30 @@ const postularOferta = async () => {
         return
       }
 
+      // al inscribirse a una oferta, enviamos el correo con EmailJS
+      // al inscribirse a una oferta, enviamos el correo con EmailJS
+      try {
+        const SERVICE_ID = "service_xznwlip"; 
+        const TEMPLATE_ID = "template_xk3yqke"; 
+        const PUBLIC_KEY = "fb8fbWLbHBX7mgoNz";
+
+        const emailEstudiante = localStorage.getItem("studentEmail") || "Correo no disponible";
+
+        console.log("Email que se enviará:", emailEstudiante); // <-- Console.log seguro
+
+        const templateParams = {
+          titulo_oferta: oferta.value?.tipo_puesto || "Puesto no especificado", 
+          empresa: oferta.value?.nombre_empresa || "Empresa no especificada",
+          email: emailEstudiante
+        };
+
+        await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+        console.log("¡Email de aviso de postulación enviado correctamente!");
+
+      } catch (emailError) {
+        // Capturamos el error del email para no arruinar la experiencia del usuario, ya que la inscripción sí se hizo.
+        console.error("La inscripción se completó, pero falló el envío del e-mail de aviso:", emailError);
+      }
       
       mensajePersonalizado.value = "¡Inscripción hecha correctamente!"
       modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta

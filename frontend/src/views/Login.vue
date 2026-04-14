@@ -51,6 +51,12 @@ const handleLogin = async (e) => {
 
     if (userId) {
       localStorage.setItem('studentId', userId)
+
+      // Para el email, si el backend no lo devuelve, usamos directamente el que escribió en el formulario
+      const userEmail = data.user?.email || data.email || email.value;
+      localStorage.setItem('studentEmail', userEmail);
+    } else {
+      console.error("EL BACKEND NO ENVIÓ ID DE USUARIO")
     }
 
     // Redirigir a las ofertas personalizadas con el ID del usuario

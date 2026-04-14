@@ -120,10 +120,34 @@ export function useFetchUser(url) {
             throw err; // Re-lanzamos para que el componente sepa que hubo fallo
         }
     };
+
+    //Actualiza el estado de la solicitud (aceptada/rechazada) de un estudiante por el administrador 
+    const actualizarEstado = async (idEstudiante, nuevoEstado) => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`/actualizar-estado/${idEstudiante}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: nuevoEstado })
+            });
+
+            if (!res.ok) throw new Error("Error al actualizar el estado");
+
+            const data = await res.json();
+            console.log("Estado actualizado:", data);
+            // Aquí podrías actualizar el estado en el objeto `students`
+        } catch (err) {
+            errorStudents.value = err.message;
+            console.error("Error detallado:", err);
+        }
+    };
     //Disparador: cuando el componente que use este archivo se monte, pedimos los datos
     onMounted(fetchData);//Ejecuta la función
 
     // Si cambia la URL (por ejemplo otro ID), volvemos a pedir los datos
     watch(url, fetchData)//Necesario para cada vez que se cambie el parametro se redenrise la página
-    return { data, error, loading, fetchData, NewStudent, guardarOferta, getOneStudent,OfertasGuardadasUser }
+    return { data, error, loading, fetchData, NewStudent, guardarOferta, getOneStudent,OfertasGuardadasUser , actualizarEstado}
 }

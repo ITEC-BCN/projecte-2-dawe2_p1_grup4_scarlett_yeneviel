@@ -250,6 +250,24 @@ app.post("/estudiante/postular", async (req, res) => {
   }
 })
 
+app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
+  try {
+    const {  id_estudiante, estado } = req.body;
+
+    if (!id_estudiante || !estado) {
+      return res.status(400).json({ error: "Faltan datos en el body" });
+    }
+
+    const resultado = await actualizarSolicitudPendiente(id_estudiante, estado);
+    res.status(200).json({
+      message: "Solicitud actualizada exitosamente",
+      data: resultado
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/guardar-oferta", async (req, res) => {
   try {
     const { id_estudiante, id_oferta } = req.body;

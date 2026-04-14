@@ -525,6 +525,7 @@ function removeDocument(id) {
                     class="fa-solid fa-xmark"></i></button>
               </span>
               <span v-if="hardSkills.length === 0" class="empty-state">No hay hard skills.</span>
+              
             </div>
 
             <div v-if="editing" class="add-inline" style="margin-top: 10px;">
@@ -1107,6 +1108,7 @@ function removeDocument(id) {
 
 .input {
   flex: 1;
+  text-align: center;
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;

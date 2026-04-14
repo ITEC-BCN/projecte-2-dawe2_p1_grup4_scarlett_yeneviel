@@ -103,12 +103,8 @@ const logout = () => {
             Cerrar sesión
           </a>
 
-<<<<<<< HEAD
-          <p v-if="userRole =='admin'" class="admin-text">User: Administrador</p>
-=======
 
 
->>>>>>> 89186f1e6bc8a2cc5d6603d48adf1f13b490b254
         </template>
       </div>
 

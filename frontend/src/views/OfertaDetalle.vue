@@ -14,6 +14,7 @@ const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+// 1. variable para guardar el mensaje personzalido dentro del mondal
 const mensajePersonalizado = ref("");
 const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);
 const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
@@ -49,6 +50,14 @@ const verificarEstado= async (idEstudiante, estado) => {
   }
   
 }
+
+//2. Estado de modal para abrir el modal informativo 
+const modalEstadoRef = ref(null);
+
+const modalInformativoEstado = () => {
+  modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+};
+
 
 // Llamamos a la función cuando el componente se carga
 onMounted(() => {
@@ -93,6 +102,7 @@ const postularOferta = async () => {
         console.error("La inscripción se completó, pero falló el envío del e-mail de aviso:", emailError);
       }
       
+      //2. Uso la variable
       mensajePersonalizado.value = "¡Inscripción hecha correctamente!"
       modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
       verificarEstado(idEstudiante, "postulacion")
@@ -135,13 +145,6 @@ const funGuardarOferta = async() => {
   }
    
 }
-
-//Estado de modal para abrir el modal informativo 
-const modalEstadoRef = ref(null);
-
-const modalInformativoEstado = () => {
-  modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
-};
 </script>
 
 <template>
@@ -243,7 +246,7 @@ const modalInformativoEstado = () => {
     </div>
   </div>
 
-  <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
+  <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
   <modal-informativo ref="modalEstadoRef" :mensaje="mensajePersonalizado" />
 </template>
 

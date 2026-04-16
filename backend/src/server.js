@@ -14,8 +14,11 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';  //esto es para subir archivos, lo usaremos para subir fotos de perfil y cvs
 import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
+import * as pdfParse from 'pdf-parse';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-.032
 import {
   obtenerOfertas,
   crearOferta,
@@ -47,6 +50,7 @@ import {
 import requireAuth from './middleware/requireAuth.js';
 const app = express();
 
+
 // Permitir cualquier origen (para desarrollo)
 app.use(cors({
   //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
@@ -58,6 +62,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+dotenv.config();
 
 //Rutas
 
@@ -165,7 +170,6 @@ app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
   }
 });
 
-
 //====================== Usuario Estudiante =======================
 
 // POST: Registrar un nuevo estudiante
@@ -214,7 +218,6 @@ app.get("/estudiantes", async (req, res) => {
   }
 });
 
-// GET: Obtener un estudiante por ID
 // GET: Obtener un estudiante por ID
 app.get("/estudiantes/:id", requireAuth, async (req, res) => {
   try {
@@ -524,7 +527,6 @@ app.get("/postulaciones/:id", async (req, res) => {
   }
 });
 
-
 // PUT: Actualizar el estado de una candidatura (ahora acepta ofertaId y estudianteId por la URL)
 app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   try {
@@ -554,5 +556,161 @@ app.get("/skills", async (req, res) => {
   } catch (err) {
     console.error("Error obteniendo skills:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ================== Integración con Gemini para extracción de datos de CV ==================
+// Asegúrate de requerir esto al principio de tu archivo si no lo tienes:
+// const express = require('express');
+// const multer = require('multer');
+// const pdf = require('pdf-parse');
+// const { GoogleGenerativeAI } = require('@google/genai');
+// const { createClient } = require('@supabase/supabase-js');
+// require('dotenv').config();
+
+// Inicializamos clientes (asegúrate de que estas variables estén en tu .env)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// Multer para PDF (en memoria)
+const uploadPDF = multer({ storage: multer.memoryStorage() });
+
+// Endpoint para subir CV
+app.post('/api/upload-cv', uploadPDF.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    const studentId = req.body.studentId;
+
+    if (!file) return res.status(400).json({ error: 'No se subió ningún archivo' });
+    if (file.mimetype !== 'application/pdf') return res.status(400).json({ error: 'Solo se permite PDF' });
+    if (!studentId) return res.status(400).json({ error: 'Falta studentId' });
+
+    // ==========================================
+    // 1. Subir a Supabase Storage (Bucket: 'cvs')
+    // ==========================================
+    const fileExt = 'pdf';
+    const fileName = `cv_${studentId}_${Date.now()}.${fileExt}`;
+
+    // Subimos el buffer directamente a Supabase
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from('cvs') // Asegúrate de crear un bucket llamado 'cvs' en tu panel de Supabase
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true // Cambiado a true para sobrescribir archivos con el mismo nombre
+      });
+
+    if (storageError) throw new Error(`Error subiendo a Storage: ${storageError.message}`);
+
+    // Obtenemos la URL pública del CV
+    const { data: { publicUrl } } = supabase.storage
+      .from('cvs')
+      .getPublicUrl(fileName);
+
+
+    // ==========================================
+    // 2. Insertar en la tabla 'documento'
+    // ==========================================
+    const { error: docError } = await supabase
+      .from('documento')
+      .insert([{
+        tipo: 'cv',
+        ruta_archivo: publicUrl,
+        id_estudiante: studentId
+      }]);
+
+    if (docError) throw new Error(`Error al insertar documento en BD: ${docError.message}`);
+
+
+    // ==========================================
+    // 3 y 4. Extraer texto del PDF (Mejorado)
+    // ==========================================
+    // Pasamos el buffer directamente a pdf-parse. ¡No necesitamos fs ni archivos temporales!
+    const pdfData = await pdfParse(file.buffer);
+    const textoDelCV = pdfData.text;
+
+
+    // ==========================================
+    // 5. Procesar con Gemini (Modo JSON)
+    // ==========================================
+    // Configuramos el modelo para forzar una respuesta JSON estricta
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: { responseMimeType: "application/json" } 
+    });
+
+    const prompt = `
+      Eres un experto analista de recursos humanos. Lee el siguiente currículum y extrae los datos.
+      Devuelve ÚNICAMENTE un objeto JSON válido.
+      La estructura debe ser EXACTAMENTE esta:
+      {
+        "nombre": "Nombre de la persona (sin apellidos)",
+        "apellido": "Apellidos de la persona",
+        "telefono": "Solo números, ej: 666666666",
+        "email": "Correo electrónico",
+        "location": "Ciudad, País (ej: Barcelona, España)",
+        "about": "Un breve resumen profesional extraído del perfil, máximo 3 líneas",
+        "idiomas": {
+          "idiomas": [
+            {"name": "Nombre del idioma", "level": "Nativo, Medio, C1, B2, etc."}
+          ]
+        },
+        "estudios": {
+          "formacion": [
+            {"centro": "Nombre del colegio/universidad", "anio": "Año de finalización", "titulo": "Nombre del título"}
+          ]
+        },
+        "hard_skills": "Lista de habilidades técnicas separadas por comas (ej: JavaScript, PHP, CSS)",
+        "soft_skills": "Lista de habilidades blandas separadas por comas (ej: Trabajo en equipo, Comunicación)"
+      }
+      \nTexto del currículum:\n${textoDelCV}
+    `;
+
+    const result = await model.generateContent(prompt);
+    let textoRespuesta = result.response.text();
+    
+    let datosCV;
+    try {
+      datosCV = JSON.parse(textoRespuesta);
+    } catch (e) {
+      return res.status(500).json({ error: 'Error parseando respuesta de Gemini', raw: textoRespuesta });
+    }
+
+
+    // ==========================================
+    // 6. Actualizar 'usuario_estudiante' en Supabase
+    // ==========================================
+    const { error: updateError } = await supabase
+      .from('usuario_estudiante') // Asegúrate de que el nombre de la tabla sea correcto
+      .update({
+        nombre: datosCV.nombre,
+        apellido: datosCV.apellido,
+        telefono: datosCV.telefono,
+        email: datosCV.email,
+        location: datosCV.location,
+        about: datosCV.about,
+        // Si las columnas en Supabase son de tipo JSON/JSONB, pásalas así:
+        idiomas: datosCV.idiomas, 
+        estudios: datosCV.estudios,
+        // (Si tus columnas son tipo texto, usa: JSON.stringify(datosCV.idiomas))
+        hard_skills: datosCV.hard_skills,
+        soft_skills: datosCV.soft_skills
+      })
+      .eq('id', studentId); // Filtramos para actualizar solo a este estudiante
+
+    if (updateError) throw new Error(`Error al actualizar estudiante: ${updateError.message}`);
+
+
+    // ==========================================
+    // 7. Responder con éxito
+    // ==========================================
+    res.json({
+      message: 'CV subido, guardado y analizado con éxito',
+      url: publicUrl,
+      datosExtraidos: datosCV
+    });
+
+  } catch (error) {
+    console.error('Error en /api/upload-cv:', error);
+    res.status(500).json({ error: error.message || 'Error interno del servidor' });
   }
 });

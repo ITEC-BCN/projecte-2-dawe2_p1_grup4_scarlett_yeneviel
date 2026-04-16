@@ -3,6 +3,7 @@ import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
+import ModalDatosCV from "../components/ModalDatosCV.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -360,6 +361,9 @@ function removeDocument(id) {
 }
 
 // --- NUEVO: FUNCIÓN PARA SUBIR CV ---
+const showModalDatosCV = ref(false);
+const datosExtraidosCV = ref(null);
+
 const uploadCV = async (event) => {
   const file = event.target.files[0];
   if (!file || file.type !== "application/pdf") {
@@ -372,13 +376,18 @@ const uploadCV = async (event) => {
   formData.append('studentId', students.value.id);
 
   try {
-    const response = await fetch(`${URL_BACK}/upload-cv`, {
+    const response = await fetch(`${URL_BACK}/api/upload-cv`, {
       method: 'POST',
       body: formData
     });
     const data = await response.json();
     if (response.ok) {
       cvUrl.value = data.url;
+      // Mostrar modal con datos extraídos si existen
+      if (data.datosExtraidos) {
+        datosExtraidosCV.value = data.datosExtraidos;
+        showModalDatosCV.value = true;
+      }
       alert('¡CV subido con éxito!');
     } else {
       alert('Error al subir el CV: ' + data.error);
@@ -673,6 +682,12 @@ const uploadCV = async (event) => {
       </div>
 
     </main>
+
+    <ModalDatosCV
+      v-if="showModalDatosCV"
+      :datos="datosExtraidosCV"
+      @close="showModalDatosCV = false"
+    />
   </div>
 </template>
 

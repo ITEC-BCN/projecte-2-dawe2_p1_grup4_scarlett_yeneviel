@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useFetch } from '../composables/useFetchOfertas';
-import { URL_BACK } from '../../../config';
+import { useFetch } from '../../composables/useFetchOfertas';
+import { URL_BACK } from '../../../../config';
 
 // watch para observar cambios en nuestras variables reactivas
 import { watch } from 'vue';

@@ -33,12 +33,12 @@ const crearOferta = () => {
 const eliminarOferta = async (id) => {
   if (!confirm('¿Eliminar esta oferta? Esta acción no se puede deshacer.')) return;
   try {
-    const res = await fetch(`${URL_BACK}/ofertas/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Error eliminando');
+    const res = await fetch(`${URL_BACK}/ofertas/${id}`, { method: 'PUT' });
+    if (!res.ok) throw new Error('Error desactivando oferta');
     await fetchData();
   } catch (err) {
-    console.error('Error eliminando oferta', err);
-    alert('No se pudo eliminar la oferta');
+    console.error('Error desactivando oferta', err);
+    alert('No se pudo desactivar la oferta');
   }
 };
 </script>

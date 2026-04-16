@@ -41,7 +41,8 @@ import {
   obtenerSkills,
   subirAvatarStorage,
   guardarFotoPerfil,
-  updatedRequestRegistration
+  updatedRequestRegistration,
+  desactivarOferta
 
 
 } from './supabaseClient.js'
@@ -141,6 +142,21 @@ app.delete('/ofertas/:id', async (req, res) => {
     const id = req.params.id;
 
     const resultado = await eliminarOferta(id);
+
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
+
+//Desactivar oferta (en lugar de eliminarla físicamente, la marcamos como inactiva)
+
+app.put('/ofertas/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const resultado = await desactivarOferta(id);
 
     res.json(resultado);
   } catch (err) {

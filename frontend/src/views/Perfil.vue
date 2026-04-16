@@ -52,6 +52,8 @@ const languages = ref([]);
 const documents = ref([]);
 const academicBackground = ref([]);
 const uploadingFile = ref(false);
+const uploadingCV = ref(false);
+const cvUrl = ref("");
 
 //Añadir la FOTO DE PERFIL
 
@@ -143,6 +145,12 @@ const restoreOriginalData = () => {
     }));
   } else {
     documents.value = [];
+  }
+
+  if (source.cv_url) {
+    cvUrl.value = source.cv_url;
+  } else {
+    cvUrl.value = "";
   }
 
   hasUnsavedChanges.value = false;
@@ -350,84 +358,139 @@ function removeDocument(id) {
   documents.value = documents.value.filter((d) => d.id !== id);
   hasUnsavedChanges.value = true;
 }
+
+// --- NUEVO: FUNCIÓN PARA SUBIR CV ---
+const uploadCV = async (event) => {
+  const file = event.target.files[0];
+  if (!file || file.type !== "application/pdf") {
+    alert("Por favor, selecciona un archivo PDF.");
+    return;
+  }
+  uploadingCV.value = true;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('studentId', students.value.id);
+
+  try {
+    const response = await fetch(`${URL_BACK}/upload-cv`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await response.json();
+    if (response.ok) {
+      cvUrl.value = data.url;
+      alert('¡CV subido con éxito!');
+    } else {
+      alert('Error al subir el CV: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error de conexión:', error);
+  } finally {
+    uploadingCV.value = false;
+  }
+};
 </script>
 
 <template>
   <div class="profile-page">
+    <div class="sidebar">
+      <aside class="profile-card">
+        <div class="profile-header">
+          <div class="avatar-container">
+            <img :src="user.avatar" alt="avatar" class="profile-avatar" />
 
-    <aside class="profile-card">
-      <div class="profile-header">
-        <div class="avatar-container">
-          <img :src="user.avatar" alt="avatar" class="profile-avatar" />
+            <div v-if="editing" class="upload-section" style="margin-top: 10px;">
+              <label for="avatar-upload" class="btn-primary" style="cursor: pointer; font-size: 0.8rem;">
+                <i class="fa-solid fa-camera"></i> Cambiar foto
+              </label>
+              <input id="avatar-upload" type="file" accept="image/*" style="display: none;" @change="uploadAvatar"
+                :disabled="uploadingFile" />
+              <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray;">Subiendo...</span>
+            </div>
+          </div>
+          <h2 class="profile-name">{{ user.name }}</h2>
+          <div class="profile-role">Estudiante</div>
+        </div>
 
-          <div v-if="editing" class="upload-section" style="margin-top: 10px;">
-            <label for="avatar-upload" class="btn-primary" style="cursor: pointer; font-size: 0.8rem;">
-              <i class="fa-solid fa-camera"></i> Cambiar foto
-            </label>
-            <input id="avatar-upload" type="file" accept="image/*" style="display: none;" @change="uploadAvatar"
-              :disabled="uploadingFile" />
-            <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray;">Subiendo...</span>
+        <div class="profile-actions" v-if="role == 'estudiante'">
+          <button class="btn-primary" :class="{ 'btn-cancel': editing }" @click="toggleEdit">
+            <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
+            {{ editing ? " Cancelar" : " Editar perfil" }}
+          </button>
+          <button v-if="editing" class="btn-save" @click="saveProfile">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar
+          </button>
+        </div>
+
+        <div class="profile-stats">
+          <div class="stat">
+            <div class="num">{{ hardSkills.length + softSkills.length }}</div>
+            <span class="label">Skills</span>
+          </div>
+          <div class="stat">
+            <div class="num">{{ documents.length }}</div>
+            <span class="label">Enlaces</span>
           </div>
         </div>
-        <h2 class="profile-name">{{ user.name }}</h2>
-        <div class="profile-role">Estudiante</div>
-      </div>
 
-      <div class="profile-actions" v-if="role == 'estudiante'">
-        <button class="btn-primary" :class="{ 'btn-cancel': editing }" @click="toggleEdit">
-          <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
-          {{ editing ? " Cancelar" : " Editar perfil" }}
-        </button>
-        <button v-if="editing" class="btn-save" @click="saveProfile">
-          <i class="fa-solid fa-floppy-disk"></i> Guardar
-        </button>
-      </div>
+        <div class="sidebar-block">
 
-      <div class="profile-stats">
-        <div class="stat">
-          <div class="num">{{ hardSkills.length + softSkills.length }}</div>
-          <span class="label">Skills</span>
+          <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
+          <p v-if="editing && hasUnsavedChanges" class="alert-warning">
+            ⚠️ No olvides dar al botón <strong>Guardar</strong> para que los cambios se registren.
+          </p>
+          <textarea v-if="editing" v-model="user.about" class="input" rows="4"
+            placeholder="Escribe algo sobre ti..."></textarea>
+          <p v-else class="sidebar-text">{{ user.about || 'Aún no has escrito nada sobre ti.' }}</p>
         </div>
-        <div class="stat">
-          <div class="num">{{ documents.length }}</div>
-          <span class="label">Enlaces</span>
-        </div>
-      </div>
 
-      <div class="sidebar-block">
+        <div class="sidebar-block">
+          <h3 class="sidebar-title"><i class="fa-solid fa-address-book"></i> Contacto</h3>
+          <div class="contact-links">
+            <a :href="`mailto:${contact.email}`" class="contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <span>{{ contact.email || 'Sin email' }}</span>
+            </a>
 
-        <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
-        <p v-if="editing && hasUnsavedChanges" class="alert-warning">
-          ⚠️ No olvides dar al botón <strong>Guardar</strong> para que los cambios se registren.
-        </p>
-        <textarea v-if="editing" v-model="user.about" class="input" rows="4"
-          placeholder="Escribe algo sobre ti..."></textarea>
-        <p v-else class="sidebar-text">{{ user.about || 'Aún no has escrito nada sobre ti.' }}</p>
-      </div>
+            <div class="contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <input v-if="editing" v-model="contact.phone" type="text" class="input input-sm" placeholder="Tu teléfono">
+              <span v-else>{{ contact.phone || 'Sin teléfono' }}</span>
+            </div>
 
-      <div class="sidebar-block">
-        <h3 class="sidebar-title"><i class="fa-solid fa-address-book"></i> Contacto</h3>
-        <div class="contact-links">
-          <a :href="`mailto:${contact.email}`" class="contact-item">
-            <i class="fa-solid fa-envelope"></i>
-            <span>{{ contact.email || 'Sin email' }}</span>
-          </a>
-
-          <div class="contact-item">
-            <i class="fa-solid fa-phone"></i>
-            <input v-if="editing" v-model="contact.phone" type="text" class="input input-sm" placeholder="Tu teléfono">
-            <span v-else>{{ contact.phone || 'Sin teléfono' }}</span>
-          </div>
-
-          <div class="contact-item">
-            <i class="fa-solid fa-location-dot"></i>
-            <input v-if="editing" v-model="contact.location" type="text" class="input input-sm"
-              placeholder="Tu ciudad/ubicación">
-            <span v-else>{{ contact.location || 'Sin ubicación' }}</span>
+            <div class="contact-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <input v-if="editing" v-model="contact.location" type="text" class="input input-sm"
+                placeholder="Tu ciudad/ubicación">
+              <span v-else>{{ contact.location || 'Sin ubicación' }}</span>
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      <aside class="cv-card compact">
+        <h3 class="sidebar-title"><i class="fa-solid fa-file-pdf"></i> Sube tu CV en PDF</h3>
+        <div>
+          <input
+            id="cv-upload"
+            type="file"
+            accept="application/pdf"
+            style="display: none;"
+            @change="uploadCV"
+            :disabled="uploadingCV"
+          />
+          <label for="cv-upload" class="btn-primaryCV" style="cursor:pointer;">
+            <i class="fa-solid fa-upload"></i> Seleccionar archivo PDF
+          </label>
+          <span v-if="uploadingCV" style="font-size: 0.9rem; color: gray;">Subiendo...</span>
+          <div v-if="cvUrl" style="margin-top:10px;">
+            <a :href="cvUrl" target="_blank" class="cv-link">
+              <i class="fa-solid fa-file-pdf"></i> Ver CV subido
+            </a>
+          </div>
+        </div>
+      </aside>
+    </div>
 
     <main class="profile-main">
 
@@ -1078,16 +1141,80 @@ function removeDocument(id) {
   gap: 25px;
 }
 
+/* NUEVO: ESTILOS PARA LA CARD DEL CV */
+.cv-card {
+  width: 320px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cv-card.compact {
+width: 320px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    margin-top: 15px;
+    margin-bottom: 0;
+    display: block;
+
+}
+
+.btn-primaryCV {
+width: 100%;
+  background: #f1f5f9;
+  color: #334155;
+  width: 90%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.cv-link {
+  color: #e74c3c;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1rem;
+}
+.cv-link i {
+  margin-right: 6px;
+}
+
 /* RESPONSIVE */
 @media (max-width: 860px) {
   .profile-page {
     flex-direction: column;
   }
 
+  .sidebar {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+  }
+
   .profile-card {
     width: 100%;
     box-sizing: border-box;
     position: static;
+  }
+
+  .cv-card.compact {
+    width: 100%;
+    padding: 16px 10px;
   }
 
   .grid-two-cols,

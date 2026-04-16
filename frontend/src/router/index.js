@@ -46,9 +46,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
       {
-      path: "/perfil/:id",
+      path: "/perfilDetalle/:id",
       name: "PerfilDetalleSolo",
-      component: () => import('@/views/Perfil.vue'),
+      component: () => import('@/views/admin/PerfilDetalleSolo.vue'),
       props: true,
       meta: { requiresAdmin: true }
     },

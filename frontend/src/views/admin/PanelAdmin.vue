@@ -39,8 +39,8 @@ const updateUserEstado = async (id, newEstado) => {
   }
 };
 
-const acceptUser = (id) => updateUserEstado(id, 'activo');
-const rejectUser = (id) => updateUserEstado(id, 'inactivo');
+const acceptUser = (id) => updateUserEstado(id, 'aprobado');
+const rejectUser = (id) => updateUserEstado(id, 'rechazado');
 const deactivateUser = (id) => updateUserEstado(id, 'inactivo');
 const activateUser = (id) => updateUserEstado(id, 'activo');
 

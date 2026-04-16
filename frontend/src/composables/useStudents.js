@@ -13,7 +13,6 @@ export function useStudents(urlRef) {
         loadingStudents.value = true;
         try {
             const token = localStorage.getItem('token'); // Recuperamos el token
-
             const res = await fetch(currentUrl, {
                 method: 'GET',
                 headers: {

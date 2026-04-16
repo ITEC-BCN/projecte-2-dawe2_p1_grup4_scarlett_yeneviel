@@ -125,23 +125,23 @@ export function useFetchUser(url) {
     const actualizarEstado = async (idEstudiante, nuevoEstado) => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`/actualizar-estado/${idEstudiante}`, {
+            const res = await fetch(`${URL_BACK}/actualizar-estado/${idEstudiante}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({ estado: nuevoEstado })
             });
 
             if (!res.ok) throw new Error("Error al actualizar el estado");
 
             const data = await res.json();
-            console.log("Estado actualizado:", data);
+            //console.log("Estado actualizado:");
             // Aquí podrías actualizar el estado en el objeto `students`
         } catch (err) {
-            errorStudents.value = err.message;
-            console.error("Error detallado:", err);
+            console.error("Error detallado:", err.message);
         }
     };
     //Disparador: cuando el componente que use este archivo se monte, pedimos los datos

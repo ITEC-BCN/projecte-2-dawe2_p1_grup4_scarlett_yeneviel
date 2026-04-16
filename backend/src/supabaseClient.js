@@ -89,6 +89,17 @@ export const eliminarOferta = async (id) => {
   return { message: 'Oferta eliminada correctamente' };
 };
 
+// 5. DESACTIVAR una oferta (DELETE)
+export const desactivarOferta = async (id) => {
+  const { error } = await supabase
+    .from('oferta')
+    .update({ estado: 'INACTIVA' })
+    .eq('id', id);
+
+  if (error) throw error;
+  return { message: 'Oferta desactivada correctamente' };
+};
+
 // ================== OFERTAS PERSONALIZADAS ==========================
 
 // Añade esta función a tu archivo de controladores de base de datos

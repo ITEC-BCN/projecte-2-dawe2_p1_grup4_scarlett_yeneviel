@@ -152,7 +152,7 @@ const submitFormulario = async () => {
   }
 };
 
-const volver = () => router.push({ name: "ofertas" });
+const volver = () => router.back();
 
 </script>
 
@@ -160,7 +160,7 @@ const volver = () => router.push({ name: "ofertas" });
 <template>
   <div class="form-wrapper">
     <button @click="volver" class="btn-volver">
-      ← Volver al detalle
+      ← Volver 
     </button>
     <div class="form-container">
       <h1 class="title">Nueva Oferta</h1>

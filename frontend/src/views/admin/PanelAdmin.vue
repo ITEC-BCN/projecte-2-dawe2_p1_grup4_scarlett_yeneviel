@@ -10,97 +10,169 @@ const router = useRouter();
 const urlUsers = ref(`${URL_BACK}/estudiantes`);
 const { data: users, error: usersError, loading: loadingUsers, fetchData: fetchUsers, actualizarEstado } = useFetchUser(urlUsers);
 
-// pagination usuarios
-const currentUserPage = ref(1);
-const userPageSize = ref(10);
-const totalUserPages = computed(() => Math.max(1, Math.ceil((users.value || []).length / userPageSize.value)));
-const usersPaginados = computed(() => {
-  const arr = users.value || [];
-  const start = (currentUserPage.value - 1) * userPageSize.value;
-  return arr.slice(start, start + userPageSize.value);
+// Filtro por pestañas: 'todos', 'pendiente', 'aprobado', 'rechazado'
+const activeTab = ref('pendiente'); 
+
+// Computed para filtrar según la pestaña activa
+const filteredUsers = computed(() => {
+  const allUsers = users.value || [];
+  if (activeTab.value === 'todos') return allUsers;
+  return allUsers.filter(u => (u.estado || '').toLowerCase() === activeTab.value);
 });
+
+// Pagination sobre los usuarios FILTRADOS
+const currentUserPage = ref(1);
+const userPageSize = ref(5);
+const totalUserPages = computed(() => Math.max(1, Math.ceil(filteredUsers.value.length / userPageSize.value)));
+
+const usersPaginados = computed(() => {
+  const start = (currentUserPage.value - 1) * userPageSize.value;
+  return filteredUsers.value.slice(start, start + userPageSize.value);
+});
+
+// Reseteamos página al cambiar de pestaña
+const setTab = (tab) => {
+  activeTab.value = tab;
+  currentUserPage.value = 1;
+};
+
 const prevUserPage = () => { if (currentUserPage.value > 1) currentUserPage.value--; };
 const nextUserPage = () => { if (currentUserPage.value < totalUserPages.value) currentUserPage.value++; };
-const goToUserPage = (p) => { currentUserPage.value = p; };
 
+// Add: navigate to a specific page when clicking a page number
+const goToPage = (p) => {
+  const page = Number(p);
+  if (!Number.isInteger(page)) return;
+  if (page < 1) return;
+  if (page > totalUserPages.value) return;
+  currentUserPage.value = page;
+};
+
+// Stats
 const usersTotal = computed(() => (users.value || []).length);
 const pendingCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'pendiente').length);
+const approvedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'aprobado').length);
+const rejectedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'rechazado').length);
 
-// actions
+// Actions
 const viewUser = (id) => { router.push({ name: 'PerfilDetalleSolo', params: { id } }); };
-const updateUserEstado = async (id, newEstado) => {
 
+const updateUserEstado = async (id, newEstado) => {
   try {
     await actualizarEstado(id, newEstado);
     await fetchUsers();
   } catch (err) {
-    console.error('Error actualizando estado', err);
-    alert('No se pudo actualizar el estado del usuario');
+    console.error('Error:', err);
+    alert('No se pudo actualizar el estado');
   }
 };
-
-const acceptUser = (id) => updateUserEstado(id, 'aprobado');
-const rejectUser = (id) => updateUserEstado(id, 'rechazado');
-const deactivateUser = (id) => updateUserEstado(id, 'inactivo');
-const activateUser = (id) => updateUserEstado(id, 'activo');
-
 </script>
 
-
 <template>
-  <header class="pa-header">
-    <h2>Panel Administrador - Usuarios</h2>
-    <p class="muted">Gestiona cuentas de estudiantes y revisa solicitudes pendientes</p>
-    <div class="header-actions">
-      <button class="link-btn" @click="router.push({ name: 'PanelOfertasAdmin' })">Ir al Gestor de Ofertas</button>
-    </div>
-  </header>
-
-  <div class="panel-admin">
-    <section class="pa-list">
-      <div v-if="loadingUsers" class="pa-status-msg">
-        <span class="loader"></span> Cargando usuarios...
+  <div class="admin-layout">
+    <header class="main-header">
+      <div class="header-content">
+        <div>
+          <h1>Gestión de Estudiantes</h1>
+          <p class="subtitle">Administra el acceso y verifica perfiles de la plataforma</p>
+        </div>
+        <!--Enlace al gestor ofertas-->
+        <button class="btn-primary-nav" @click="router.push({ name: 'PanelOfertasAdmin' })">
+          <div class="btn-content">
+            <span class="btn-icon-wrapper">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path><path d="M12 8h.01"></path></svg>
+            </span>
+            <div class="btn-text">
+              <span class="btn-title">Gestor de Ofertas</span>
+              <span class="btn-desc">Ver vacantes activas</span>
+            </div>
+          </div>
+      </button>
       </div>
-      <div v-else-if="usersError" class="pa-status-msg error">
-        ⚠️ Error: {{ usersError }}
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card success" @click="setTab('aprobado')" :class="{ active: activeTab === 'aprobado' }">
+        <span class="stat-label">Aprobados</span>
+        <span class="stat-value">{{ approvedCount }}</span>
+      </div>
+
+      <div class="stat-card pending" @click="setTab('pendiente')" :class="{ active: activeTab === 'pendiente' }">
+        <span class="stat-label">Pendientes</span>
+        <span class="stat-value">{{ pendingCount }}</span>
+      </div>
+
+
+      <div class="stat-card reject" @click="setTab('rechazado')" :class="{ active: activeTab === 'rechazado' }">
+        <span class="stat-label">Rechazados</span>
+        <span class="stat-value">{{ rejectedCount }}</span>
+      </div>
+
+      <div class="stat-card" @click="setTab('todos')" :class="{ active: activeTab === 'todos' }">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">{{ usersTotal }}</span>
+      </div>
+    </div>
+
+    <section class="table-section">
+
+      <div v-if="loadingUsers" class="status-box">
+        <div class="spinner"></div>
+        <p>Cargando información...</p>
+      </div>
+
+      <div v-else-if="usersError" class="status-box error">
+        <p>⚠️ {{ usersError }}</p>
       </div>
 
       <div v-else>
-        <div class="users-overview">
-          <div class="overview-item">Total usuarios: <strong>{{ usersTotal }}</strong></div>
-          <div class="overview-item">Solicitudes pendientes: <strong class="pending-count">{{ pendingCount }}</strong></div>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Contacto</th>
+                <th>Estado</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="usuario in usersPaginados" :key="usuario.id">
+                <td>
+                  <div class="user-info">
+                    <div class="avatar">{{ usuario.nombre[0] }}</div>
+                    <span class="user-name">{{ usuario.nombre }} {{ usuario.apellido }}</span>
+                  </div>
+                </td>
+                <td><span class="user-email">{{ usuario.email }}</span></td>
+                <td>
+                  <span :class="['pill', usuario.estado]">
+                    {{ usuario.estado }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <button class="btn-icon" title="Ver detalle" @click="viewUser(usuario.id)">👁️</button>
+                  
+                  <template v-if="usuario.estado === 'pendiente'">
+                    <button class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Aceptar</button>
+                    <button class="btn-action reject" @click="updateUserEstado(usuario.id, 'rechazado')">Rechazar</button>
+                  </template>
+                  
+                  <button v-if="usuario.estado === 'aprobado'" class="btn-action deactivate" @click="updateUserEstado(usuario.id, 'inactivo')">Desactivar</button>
+                  <button v-if="usuario.estado === 'rechazado' || usuario.estado === 'inactivo'" class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Reactivar</button>
+                </td>
+              </tr>
+              <tr v-if="usersPaginados.length === 0">
+                <td colspan="4" class="empty-state">No hay usuarios en esta categoría</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="users-container">
-          <div class="users-headers">
-            <div>Nombre</div>
-            <div>Email</div>
-            <div>Estado</div>
-            <div>Acciones</div>
-          </div>
-
-          <ul class="users-list">
-            <li v-for="usuario in usersPaginados" :key="usuario.id" class="user-item">
-              <div class="user-name">{{ usuario.nombre }} {{ usuario.apellido }}</div>
-              <div class="user-email">{{ usuario.email }}</div>
-              <div class="user-estado">
-                <span :class="['estado-pill', usuario.estado === 'activo' ? 'activo' : usuario.estado === 'pendiente' ? 'pendiente' : 'inactivo']">{{ usuario.estado }}</span>
-              </div>
-              <div class="user-actions">
-                <button class="btn" @click="viewUser(usuario.id)">Ver</button>
-                <button v-if="usuario.estado === 'pendiente'" class="btn" @click="acceptUser(usuario.id)">Aceptar</button>
-                <button v-if="usuario.estado === 'pendiente'" class="btn btn-danger" @click="rejectUser(usuario.id)">Rechazar</button>
-                <button v-if="usuario.estado === 'activo'" class="btn btn-danger" @click="deactivateUser(usuario.id)">Desactivar</button>
-                <button v-if="usuario.estado === 'inactivo'" class="btn" @click="activateUser(usuario.id)">Activar</button>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div class="pa-pagination" v-if="totalUserPages > 1">
+        <div class="pagination" v-if="totalUserPages > 1">
           <button class="page-btn" :disabled="currentUserPage === 1" @click="prevUserPage">Anterior</button>
           <div class="page-numbers">
-            <button v-for="p in totalUserPages" :key="p" :class="['page-number', { active: p === currentUserPage }]" @click="goToUserPage(p)">{{ p }}</button>
+            <button v-for="p in totalUserPages" :key="p" :class="['page-number', { active: p === currentUserPage }]" @click="goToPage(p)">{{ p }}</button>
           </div>
           <button class="page-btn" :disabled="currentUserPage === totalUserPages" @click="nextUserPage">Siguiente</button>
         </div>
@@ -109,41 +181,145 @@ const activateUser = (id) => updateUserEstado(id, 'activo');
   </div>
 </template>
 
-
 <style scoped>
-.panel-admin { background: white; padding: 24px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 1000px; margin: 0 auto 30px; }
-.pa-header { margin-bottom: 12px; }
-.pa-header h2 { margin:0; font-size:1.4rem }
-.muted { color:#6b7280 }
+/* Layout & Basics */
+.admin-layout { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; font-family: 'Inter', system-ui, sans-serif; color: #1f2937; }
+.main-header { margin-bottom: 2rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; }
+h1 { font-size: 1.75rem; font-weight: 800; margin: 0; color: #111827; }
+.subtitle { color: #6b7280; margin: 4px 0 0; }
 
-.users-overview { display:flex; gap:16px; margin-bottom:12px; }
-.overview-item { background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #eef2ff; }
-.pending-count { color:#b45309; font-weight:700 }
+/* Stats Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.stat-card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; }
+.stat-card:hover { border-color: #10b981; transform: translateY(-2px); }
+.stat-card.active { border-bottom: 4px solid #10b981; background: #f0fdf4; }
+.stat-card.pending.active { border-bottom-color: #f59e0b; background: #fffbeb; }
+.stat-label { display: block; color: #6b7280; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; }
+.stat-value { display: block; font-size: 2rem; font-weight: 800; margin-top: 0.5rem; }
+.stat-card.reject.active  { border-bottom: 4px solid #ef4444; background: #fef2f2; }
 
-.users-container { border:1px solid #f3f4f6; border-radius:12px; overflow:hidden }
-.users-headers { display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:12px; padding:12px 16px; background:#fafafa; color:#6b7280; font-weight:700 }
-.users-list { list-style:none; padding:0; margin:0 }
-.user-item { display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:12px; padding:12px 16px; border-bottom:1px solid #f3f4f6; align-items:center }
-.user-name { font-weight:700 }
-.user-email { color:#6b7280 }
-.estado-pill { padding:6px 10px; border-radius:999px; font-weight:700; text-transform:capitalize }
-.estado-pill.activo { background:#ecfdf5; color:#065f46 }
-.estado-pill.pendiente { background:#fff7ed; color:#92400e }
-.estado-pill.inactivo { background:#fff1f2; color:#981b1b }
+/* Tabs */
+.table-section { background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.tabs-nav { display: flex; background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 0 1rem; }
+.tab-link { padding: 1rem 1.5rem; border: none; background: none; cursor: pointer; color: #6b7280; font-weight: 600; border-bottom: 2px solid transparent; }
+.tab-link.active { color: #10b981; border-bottom-color: #10b981; }
 
-.user-actions { display:flex; gap:8px }
-.btn { background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer }
-.btn-danger { background:#ef4444 }
+/* Table Style */
+.table-container { width: 100%; overflow-x: auto; }
+.custom-table { width: 100%; border-collapse: collapse; text-align: left; }
+.custom-table th { padding: 1rem; background: #f9fafb; color: #4b5563; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.custom-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; }
 
-.pa-pagination { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:16px }
-.page-number { border:1px solid #e6e6e6; padding:8px 12px; border-radius:8px; cursor:pointer }
-.page-number.active { background:#10b981; color:white; border-color:#10b981 }
+/* User Info */
+.user-info { display: flex; align-items: center; gap: 0.75rem; }
+.avatar { width: 32px; height: 32px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.user-name { font-weight: 600; }
+.user-email { color: #6b7280; font-size: 0.9rem; }
 
-.pa-status-msg { padding:24px; text-align:center; color:#6b7280 }
-.pa-status-msg.error { color:#ef4444 }
+/* Pills */
+.pill { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: capitalize; }
+.pill.pendiente { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
+.pill.aprobado { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+.pill.rechazado, .pill.inactivo { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
 
-.header-actions { margin-top: 10px; }
-.link-btn { background: transparent; border: 1px solid #10b981; color: #10b981; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-weight:700; }
-.link-btn:hover { background: #ecfdf5; }
+/* Actions */
+.actions-cell { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-action.approve { background: #10b981; color: white; }
+.btn-action.reject { background: #ef4444; color: white; }
+.btn-action.deactivate { background: #f3f4f6; color: #374151; }
+.btn-icon { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+
+/* Utils */
+
+.empty-state { text-align: center; padding: 3rem !important; color: #9ca3af; }
+.pagination { padding: 1rem; display: flex; justify-content: center; align-items: center; gap: 1.5rem; border-top: 1px solid #f3f4f6; }
+.page-numbers { display: flex; gap: 6px; }
+
+.page-btn, .page-number { 
+  border: 1px solid #e6e6e6; 
+  background: white; 
+  padding: 8px 14px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 700; 
+  color: #4d1b95; 
+  transition: all 0.2s ease;
+}
+.page-btn:hover:not([disabled]) { border-color: #4d1b95; background: #f5f3ff; }
+.page-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+.page-number.active { 
+  background: #10b981; 
+  color: white; 
+  border-color: #10b981; 
+}
+
+/* Nuevo Botón Principal de Navegación */
+.btn-primary-nav {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.btn-primary-nav:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+  filter: brightness(1.05);
+}
+
+.btn-primary-nav:active {
+  transform: translateY(0);
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.btn-icon-wrapper {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+.btn-desc {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+/* Ajuste opcional para móviles: ocultar la descripción si no hay espacio */
+@media (max-width: 640px) {
+  .btn-desc { display: none; }
+  .btn-primary-nav { padding: 8px 14px; }
+}
+
+/* Spinner */
+.spinner { width: 24px; height: 24px; border: 3px solid #f3f4f6; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
-

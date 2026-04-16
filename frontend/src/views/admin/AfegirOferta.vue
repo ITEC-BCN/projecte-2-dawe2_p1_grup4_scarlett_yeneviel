@@ -1,5 +1,5 @@
 <script setup>
-import FormularioOferta from "../components/Afegirformulario.vue";
+import FormularioOferta from "../../components/Afegirformulario.vue";
 
 </script>
 

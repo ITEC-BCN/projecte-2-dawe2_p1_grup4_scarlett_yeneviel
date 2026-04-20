@@ -332,6 +332,23 @@ HU21-Panel de administrador
 - Diseño del panel del administrador
 - El admin aprueba las solicitudes de registro a la web
 
+## Dia 25 - 16/04/2026 
+**Asistencia:** Yeneviel Roberts, Scarllet Toala y Silvia Serra
+
+**Temas tratados**
+- Diseño del panel del administrador
+- Mostrar foto de perfil
+- Investigación sobre como subir un pdf y se muestre esa información en la web
+- Enviar email con las postulaciones al admin
+
+## Dia 26 - 20/04/2026 
+**Asistencia:** Yeneviel Roberts 
+
+**Temas tratados**
+HU21-Panel de administrador
+- modificación:activar y desactivar ofertas en vez de eliminarlas
+- Ver CV del estudiante
+
 
 
 

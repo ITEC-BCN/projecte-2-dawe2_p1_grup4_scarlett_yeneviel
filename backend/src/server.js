@@ -42,7 +42,8 @@ import {
   subirAvatarStorage,
   guardarFotoPerfil,
   updatedRequestRegistration,
-  desactivarOferta
+  desactivarOferta,
+  getCVUrl
 
 
 } from './supabaseClient.js'
@@ -149,14 +150,16 @@ app.delete('/ofertas/:id', async (req, res) => {
   }
 });
 
-
 //Desactivar oferta (en lugar de eliminarla físicamente, la marcamos como inactiva)
 
 app.put('/ofertas/:id', async (req, res) => {
   try {
     const id = req.params.id;
+    // Leer el nuevo estado desde el body
+    const { estado } = req.body;
+    if (!estado) return res.status(400).json({ error: 'Falta el campo "estado" en el body' });
 
-    const resultado = await desactivarOferta(id);
+    const resultado = await desactivarOferta(id, estado);
 
     res.json(resultado);
   } catch (err) {
@@ -234,8 +237,25 @@ app.get("/estudiantes", async (req, res) => {
 // GET: Obtener un estudiante por ID
 app.get("/estudiantes/:id", requireAuth, async (req, res) => {
   try {
-    const estudiante = await obtenerEstudiantePorId(req.params.id);
+
+    const { id } = req.params;
+    const userRequesting = req.user; // Datos del token (id, role, etc.)
+
+    // --- VALIDACIÓN DE AUTORIZACIÓN ---
+    // Un usuario solo puede verse a sí mismo, A MENOS que sea admin
+    if (userRequesting.role !== 'admin' && userRequesting.id !== parseInt(id)) {
+        return res.status(403).json({ 
+            error: "No tienes permiso para ver este perfil" 
+        });
+    }
+
+    const estudiante = await obtenerEstudiantePorId(id);
+
+    if (!estudiante) {
+      return res.status(404).json({ error: "Estudiante no encontrado" });
+    }
     res.json(estudiante);
+
   } catch (err) {
     console.error("Error obteniendo estudiante:", err);
     res.status(404).json({ error: err.message || "Estudiante no encontrado" });
@@ -518,7 +538,7 @@ app.post("/login-admin", async (req, res) => {
 
     // Generar el token JWT igual que estudiante
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, tipo: "admin" },
+      { id: admin.id, email: admin.email, role: "admin" },
       SECRET_JWT_KEY,
       { expiresIn: '2h' }
     );
@@ -538,7 +558,7 @@ app.post("/login-admin", async (req, res) => {
         id: admin.id,
         nombre: admin.nombre,
         email: admin.email,
-        tipo: "admin"
+        role: "admin"
       },
       token
     });
@@ -590,4 +610,21 @@ app.get("/skills", async (req, res) => {
     console.error("Error obteniendo skills:", err);
     res.status(500).json({ error: err.message });
   }
+});
+
+
+app.get('/get-cv/:nombreArchivo', async (req, res) => {
+  try {
+    const { nombreArchivo } = req.params;
+
+
+    if(!nombreArchivo) {
+      return res.status(400).json({ error: "Nombre de archivo requerido" });
+    }
+    const url = getCVUrl(nombreArchivo);
+    res.json({ url });
+  } catch (err) {
+    console.error("Error obteniendo CV:", err);
+    res.status(500).json({ error: err.message || "Error interno del servidor" });
+   }
 });

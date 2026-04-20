@@ -42,6 +42,7 @@ const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('role');
   localStorage.removeItem('studentId');
+  localStorage.removeItem('studentEmail');
 
   if(userRole.value == 'admin'){
     localStorage.removeItem('userId');

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFetchUser } from '../../composables/userFetchUser';
 import { URL_BACK } from '../../../../config';
+import { sendEmail } from '../../components/MensajeConfirmRegistro.vue';
 
 const router = useRouter();
 
@@ -61,11 +62,19 @@ const updateUserEstado = async (id, newEstado) => {
   try {
     await actualizarEstado(id, newEstado);
     await fetchUsers();
+
+    if (newEstado === 'aprobado') {
+      const user = users.value.find(u => u.id === id);
+      if (user) {
+        await sendEmail(user.email);
+      }
+    }
   } catch (err) {
     console.error('Error:', err);
     alert('No se pudo actualizar el estado');
   }
 };
+
 </script>
 
 <template>
@@ -96,7 +105,6 @@ const updateUserEstado = async (id, newEstado) => {
         <span class="stat-label">Aprobados</span>
         <span class="stat-value">{{ approvedCount }}</span>
       </div>
-
       <div class="stat-card pending" @click="setTab('pendiente')" :class="{ active: activeTab === 'pendiente' }">
         <span class="stat-label">Pendientes</span>
         <span class="stat-value">{{ pendingCount }}</span>

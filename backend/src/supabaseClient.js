@@ -90,10 +90,10 @@ export const eliminarOferta = async (id) => {
 };
 
 // 5. DESACTIVAR una oferta (DELETE)
-export const desactivarOferta = async (id) => {
+export const desactivarOferta = async (id, estado) => {
   const { error } = await supabase
     .from('oferta')
-    .update({ estado: 'INACTIVA' })
+    .update({ estado: estado.toUpperCase() }) // Cambia el estado a 'inactiva' o el que quieras usar
     .eq('id', id);
 
   if (error) throw error;
@@ -178,7 +178,12 @@ export const crearEstudiante = async (nuevoEstudiante) => {
 export const obtenerEstudiantes = async () => {
   const { data, error } = await supabase
     .from('usuario_estudiante')
-    .select('*');
+    .select(`*,
+      documento(
+          id,
+          ruta_archivo,
+          tipo
+        )`);
 
   if (error) throw error;
   return data;
@@ -211,12 +216,26 @@ export const obtenerEstudiantePorId = async (id) => {
             nombre_empresa,
             tipo_puesto
           )
+        ),
+        documento(
+          id,
+          ruta_archivo,
+          tipo
         )
       `)
     .eq('id', id)
     .single();
 
-  if (error) throw new Error("No encontrado");
+  if (error) {
+    console.error("Supabase error en obtenerEstudiantePorId:", error);
+    throw error; // rethrow original error so caller can see Supabase message
+  }
+
+  if (!data) {
+    // No hubo resultado (registro no encontrado)
+    throw new Error('Estudiante no encontrado');
+  }
+
   //console.log("3. Enlaces encontrados en la BD:", data.enlaces);
   return data;
 };
@@ -452,7 +471,12 @@ export const VerPostulacionesAdmin = async (idOferta) => {
         id, 
         nombre, 
         apellido, 
-        email
+        email,
+        documento (
+          id,
+          ruta_archivo,
+          tipo
+        )
       )
     `)
     .eq('id_oferta', Number(idOferta));
@@ -506,4 +530,21 @@ export const updatedRequestRegistration= async(id_estudiante,estado) => {
   }
 
   return data;
+}
+
+
+/**
+ * Obtiene la URL pública de un archivo en el storage
+ * @param {string} nombreArchivo - El nombre o path del archivo
+ * @returns {string|null} - La URL o null si hay error
+ */
+export const getCVUrl = (nombreArchivo) => {
+  if (!nombreArchivo) return null;
+
+  const { data } = supabase
+    .storage
+    .from('cvs')
+    .getPublicUrl(nombreArchivo);
+
+  return data?.publicUrl || null;
 }

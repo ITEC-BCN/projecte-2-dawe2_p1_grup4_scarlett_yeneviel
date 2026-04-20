@@ -666,12 +666,12 @@ function removeDocument(id) {
             <div v-if="documents.length === 0" class="empty-state">Aún no hay enlaces.</div>
           </div>
 
-          <div v-if="editing" class="add-box">
-            <p v-if="documents.length >= 3" class="empty-state warning-text">
-              <i class="fa-solid fa-lock"></i> Has alcanzado el límite máximo de 3 enlaces.
+          <div v-if="editing">
+            <p v-if="documents.length >= 3" class="empty-state" style="color: #e74c3c;">
+              <i class="fa-solid fa-circle-exclamation"></i> Límite de 3 enlaces alcanzado.
             </p>
 
-            <div v-else class="edit-row">
+            <div v-else class="edit-row add-box">
               <label for="input-sm">Alias:</label>
               <input v-model="newDocName" class="input input-sm" placeholder="Nombre (Ej: Mi perfil)" />
               <label for="input-sm">Tipo:</label>
@@ -1061,9 +1061,17 @@ function removeDocument(id) {
 
 .skill-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-direction:column;
   gap: 10px;
 }
+
+.add-inline{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 
 .skill-chip {
   padding: 8px 14px;
@@ -1071,8 +1079,12 @@ function removeDocument(id) {
   font-weight: 600;
   font-size: 0.85rem;
   display: flex;
-  align-items: center;
   gap: 8px;
+  justify-content: space-between;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+
 }
 
 /* Colores pastel para los chips */

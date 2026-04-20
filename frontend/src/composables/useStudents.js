@@ -1,10 +1,11 @@
-import { useApi } from "./useApi";
 import { ref, watch } from "vue";
+import { URL_BACK } from "../../../config";
 
 export function useStudents(urlRef) {
     const students = ref(null);
     const loadingStudents = ref(true);
     const errorStudents = ref(null);
+
 
     const fetchAllReq = async (url) => {
         const currentUrl = urlRef.value;
@@ -12,7 +13,8 @@ export function useStudents(urlRef) {
 
         loadingStudents.value = true;
         try {
-            const token = localStorage.getItem('token'); // Recuperamos el token
+             // Recuperamos el token
+            const token = localStorage.getItem('token');
             const res = await fetch(currentUrl, {
                 method: 'GET',
                 headers: {
@@ -34,6 +36,35 @@ export function useStudents(urlRef) {
         }
     };
 
+    //Ver cv
+    const verCV=async(nombreArchivo)=>{
+
+        if (!nombreArchivo) {
+            alert('No se proporcionó el nombre del archivo');
+            return;
+        }
+        try {
+            // Llamada a tu API de Node
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${URL_BACK}/get-cv/${nombreArchivo}`,{
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+            });
+            const data = await response.json();
+            const urlPublica = data.url;
+
+            // Abrir en pestaña nueva
+            window.open(urlPublica, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+            console.error('Error al obtener el CV de la API:', error);
+            alert('No se pudo abrir el archivo');
+        }
+    };
+
     watch(urlRef, () => {
         fetchAllReq();
     }, { immediate: true });
@@ -42,6 +73,8 @@ export function useStudents(urlRef) {
         students,
         loadingStudents,
         errorStudents,
+        verCV,
         refreshStudents: fetchAllReq,
+        
     };
 }

@@ -66,6 +66,7 @@ const updateUserEstado = async (id, newEstado) => {
     alert('No se pudo actualizar el estado');
   }
 };
+
 </script>
 
 <template>

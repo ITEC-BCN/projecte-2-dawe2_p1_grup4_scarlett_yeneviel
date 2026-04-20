@@ -30,7 +30,7 @@ const handleLoginAdmin = async(e) => {
     }
     localStorage.setItem('token', data.token)
     localStorage.setItem('userId', data.user.id)
-    localStorage.setItem('role', 'admin')
+    localStorage.setItem('role', data.user.role)
     router.push('/admin/panel')
 
   } catch (err) {

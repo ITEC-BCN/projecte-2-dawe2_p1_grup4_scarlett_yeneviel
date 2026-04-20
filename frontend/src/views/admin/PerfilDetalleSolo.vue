@@ -8,9 +8,9 @@ const route = useRoute();
 const studentId = route.params.id;
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 
-const { students, loadingStudents } = useStudents(url);
+const { students, loadingStudents, verCV } = useStudents(url);
 
-const user = reactive({ name: "", role: "", avatar: "", about: "" });
+const user = reactive({ name: "", role: "", avatar: "", about: "", documento:[]});
 const contact = reactive({ email: "", phone: "", location: "" });
 
 const hardSkills = ref([]);
@@ -28,6 +28,7 @@ const restoreOriginalData = () => {
   user.role = source.role || "Estudiante";
   user.avatar = source.foto_perfil || "/img/avatarGroup.png";
   user.about = source.about || "";
+  user.documento = source.documento;
   contact.email = source.email || "";
   contact.phone = source.telefono || "";
   contact.location = source.location || "";
@@ -68,7 +69,6 @@ const restoreOriginalData = () => {
     documents.value = [];
   }
 };
-
 watch(
   () => students.value,
   () => {
@@ -134,6 +134,16 @@ const getDocIcon = (tipo) => {
             <span>{{ contact.location || 'Sin ubicación' }}</span>
           </div>
         </div>
+        <div class="contact-item">
+          <button
+            class="btn-view"
+            :disabled="!user.documento || user.documento.length === 0 || !user.documento[0]?.ruta_archivo"
+            @click="(user.documento && user.documento.length && user.documento[0]?.ruta_archivo) && verCV(user.documento[0].ruta_archivo)"
+          >
+            Ver CV
+          </button>
+        </div>
+
       </div>
     </aside>
 
@@ -275,6 +285,24 @@ const getDocIcon = (tipo) => {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+ .btn-view {
+  background: #6b46c1;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin: 5px;
+  font-weight: 600;
+}
+
+/* Disabled state for buttons (especially 'Ver CV' when no documento) */
+.btn-view[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ESTADÍSTICAS */

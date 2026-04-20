@@ -6,6 +6,9 @@ import { useFetch } from '../../composables/useFetchOfertas';
 import { URL_BACK } from '../../../../config';
 import ModalEliminar from '../../components/Modal.vue';
 import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
+import { useStudents } from "../../composables/useStudents";
+
+const {verCV} = useStudents('');
 
 const route = useRoute();
 const router = useRouter();
@@ -78,11 +81,12 @@ const obtenerPostulaciones =async()=>{
 onMounted(async() => {
   await obtenerPostulaciones();
 });
-
+  
 //Ver perfil de los estudiantes postulados
 const verDetallePerfil = (id) => {
-  router.push({ name: 'PerfilDetalleSolo', params: { id: id } });
+  router.push({ name: 'PerfilDetalleSolo', params: { id } });
 };
+
 </script>
 
 <template>
@@ -186,7 +190,13 @@ const verDetallePerfil = (id) => {
           <div class="candidato-actions">
             <button @click="modalEstadoCandi(Number(route.params.id), item.usuario_estudiante.id)" class="btn-view">Actualizar estado</button>
             <button @click="verDetallePerfil(item.usuario_estudiante.id)" class="btn-view">Ver perfil</button>
-            <button class="btn-view">Ver CV</button>
+            <button
+              class="btn-view"
+              :disabled="!item.usuario_estudiante?.documento || item.usuario_estudiante.documento.length === 0 || !item.usuario_estudiante.documento[0]?.ruta_archivo"
+              @click="(item.usuario_estudiante && item.usuario_estudiante.documento && item.usuario_estudiante.documento[0] && item.usuario_estudiante.documento[0].ruta_archivo) && verCV(item.usuario_estudiante.documento[0].ruta_archivo)"
+            >
+              Ver CV
+            </button>
           </div>
         </div>
       </div>
@@ -486,6 +496,13 @@ const verDetallePerfil = (id) => {
 
 .candidato-actions .btn-view:hover {
   background: #5a38a8;
+}
+
+/* Disabled state for buttons (especially 'Ver CV' when no documento) */
+.candidato-actions .btn-view[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {

@@ -30,10 +30,16 @@ const crearOferta = () => {
   router.push({ name: 'CrearOferta' }); // Ajusta el nombre de tu ruta
 };
 
-const eliminarOferta = async (id) => {
-  if (!confirm('¿Eliminar esta oferta? Esta acción no se puede deshacer.')) return;
+const DesactivarOferta = async (id,estado) => {
+  if (!confirm('Desactivar esta oferta? Esta acción no se puede deshacer.')) return;
   try {
-    const res = await fetch(`${URL_BACK}/ofertas/${id}`, { method: 'PUT' });
+    const res = await fetch(`${URL_BACK}/ofertas/${id}`, 
+    { 
+     method: 'PUT',
+     headers: { 'Content-Type': 'application/json' }, 
+     body: JSON.stringify({ estado }) 
+    });
+
     if (!res.ok) throw new Error('Error desactivando oferta');
     await fetchData();
   } catch (err) {
@@ -105,8 +111,26 @@ const eliminarOferta = async (id) => {
                   <button class="btn-view" @click="router.push({ name: 'verOfertaAdmin', params: { id: oferta.id } })">
                     Detalles
                   </button>
-                  <button class="btn-delete-icon" @click="eliminarOferta(oferta.id)" title="Eliminar oferta">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  <!-- Toggle button: shows a green check when active, gray slash when inactive -->
+                  <button
+                    :class="['btn-toggle', { active: oferta.estado === 'ACTIVA' }]"
+                    @click="DesactivarOferta(oferta.id, oferta.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA')"
+                    :title="oferta.estado === 'ACTIVA' ? 'Desactivar oferta' : 'Activar oferta'"
+                  >
+                    <template v-if="oferta.estado === 'ACTIVA'">
+                      <!-- active: green check-circle -->
+                      <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" fill="#10b981" />
+                        <path d="M9 12.5l1.8 1.8L15 10" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                      </svg>
+                    </template>
+                    <template v-else>
+                      <!-- inactive: gray slash-circle -->
+                      <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" fill="#9ca3af" />
+                        <path d="M8 12h8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                    </template>
                   </button>
                 </td>
               </tr>
@@ -172,8 +196,10 @@ h1 { font-size: 2rem; font-weight: 800; color: #111827; margin: 0; letter-spacin
 .actions-cell { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
 .btn-view { background: #f3f4f6; color: #374151; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
 .btn-view:hover { background: #e5e7eb; }
-.btn-delete-icon { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; }
-.btn-delete-icon:hover { background: #ef4444; color: white; }
+.btn-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+.btn-toggle.active { background: #ecfdf5; border-color: #10b981; }
+.btn-toggle:not(.active) { background: #f3f4f6; border-color: #d1d5db; }
+.btn-toggle svg { display: block; }
 
 /* Paginación Modernizada */
 .pagination-footer { padding: 1.5rem; display: flex; justify-content: center; align-items: center; gap: 1rem; background: #fafafa; }

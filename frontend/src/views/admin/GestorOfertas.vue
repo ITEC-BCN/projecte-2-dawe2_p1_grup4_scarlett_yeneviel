@@ -3,10 +3,15 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import { URL_BACK } from '../../../../config';
+import ModalInformativo from '../../components/ModalInformativo.vue';//Paso 1 importar el componente
 
 const router = useRouter();
 const url = ref(`${URL_BACK}/ofertas`);
 const { data: ofertas, error, loading, fetchData} = useFetch(url);
+
+// 2. Modal state
+const modalRef = ref(null);
+const mensaje = ref('');
 
 // Simulación de rol (ajusta según tu lógica de auth)
 const roleUser = ref('admin'); 
@@ -44,7 +49,9 @@ const DesactivarOferta = async (id,estado) => {
     await fetchData();
   } catch (err) {
     console.error('Error desactivando oferta', err);
-    alert('No se pudo desactivar la oferta');
+    //4. abrir el modal
+    mensaje.value = 'No se pudo desactivar la oferta';
+    modalRef.value?.openModal();
   }
 };
 </script>
@@ -152,6 +159,10 @@ const DesactivarOferta = async (id,estado) => {
         </div>
       </div>
     </div>
+    <!--3. Insertar el componente en el template. Modal informativo para mostrar errores / mensajes 
+     binding reactivo de mensaje; ref permite llamar al modal desde el script
+    -->
+    <ModalInformativo ref="modalRef" :mensaje="mensaje" />
   </div>
 </template>
 

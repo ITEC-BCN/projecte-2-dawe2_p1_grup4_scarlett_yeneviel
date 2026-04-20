@@ -388,13 +388,19 @@ function removeDocument(id) {
         <div class="avatar-container">
           <img :src="user.avatar" alt="avatar" class="profile-avatar" />
         </div>
-        <div v-if="editing" class="upload-section" style="margin-top: 10px;">
-          <label for="avatar-upload" class="btn-primary" style="cursor: pointer; font-size: 0.8rem;">
+        <div v-if="editing" class="upload-section">
+          <label for="avatar-upload" class="btn-primary" >
             <i class="fa-solid fa-camera"></i> Cambiar foto
           </label>
-          <input id="avatar-upload" type="file" accept="image/*" style="display: none;" @change="uploadAvatar"
-            :disabled="uploadingFile" />
-          <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray;">Subiendo...</span>
+          <input 
+          id="avatar-upload" 
+          type="file" 
+          accept="image/*" 
+          @change="uploadAvatar"
+          :disabled="uploadingFile" 
+          
+          />
+          <span v-if="uploadingFile">Subiendo...</span>
         </div>
 
         <h2 class="profile-name">{{ user.name }}</h2>
@@ -494,8 +500,11 @@ function removeDocument(id) {
 
         <div v-else class="edit-education">
           <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-grid-row">
+            <label for="edu-anio">Año</label>
             <input v-model="edu.anio" placeholder="Año" class="input" />
+            <label for="edu-titulo">Título</label>
             <input v-model="edu.titulo" placeholder="Título" class="input" />
+            <label for="edu-centro">Centro</label>
             <input v-model="edu.centro" placeholder="Centro" class="input" />
             <button @click="removeEducation(index)" class="btn-icon-danger" title="Eliminar">
               <i class="fa-solid fa-trash"></i>
@@ -547,8 +556,8 @@ function removeDocument(id) {
 
             </div>
 
-            <div v-if="editing" class="add-inline" style="margin-top: 10px;">
-              <p v-if="hardSkills.length >= 6" class="empty-state" style="color: #e74c3c;">
+            <div v-if="editing" class="add-box">
+              <p v-if="hardSkills.length >= 6" class="empty-state">
                 <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 hard skills alcanzado.
               </p>
               <p v-else-if="availableHardSkills.length === 0" class="empty-state">
@@ -578,8 +587,8 @@ function removeDocument(id) {
               <span v-if="softSkills.length === 0" class="empty-state">No hay soft skills.</span>
             </div>
 
-            <div v-if="editing" class="add-inline" style="margin-top: 10px;">
-              <p v-if="softSkills.length >= 6" class="empty-state" style="color: #e74c3c;">
+            <div v-if="editing" class="add-box">
+              <p v-if="softSkills.length >= 6" class="empty-state" >
                 <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 soft skills alcanzado.
               </p>
               <p v-else-if="availableSoftSkills.length === 0" class="empty-state">
@@ -612,8 +621,8 @@ function removeDocument(id) {
             <span v-if="languages.length === 0" class="empty-state">Sin idiomas registrados.</span>
           </div>
 
-          <div v-if="editing" class="add-inline">
-            <p v-if="languages.length >= 5" class="empty-state" style="color: #e74c3c;">
+          <div v-if="editing">
+            <p v-if="languages.length >= 5" class="empty-state">
               <i class="fa-solid fa-circle-exclamation"></i> Límite de 5 idiomas alcanzado.
             </p>
             <p v-else-if="availableLanguages.length === 0" class="empty-state">
@@ -667,7 +676,7 @@ function removeDocument(id) {
           </div>
 
           <div v-if="editing">
-            <p v-if="documents.length >= 3" class="empty-state" style="color: #e74c3c;">
+            <p v-if="documents.length >= 3" class="empty-state">
               <i class="fa-solid fa-circle-exclamation"></i> Límite de 3 enlaces alcanzado.
             </p>
 
@@ -1061,7 +1070,7 @@ function removeDocument(id) {
 
 .skill-list {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   flex-direction:column;
   gap: 10px;
 }
@@ -1070,6 +1079,7 @@ function removeDocument(id) {
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: center;
 }
 
 
@@ -1080,7 +1090,7 @@ function removeDocument(id) {
   font-size: 0.85rem;
   display: flex;
   gap: 8px;
-  justify-content: space-between;
+  justify-content: center;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
@@ -1104,6 +1114,10 @@ function removeDocument(id) {
   border: 1px solid #e2e8f0;
 }
 
+#avatar-upload{
+  display: none;
+}
+
 .badge-level {
   background: rgba(0, 0, 0, 0.1);
   padding: 2px 6px;
@@ -1117,7 +1131,6 @@ function removeDocument(id) {
   flex-direction: column;
   gap: 14px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
   border-radius: 18px;
   padding: 16px;
 }
@@ -1250,7 +1263,6 @@ margin-top: 1rem;
 
 .input {
   flex: 1;
-  text-align: center;
   padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid #cbd5e1;
@@ -1370,6 +1382,8 @@ margin-top: 1rem;
   flex-direction: column;
   width: 100%;
   gap: 15px;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Usamos Grid para que las columnas siempre midan lo mismo */
@@ -1484,9 +1498,10 @@ margin-top: 1rem;
 /* --- RESPONSIVE OBLIGATORIO --- */
 @media (max-width: 860px) {
   .edit-grid-row {
-    grid-template-columns: 1fr;
-    /* En móvil, todo se pone en una sola columna hacia abajo */
-    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    flex-direction: column;
+    color:#334155
   }
 
   .btn-icon-danger,
@@ -1498,8 +1513,13 @@ margin-top: 1rem;
 
 /* RESPONSIVE */
 @media (max-width: 860px) {
+  .profile-main{
+    width: 100%;
+    justify-content: center;
+  }
   .profile-page {
     flex-direction: column;
+
   }
 
   .profile-card {
@@ -1521,6 +1541,25 @@ margin-top: 1rem;
   align-items: end;
 }
 
+.edit-education{
+display:flex;
+width:100%;
+gap: 15px;
+align-items: stretch;
+justify-content: center;
+flex-wrap:nowrap;
+flex-direction: column;
+  }
+
+.edit-grid-row {
+flex-wrap: wrap;
+align-items:stretch;
+flex-direction: column;
+width:100%;
+}
+
+
+
   .input-sm {
     width: 85%;
   }
@@ -1535,4 +1574,6 @@ margin-top: 1rem;
     font-size: 0.9rem;
   }
 }
+
+
 </style>

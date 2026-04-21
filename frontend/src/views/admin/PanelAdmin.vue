@@ -3,7 +3,27 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFetchUser } from '../../composables/userFetchUser';
 import { URL_BACK } from '../../../../config';
-import { sendEmail } from '../../components/MensajeConfirmRegistro.vue';
+
+import emailjs from "@emailjs/browser";
+
+async function sendEmail (studentEmail,studentName){ 
+
+    try {
+    const templateParams = {
+        to_name: 'Estudiante ' + studentName,
+        from_name: 'Tu Plataforma de Prácticas',
+        message: '¡Gracias por registrarte! Estamos emocionados de tenerte con nosotros. Explora las ofertas de prácticas y encuentra la oportunidad perfecta para tu desarrollo profesional.',
+        to_email: studentEmail
+    };
+
+     await emailjs.send(import.meta.env.VITE_SERVICE_ID, import.meta.env.VITE_TEMPLATE_ID, templateParams, import.meta.env.VITE_PUBLIC_KEY);
+        console.log("¡Email de aviso de postulación enviado correctamente!",studentEmail);
+
+    } catch (emailError) {
+        console.error("La inscripción se completó, pero falló el envío del e-mail de aviso:", emailError);
+    }
+
+};
 
 const router = useRouter();
 
@@ -65,8 +85,11 @@ const updateUserEstado = async (id, newEstado) => {
 
     if (newEstado === 'aprobado') {
       const user = users.value.find(u => u.id === id);
-      if (user) {
-        await sendEmail(user.email);
+      if (user && user.email) {
+        console.log("Enviando correo a...", user.email);
+        await sendEmail(user.email, user.nombre);
+      } else {
+        console.warn("No se encontró el email para el usuario:", id);
       }
     }
   } catch (err) {

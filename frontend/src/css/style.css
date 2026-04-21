@@ -48,3 +48,34 @@
     /* Centra el texto en móvil */
   }
 }
+
+/* Estilos para validación de formularios */
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-message i {
+  font-size: 0.75rem;
+}
+
+.error-small {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.char-counter {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.char-warning {
+  color: #f59e0b;
+  font-weight: 500;
+}

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 import ModalDatosCV from "../components/ModalDatosCV.vue";
+import { availableLanguagesList, languageLevels, allLinkTypes } from "../js/const.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -55,6 +56,26 @@ const academicBackground = ref([]);
 const uploadingFile = ref(false);
 const uploadingCV = ref(false);
 const cvUrl = ref("");
+
+// --- FILTROS Y HELPERS DE IDIOMAS Y ENLACES ---
+const filteredLanguages = computed(() => {
+  return availableLanguagesList.filter(
+    lang => !languages.value.some(l => l.name === lang)
+  );
+});
+
+const availableLanguages = computed(() => {
+  return languageLevels.filter(lvl =>
+    !languages.value.some(lang => lang.level === lvl)
+  );
+});
+
+const availableLinkTypes = computed(() => {
+  const usados = documents.value.map(d => d.tipo?.toLowerCase().trim());
+  return allLinkTypes.filter(tipo =>
+    !usados.includes(tipo.toLowerCase())
+  );
+});
 
 //Añadir la FOTO DE PERFIL
 
@@ -280,7 +301,6 @@ function removeEducation(index) {
 // --- VARIABLES Y FUNCIONES PARA AÑADIR IDIOMAS ---
 const newLangName = ref("");
 const newLangLevel = ref("");
-const languageLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 function addLanguage() {
   const name = newLangName.value?.trim();
@@ -299,12 +319,6 @@ function addLanguage() {
   hasUnsavedChanges.value = true;
 }
 
-const availableLanguages = computed(() => {
-  return languageLevels.filter(lvl =>
-    !languages.value.some(lang => lang.level === lvl)
-  );
-});
-
 function removeLanguage(i) {
   languages.value.splice(i, 1);
   hasUnsavedChanges.value = true;
@@ -314,15 +328,6 @@ function removeLanguage(i) {
 const newDocName = ref("");
 const newDocURL = ref("");
 const newDocTipo = ref("");
-
-const allLinkTypes = ["Github", "Linkedin", "Portfolio"];
-
-const availableLinkTypes = computed(() => {
-  const usados = documents.value.map(d => d.tipo?.toLowerCase().trim());
-  return allLinkTypes.filter(tipo =>
-    !usados.includes(tipo.toLowerCase())
-  );
-});
 
 watch(documents, () => {
   if (!availableLinkTypes.value.includes(newDocTipo.value)) {

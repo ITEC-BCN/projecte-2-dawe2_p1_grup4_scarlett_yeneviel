@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { URL_BACK } from "../../../../config";
 import { useStudents } from "../../composables/useStudents";
@@ -69,13 +69,6 @@ const restoreOriginalData = () => {
     documents.value = [];
   }
 };
-watch(
-  () => students.value,
-  () => {
-    restoreOriginalData();
-  },
-  { immediate: true }
-);
 
 const getDocIcon = (tipo) => {
   if (!tipo) return 'fa-solid fa-file-lines';
@@ -86,6 +79,29 @@ const getDocIcon = (tipo) => {
 
   return 'fa-solid fa-file-lines';
 };
+
+// Filtramos todos los documentos que sean tipo 'cv'
+const studentCVs = computed(() => {
+  if (!user.documento || !Array.isArray(user.documento)) return [];
+  return user.documento.filter(doc => doc.tipo.toLowerCase() === 'cv');
+});
+
+// Obtenemos el último CV subido (el más reciente)
+const lastCV = computed(() => {
+  return studentCVs.value.length > 0 
+    ? studentCVs.value[studentCVs.value.length - 1] 
+    : null;
+});
+
+watch(
+  () => students.value,
+  () => {
+    restoreOriginalData();
+  },
+  { immediate: true }
+);
+
+
 </script>
 
 <template>
@@ -137,8 +153,8 @@ const getDocIcon = (tipo) => {
         <div class="contact-item">
           <button
             class="btn-view"
-            :disabled="!user.documento || user.documento.length === 0 || !user.documento[0]?.ruta_archivo"
-            @click="(user.documento && user.documento.length && user.documento[0]?.ruta_archivo) && verCV(user.documento[0].ruta_archivo)"
+            :disabled="!lastCV"
+            @click="lastCV && verCV(lastCV.ruta_archivo)"
           >
             Ver CV
           </button>

@@ -3,8 +3,57 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFetchUser } from '../../composables/userFetchUser';
 import { URL_BACK } from '../../../../config';
-import { sendEmail } from '../../components/MensajeConfirmRegistro.vue';
 
+import emailjs from "@emailjs/browser";
+
+async function sendEmail(studentEmail, studentName, type) { 
+    try {
+        const SERVICE_ID = "service_2pkidij"; 
+        const PUBLIC_KEY = "H0Ksbx9yvhgwZHPJO"; 
+        
+        let TEMPLATE_ID = "";
+        let templateParams = {};
+
+        if (type === 'aprobado') {
+            // Plantilla específica de Bienvenida
+            TEMPLATE_ID = "template_dqb3voi"; 
+            templateParams = {
+                name: studentName,
+                email: studentEmail
+            };
+        } 
+        else if (type === 'rechazado' || type === 'inactivo') {
+            // Plantilla genérica para otros estados
+            TEMPLATE_ID = "template_tqj25lc";
+            
+            let subject = "";
+            let messageBody = "";
+
+            if (type === 'rechazado') {
+                subject = "Actualización de tu perfil en Internia";
+                messageBody = "Lamentamos informarte que tu perfil no cumple con los requisitos actuales. Puedes contactarnos para más detalles.";
+            } else {
+                subject = "Aviso de cuenta desactivada";
+                messageBody = "Tu cuenta en Internia ha sido desactivada temporalmente por el administrador.";
+            }
+
+            templateParams = {
+                name: studentName,
+                email: studentEmail,
+                subject: subject,        // Asegúrate de tener {{subject}} en la plantilla tqj25lc
+                message_body: messageBody // Asegúrate de tener {{message_body}} en la plantilla tqj25lc
+            };
+        }
+      
+        // Solo enviamos si se asignó una plantilla
+        if (TEMPLATE_ID) {
+            await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+            console.log(`Email de tipo [${type}] enviado a:`, studentEmail);
+        }
+    } catch (emailError) {
+        console.error("Error al enviar el email:", emailError);
+    }
+}
 const router = useRouter();
 
 // Usuarios
@@ -62,18 +111,20 @@ const updateUserEstado = async (id, newEstado) => {
   try {
     await actualizarEstado(id, newEstado);
     await fetchUsers();
-
-    if (newEstado === 'aprobado') {
       const user = users.value.find(u => u.id === id);
-      if (user) {
-        await sendEmail(user.email);
-      }
+
+    if (user && user.email) {
+      console.log("Enviando correo a...", user.email);
+      await sendEmail(user.email, user.nombre, newEstado);
+    } else {
+      console.warn("No se encontró el email para el usuario:", id);
     }
   } catch (err) {
     console.error('Error:', err);
     alert('No se pudo actualizar el estado');
   }
 };
+
 
 </script>
 

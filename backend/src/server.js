@@ -43,7 +43,8 @@ import {
   guardarFotoPerfil,
   updatedRequestRegistration,
   desactivarOferta,
-  getCVUrl
+  getCVUrl,
+  getUserState
 
 
 } from './supabaseClient.js'
@@ -298,6 +299,23 @@ app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
     res.status(200).json({
       message: "Solicitud actualizada exitosamente",
       data: resultado
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/estudiante/estado/:idEstudiante", async (req, res) => {
+  try {
+    const id_estudiante = req.params.idEstudiante;
+    if (!id_estudiante) {
+      return res.status(400).json({ error: "Falta el id del estudiante en la URL" });
+    }
+
+    const resultado = await getUserState(id_estudiante);
+    res.status(200).json({
+      message: "Estado obtenido exitosamente",
+      estado: resultado
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

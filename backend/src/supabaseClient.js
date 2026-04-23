@@ -240,6 +240,26 @@ export const obtenerEstudiantePorId = async (id) => {
   return data;
 };
 
+export const getUserState = async (id) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante')
+    .select('estado')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error("Supabase error en getUserState:", error);
+    throw error; // rethrow original error so caller can see Supabase message
+  }
+
+  if (!data) {
+    // No hubo resultado (registro no encontrado)
+    throw new Error('Estudiante no encontrado');
+  }
+
+  return data.estado;
+};
+
 //Modificar Usuario
 // ==========================================
 // 3. ACTUALIZAR ESTUDIANTE (Perfil, Skills y Enlaces)
@@ -340,6 +360,7 @@ export const obtenerOfertasGuardadas = async (id_estudiante) => {
   if (error) throw error;
   return data;
 }
+
 
 // ---------------------------------------------------------
 // NUEVO: SUBIR FOTO DE PERFIL (STORAGE)

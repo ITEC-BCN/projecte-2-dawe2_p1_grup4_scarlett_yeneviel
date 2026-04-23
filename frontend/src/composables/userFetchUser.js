@@ -1,5 +1,6 @@
 import { onMounted, ref, watch } from "vue";
 import { URL_BACK } from "../../../config";
+import{obtenerIdDesdeToken} from '../js/obtenerId.js';
 
 export function useFetchUser(url) {
 
@@ -144,10 +145,26 @@ export function useFetchUser(url) {
             console.error("Error detallado:", err.message);
         }
     };
+
+    const getEstadoEstudiante = async () => {
+
+        try {
+            const userId = obtenerIdDesdeToken();
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${URL_BACK}/estudiante/estado/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            return data.estado;
+        } catch (error) {
+            console.error("Error al obtener el estado del estudiante:", error);
+            return "desconocido";
+        }
+    }
     //Disparador: cuando el componente que use este archivo se monte, pedimos los datos
     onMounted(fetchData);//Ejecuta la función
 
     // Si cambia la URL (por ejemplo otro ID), volvemos a pedir los datos
     watch(url, fetchData)//Necesario para cada vez que se cambie el parametro se redenrise la página
-    return { data, error, loading, fetchData, NewStudent, guardarOferta, getOneStudent,OfertasGuardadasUser , actualizarEstado}
+    return { data, error, loading, fetchData, NewStudent, guardarOferta, getOneStudent,OfertasGuardadasUser , actualizarEstado, getEstadoEstudiante}
 }

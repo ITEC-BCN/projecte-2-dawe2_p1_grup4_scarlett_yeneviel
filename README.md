@@ -349,6 +349,32 @@ HU21-Panel de administrador
 - modificación:activar y desactivar ofertas en vez de eliminarlas
 - Ver CV del estudiante
 
+## Dia 27 - 21/04/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala y Silvia Serra
+
+**Temas tratados**
+HU21-Panel de administrador
+- Envio de correo sobre el estado de la solicitud de registro
+- Envio de correo sobre el estado del perfil (Esta inactivo)
+
+Perfil del estudiante
+- Editar los datos
+- Subir pdf y que se muestren esos datos
+
+## Dia 27 - 23/04/2026 
+**Asistencia:** Yeneviel Roberts, Scarlett Toala 
+
+**Temas tratados**
+
+Perfil del estudiante
+- Editar los datos
+  
+HU10.4  - Bloque de perfil hasta que el admin acepta
+- El estudiante no puede acceder a su dashboard, perfil o postularse a ofertas hasta que el admin acepte el registro.
+
+
+
+
 
 
 

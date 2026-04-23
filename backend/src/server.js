@@ -13,7 +13,6 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import dotenv from "dotenv";
-import * as pdfParse from "pdf-parse";
 
 import { SECRET_JWT_KEY } from "../config.js";
 import { URL_FRONT } from "../../config.js";
@@ -50,6 +49,7 @@ import requireAuth from "./middleware/requireAuth.js";
 
 /* ================= INIT ================= */
 dotenv.config();
+console.log("GEMINI_API_KEY =", process.env.GEMINI_API_KEY);
 const app = express();
 
 /* ================= MIDDLEWARE ================= */
@@ -283,11 +283,9 @@ app.post("/guardar-oferta", async (req, res) => {
     const { id_estudiante, id_oferta } = req.body;
 
     if (!id_estudiante || !id_oferta) {
-      return res
-        .status(400)
-        .json({
-          error: "Falta id del estudiante o id de la oferta en el body",
-        });
+      return res.status(400).json({
+        error: "Falta id del estudiante o id de la oferta en el body",
+      });
     }
 
     const resultado = await guardarOferta(id_estudiante, id_oferta);
@@ -534,11 +532,9 @@ app.get("/postulaciones/:id", async (req, res) => {
     const datos = await VerPostulacionesAdmin(req.params.id);
     res.json(datos);
   } catch (err) {
-    res
-      .status(404)
-      .json({
-        error: err.message || "Postulaciones para esta ofert no encontradas",
-      });
+    res.status(404).json({
+      error: err.message || "Postulaciones para esta ofert no encontradas",
+    });
   }
 });
 
@@ -589,9 +585,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 /* ================= UPLOAD CV + GEMINI ================= */
 
 // GET: Obtener datos procesados del CV de un estudiante
-app.get("/api/cv/:studentId", async (req, res) => {
+app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
+
+    // 🔒 seguridad
+    if (req.user.id !== studentId) {
+      return res.status(403).json({ error: "No autorizado" });
+    }
 
     const { data, error } = await supabase
       .from("usuario_estudiante")
@@ -599,7 +600,13 @@ app.get("/api/cv/:studentId", async (req, res) => {
       .eq("id", studentId)
       .single();
 
-    if (error) {
+    // error real
+    if (error && error.code !== "PGRST116") {
+      return res.status(500).json({ error: error.message });
+    }
+
+    // no encontrado
+    if (!data) {
       return res.status(404).json({ error: "CV no encontrado" });
     }
 
@@ -614,34 +621,76 @@ app.get("/api/cv/:studentId", async (req, res) => {
 
 // POST: Subir CV en PDF, procesarlo con Gemini y guardar los datos en Supabase
 app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
-  console.log("FILE:", req.file);
-  console.log("BODY:", req.body);
   try {
-    const pdfData = await pdfParse.default(req.file.buffer);
-    const text = pdfData.text;
+    if (!req.file) {
+      return res.status(400).json({ error: "No se subió archivo" });
+    }
 
+    if (!req.body.studentId) {
+      return res.status(400).json({ error: "Falta studentId" });
+    }
+
+    // PDF → TEXTO
+    const pdfParse = (await import("pdf-parse")).default;
+    const data = await pdfParse(req.file.buffer);
+    const text = data.text;
+
+    // GEMINI
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" },
+      model: "models/gemini-2.0-flash",
     });
 
-    const result = await model.generateContent(`
-Extrae datos del CV en JSON estructurado:
+    const prompt = `
+Eres un extractor de datos de CV.
+Devuelve SOLO JSON válido sin texto adicional.
+
+Extrae del siguiente CV:
+- nombre
+- email
+- teléfono
+- educación
+- experiencia
+- habilidades
+
+CV:
 ${text}
-`);
+`;
 
-    const datosExtraidos = JSON.parse(result.response.text());
+    const result = await model.generateContent(prompt);
 
-    await supabase
+    const raw = result.response.text();
+
+    // 🔥 LIMPIEZA DEFENSIVA (MUY IMPORTANTE)
+    const clean = raw
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    let datosExtraidos;
+
+    try {
+      datosExtraidos = JSON.parse(clean);
+    } catch (parseError) {
+      console.error("RAW GEMINI:", raw);
+      return res.status(500).json({
+        error: "Gemini no devolvió JSON válido",
+        raw,
+      });
+    }
+
+    const { error } = await supabase
       .from("usuario_estudiante")
       .update(datosExtraidos)
       .eq("id", req.body.studentId);
 
-    res.json({
-      message: "OK",
-      datosExtraidos,   // 👈 IMPORTANTE
-    });
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
 
+    res.json({
+      message: "CV procesado correctamente",
+      datosExtraidos,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -651,5 +700,5 @@ ${text}
 /* ================= SERVER, LÍNEA SIEMPRE AL FINAL ================= */
 
 app.listen(3000, () => {
-  console.log('Servidor en http://localhost:3000');
+  console.log("Servidor en http://localhost:3000");
 });

@@ -8,10 +8,8 @@ import ModalInformativo from '../components/ModalInformativo.vue';
 // Importar la librería para enviar un e-mail cuando el estudiante se postula a una oferta
 import emailjs from "@emailjs/browser";
 
-
 const route = useRoute();
 const router = useRouter();
-
 
 // Construimos la URL usando el ID que viene en la ruta
 const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
@@ -31,6 +29,15 @@ const bodyPostulacion = ref({
 
 const yaPostulado = ref(false);
 const ofertaYaGuardada = ref(false);
+//Estado del estudiante
+const { getEstadoEstudiante } = useFetchUser();
+const estadoActual = ref('cargando...');
+
+const actualizarEstado = async () => {
+  const res = await getEstadoEstudiante();
+  estadoActual.value = res.toLowerCase()
+  
+};
 
 //función que verifica tanto si el estudiante ya postuló a la oferta como si ya la guardó, para actualizar ambos estados al cargar la página y desabilitar botones
 const verificarEstado= async (idEstudiante, estado) => {
@@ -52,7 +59,6 @@ const verificarEstado= async (idEstudiante, estado) => {
   }
   
 }
-
 //2. Estado de modal para abrir el modal informativo 
 const modalEstadoRef = ref(null);
 
@@ -60,14 +66,25 @@ const modalInformativoEstado = () => {
   modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
 };
 
-
 // Llamamos a la función cuando el componente se carga
 onMounted(() => {
   verificarEstado(idEstudiante, "postulacion");
   verificarEstado(idEstudiante, "guardado");
+  actualizarEstado();
 });
 
 const postularOferta = async () => {
+
+
+  if(estadoActual.value !== 'aprobado'){
+    mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden postular a ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
+    modalInformativoEstado();
+    return;
+  }else if(estadoActual.value === 'inactivo'){
+    mensajePersonalizado.value = `Tu cuenta está inactiva. Por favor, contacta con soporte para más información.`;
+    modalInformativoEstado();
+    return;
+  }
 
   if(idEstudiante){
     try {
@@ -125,6 +142,17 @@ const postularOferta = async () => {
 }
 
 const funGuardarOferta = async() => {
+
+  if(estadoActual.value !== 'aprobado'){
+    mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden guardar ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
+    modalInformativoEstado();
+    return;
+    
+  }else if(estadoActual.value === 'inactivo'){
+    mensajePersonalizado.value = `Tu cuenta está inactiva. Por favor, contacta con soporte para más información.`;
+    modalInformativoEstado();
+    return;
+  }
 
   if(idEstudiante){
 

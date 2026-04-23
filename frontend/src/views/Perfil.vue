@@ -51,7 +51,8 @@ const contact = reactive({ email: "", phone: "", location: "" });
 const validationErrors = reactive({
   phone: "",
   location: "",
-  about: ""
+  about: "",
+  educationYear: ""
 });
 
 const MAX_PHONE_DIGITS = 9;
@@ -107,6 +108,25 @@ function validateLocation(value) {
     validationErrors.location = "";
     return true;
   }
+}
+
+function validateEducationYear(yearValue) {
+  const trimmedValue = String(yearValue || "").trim();
+
+  if (!trimmedValue) {
+    validationErrors.educationYear = "";
+    return true;
+  }
+
+  const isValidNumber = /^\d+$/.test(trimmedValue);
+
+  if (!isValidNumber) {
+    validationErrors.educationYear = "El año debe ser un número válido.";
+    return false;
+  }
+
+  validationErrors.educationYear = "";
+  return true;
 }
 
 // Validar "Sobre mí": máximo 300 caracteres
@@ -274,8 +294,8 @@ function toggleEdit() {
 
 // --- FUNCIONES DE SKILLS CON LÍMITE DE 6 ---
 function addHardFromSelect() {
-  if (hardSkills.value.length >= 6) {
-    alert("Has alcanzado el límite máximo de 6 Hard Skills.");
+  if (hardSkills.value.length >= MAX_HARD_SKILLS) {
+    alert(`Has alcanzado el límite máximo de ${MAX_HARD_SKILLS} Hard Skills.`);
     return;
   }
   const skill = allDbSkills.value.find(s => s.id === selectedHardSkillId.value);
@@ -287,8 +307,8 @@ function addHardFromSelect() {
 }
 
 function addSoftFromSelect() {
-  if (softSkills.value.length >= 6) {
-    alert("Has alcanzado el límite máximo de 6 Soft Skills.");
+  if (softSkills.value.length >= MAX_SOFT_SKILLS) {
+    alert(`Has alcanzado el límite máximo de ${MAX_SOFT_SKILLS} Soft Skills.`);
     return;
   }
   const skill = allDbSkills.value.find(s => s.id === selectedSoftSkillId.value);
@@ -427,9 +447,30 @@ const getDocIcon = (tipo) => {
 };
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR EDUCACIÓN ---
+const MAX_EDUCATION = 5;
+const MAX_LANGUAGES = 5;
+const MAX_LINKS = 3;
+const MAX_HARD_SKILLS = 6;
+const MAX_SOFT_SKILLS = 6;
+
 const newEdu = reactive({ centro: "", anio: "", titulo: "" });
+const remainingEducation = computed(() => MAX_EDUCATION - academicBackground.value.length);
+const remainingLanguages = computed(() => MAX_LANGUAGES - languages.value.length);
+const remainingLinks = computed(() => MAX_LINKS - documents.value.length);
+const remainingHardSkills = computed(() => MAX_HARD_SKILLS - hardSkills.value.length);
+const remainingSoftSkills = computed(() => MAX_SOFT_SKILLS - softSkills.value.length);
 
 function addEducation() {
+  if (academicBackground.value.length >= MAX_EDUCATION) {
+    alert(`Solo puedes añadir un máximo de ${MAX_EDUCATION} estudios.`);
+    return;
+  }
+
+  if (newEdu.anio && !validateEducationYear(newEdu.anio)) {
+    alert("Introduce un año válido solo con números.");
+    return;
+  }
+
   if (newEdu.centro && newEdu.titulo) {
     academicBackground.value.push({ ...newEdu });
     // Ordenar por año descendente después de añadir
@@ -635,8 +676,10 @@ function removeDocument(id) {
             <div class="contact-content">
               <span class="contact-label">Ubicación</span>
               <template v-if="editing">
-                <input v-model="contact.location" @input="validateLocation(contact.location)" type="text"
-                  class="input input-sm contact-input" placeholder="Tu ciudad/ubicación (ej: Barcelona)" />
+                <select v-model="contact.location" @change="validateLocation(contact.location)" class="input input-sm contact-input">
+                  <option value="" disabled>Selecciona tu ciudad</option>
+                  <option v-for="city in validSpanishCities" :key="city" :value="city">{{ city }}</option>
+                </select>
                 <div v-if="validationErrors.location" class="error-message error-small">
                   <i class="fa-solid fa-exclamation-circle"></i> {{ validationErrors.location }}
                 </div>
@@ -674,7 +717,7 @@ function removeDocument(id) {
           <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-grid-row">
             <div class="input-col">
               <label for="edu-anio">Año</label>
-              <input v-model="edu.anio" placeholder="Año" class="input" />
+              <input v-model="edu.anio" @input="validateEducationYear(edu.anio)" placeholder="Año" class="input" />
             </div>
             <div class="input-col">
               <label for="edu-titulo">Título</label>
@@ -685,17 +728,22 @@ function removeDocument(id) {
               <input v-model="edu.centro" placeholder="Centro" class="input" />
             </div>
             <button @click="removeEducation(index)" class="btn-icon-danger" title="Eliminar">
-              <i class="fa-solid fa-trash"></i>
+              <i class="fa-solid fa-trash"></i> Eliminar
             </button>
           </div>
 
-          <div class="add-box new-education-box">
+          <div v-if="academicBackground.length < MAX_EDUCATION" class="add-box new-education-box">
             <p class="subtitle"> Añadir nueva titulación</p>
+            <p class="info-text" v-if="remainingEducation > 1"> {{ remainingEducation }} estudios por añadir.</p>
+            <p class="info-text" v-else> {{ remainingEducation }} estudio por añadir.</p>
 
             <div class="edit-grid-row form-labels-top">
               <div class="input-col">
                 <label for="edu-anio">Año</label>
-                <input id="edu-anio" v-model="newEdu.anio" placeholder="Ej: 2026" class="input" />
+                <input id="edu-anio" v-model="newEdu.anio" @input="validateEducationYear(newEdu.anio)" placeholder="Ej: 2026" class="input" />
+                <div v-if="validationErrors.educationYear" class="error-message error-small">
+                  <i class="fa-solid fa-exclamation-circle"></i> {{ validationErrors.educationYear }}
+                </div>
               </div>
 
               <div class="input-col">
@@ -709,10 +757,13 @@ function removeDocument(id) {
               </div>
 
               <button @click.prevent="addEducation" class="btn-icon-success btn-align-bottom" title="Añadir">
-                <i class="fa-solid fa-plus"></i>
+                 <i class="fa-solid fa-plus"></i> Añadir
               </button>
             </div>
           </div>
+          <p v-else class="empty-state">
+            <i class="fa-solid fa-circle-exclamation"></i> Límite de {{ MAX_EDUCATION }} estudios alcanzado.
+          </p>
         </div>
       </section>
 
@@ -735,22 +786,24 @@ function removeDocument(id) {
             </div>
 
             <div v-if="editing" class="add-box">
-              <p v-if="hardSkills.length >= 6" class="empty-state">
-                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 hard skills alcanzado.
+              <p v-if="hardSkills.length >= MAX_HARD_SKILLS" class="empty-state">
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de {{ MAX_HARD_SKILLS }} hard skills alcanzado.
               </p>
               <p v-else-if="availableHardSkills.length === 0" class="empty-state">
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las hard skills disponibles!
               </p>
-              <template v-else>
-                <select v-model="selectedHardSkillId" class="input" :disabled="hardSkills.length >= 6">
+              <div v-else>
+                <p class="info-text" v-if="remainingHardSkills>1"> {{ remainingHardSkills }} hard skills disponibles.</p>
+                <p class="info-text" v-else> {{ remainingHardSkills }} hard skill disponible.</p>
+                <select v-model="selectedHardSkillId" class="input" :disabled="hardSkills.length >= MAX_HARD_SKILLS">
                   <option value="" disabled>Selecciona una skill...</option>
                   <option v-for="skill in availableHardSkills" :key="skill.id" :value="skill.id">
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button class="btn-add-small" @click.prevent="addHardFromSelect"
-                  :disabled="!selectedHardSkillId">Añadir</button>
-              </template>
+                <button class="btn-icon-success" @click.prevent="addHardFromSelect"
+                  :disabled="!selectedHardSkillId"><i class="fa-solid fa-plus"></i> Añadir</button>
+              </div>
             </div>
           </div>
 
@@ -766,22 +819,24 @@ function removeDocument(id) {
             </div>
 
             <div v-if="editing" class="add-box">
-              <p v-if="softSkills.length >= 6" class="empty-state">
-                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 soft skills alcanzado.
+              <p v-if="softSkills.length >= MAX_SOFT_SKILLS" class="empty-state">
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de {{ MAX_SOFT_SKILLS }} soft skills alcanzado.
               </p>
               <p v-else-if="availableSoftSkills.length === 0" class="empty-state">
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las soft skills disponibles!
               </p>
-              <template v-else>
-                <select v-model="selectedSoftSkillId" class="input">
+              <div v-else>
+                <p class="info-text" v-if="remainingSoftSkills>1"> {{ remainingSoftSkills }} soft skills disponibles.</p>
+                <p class="info-text" v-else> {{ remainingSoftSkills }} soft skill disponible.</p>
+                <select v-model="selectedSoftSkillId" class="input" :disabled="softSkills.length >= MAX_SOFT_SKILLS">
                   <option value="" disabled>Selecciona una skill...</option>
                   <option v-for="skill in availableSoftSkills" :key="skill.id" :value="skill.id">
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button class="btn-add-small" @click.prevent="addSoftFromSelect"
-                  :disabled="!selectedSoftSkillId">Añadir</button>
-              </template>
+                <button class="btn-icon-success" @click.prevent="addSoftFromSelect"
+                  :disabled="!selectedSoftSkillId"><i class="fa-solid fa-plus"></i> Añadir</button>
+              </div>
             </div>
           </div>
         </div>
@@ -833,11 +888,13 @@ function removeDocument(id) {
           </div>
 
           <div v-if="editing">
-            <p v-if="languages.length >= 5" class="empty-state">
-              <i class="fa-solid fa-circle-exclamation"></i> Límite de 5 idiomas alcanzado.
+            <p v-if="languages.length >= MAX_LANGUAGES" class="empty-state">
+              <i class="fa-solid fa-circle-exclamation"></i> Límite de {{ MAX_LANGUAGES }} idiomas alcanzado.
             </p>
             <div v-else class="add-box">
               <p class="subtitle">Añadir nuevo idioma</p>
+              <p class="info-text" v-if="remainingLanguages > 1"> {{ remainingLanguages }} idiomas disponibles.</p>
+              <p class="info-text" v-else> {{ remainingLanguages }} idioma disponible.</p>
               <div class="form-row">
 
                 <div class="form-group">
@@ -860,7 +917,7 @@ function removeDocument(id) {
                 </div>
 
                 <button class="btn-icon-success" @click.prevent="addLanguage">
-                  <i class="fa-solid fa-plus"></i>
+                  <i class="fa-solid fa-plus"></i>Añadir
                 </button>
 
               </div>
@@ -917,12 +974,13 @@ function removeDocument(id) {
           </div>
 
           <div v-if="editing">
-            <p v-if="documents.length >= 3" class="empty-state">
-              <i class="fa-solid fa-circle-exclamation"></i> Límite de 3 enlaces alcanzado.
+            <p v-if="documents.length >= MAX_LINKS" class="empty-state">
+              <i class="fa-solid fa-circle-exclamation"></i> Límite de {{ MAX_LINKS }} enlaces alcanzado.
             </p>
-
             <div v-else class="edit-row add-box">
               <p class="subtitle">Añadir nuevo enlace</p>
+              <p class="info-text" v-if="remainingLinks > 1"> {{ remainingLinks }} enlaces por añadir.</p>
+              <p class="info-text" v-else> {{ remainingLinks }} enlace por añadir.</p>
               <label for="input-sm">Alias:</label>
               <input v-model="newDocName" class="input input-sm" placeholder="Nombre (Ej: Mi perfil)" />
               <label for="input-sm">Tipo:</label>
@@ -935,7 +993,7 @@ function removeDocument(id) {
               <label for="input-sm">URL:</label>
               <input v-model="newDocURL" class="input" placeholder="URL (https://...)" />
 
-              <button class="btn-icon-success" @click.prevent="addDocument"><i class="fa-solid fa-plus"></i></button>
+              <button class="btn-icon-success" @click.prevent="addDocument"><i class="fa-solid fa-plus"></i>Añadir</button>
             </div>
           </div>
         </section>
@@ -1396,6 +1454,9 @@ function removeDocument(id) {
   transform: scale(1.1);
 }
 
+.subtitle{
+width:100%;
+}
 /* ENLACES / LINKS */
 .grid-two-cols {
   display: grid;
@@ -1449,6 +1510,21 @@ function removeDocument(id) {
   font-size: 1.2rem;
 }
 
+/*Decoración para texto */
+.info-text {
+  color: #6c757d;          /* gris elegante */
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  margin: 8px 0 16px;
+  text-align:center;
+  width:100%;
+}
+
+.info-text strong {
+  color: #495057;          /* un poco más oscuro para el número */
+}
+
 /* =========================================
    FORMULARIOS Y EDICIÓN (MODO RESPONSIVE)
 ========================================== */
@@ -1495,16 +1571,26 @@ function removeDocument(id) {
 .form-row {
   display: flex;
   gap: 12px;
-  align-items: flex-end;
   flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+    
 }
+
+.skill-group {
+display: flex;
+flex-direction: column;
+justify-content: flex-start;
+align-items: center;
+
+  }
 
 .input-col,
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 200px;
+  width:100%;
   /* Flexibilidad para grids responsivos */
 
 }
@@ -1516,6 +1602,8 @@ function removeDocument(id) {
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
+  justify-content: center;
+  flex-direction: column;
 }
 
 /* Botones de acción (Añadir/Eliminar) */
@@ -1531,6 +1619,7 @@ function removeDocument(id) {
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  justify-self: center;
 }
 
 .btn-icon-danger {
@@ -1615,7 +1704,7 @@ function removeDocument(id) {
 
 /* Alinea el botón de eliminar a la derecha para que se vea más ordenado */
 .align-self-end {
-  align-self: flex-end;
+  align-self: flex-center;
   display: flex;
   gap: 6px;
   align-items: center;

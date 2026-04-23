@@ -8,6 +8,7 @@ import ModalInformativo from '../components/ModalInformativo.vue';
 // Importar la librería para enviar un e-mail cuando el estudiante se postula a una oferta
 import emailjs from "@emailjs/browser";
 
+
 const route = useRoute();
 const router = useRouter();
 
@@ -22,6 +23,7 @@ const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
 const volver = () => router.push({ name: "ofertas" });
 
 const idEstudiante = localStorage.getItem("studentId")
+const estudianteEstado = localStorage.getItem("estado") || "desconocido"
 const bodyPostulacion = ref({
   id_oferta: route.params.id,
   id_estudiante: idEstudiante

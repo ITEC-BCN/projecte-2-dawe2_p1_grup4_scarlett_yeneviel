@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { URL_BACK } from '../../../config.js';
+import{obtenerIdDesdeToken} from '../js/obtenerId.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,7 +10,7 @@ const router = createRouter({
       name: 'home',
       component: () => import('@/views/Home.vue')
     },
-         {
+    {
       path: "/login",
       name: "login",
       component: () => import('@/views/Login.vue'),
@@ -20,7 +22,7 @@ const router = createRouter({
       component: () => import('@/views/admin/LoginAdmin.vue'),
       props: true
     },
-          {
+    {
       path: "/registro",
       name: "registro",
       component: () => import('@/views/Registro.vue'),
@@ -38,26 +40,26 @@ const router = createRouter({
       component: () => import('@/views/OfertaDetalle.vue'),
       props: true,
     },
-     {
+    {
       path: "/perfil",
       name: "perfil",
       component: () => import('@/views/Perfil.vue'),
       props: true,
       meta: { requiresAuth: true }
     },
-      {
+    {
       path: "/perfilDetalle/:id",
       name: "PerfilDetalleSolo",
       component: () => import('@/views/admin/PerfilDetalleSolo.vue'),
       props: true,
       meta: { requiresAdmin: true }
     },
-          {
+    {
       path: "/dashboard",
       name: "dashboard",
       component: () => import('@/views/Dasboard.vue'),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true}
     },
     {
       path: "/oferta/actualizar/:id",
@@ -81,93 +83,122 @@ const router = createRouter({
       meta: { requiresAdmin: true }
     },
     {
-    path: "/crear",
-    name: "CrearOferta",
-    component: () => import('@/views/admin/AfegirOferta.vue'),
-    props: true,
-    meta: { requiresAdmin: true }
-  },
-  {
-    path: "/nosotros",
-    name: "sobre nosotros",
-    component: () => import('@/views/Nosotros.vue'),
-  },
+      path: "/crear",
+      name: "CrearOferta",
+      component: () => import('@/views/admin/AfegirOferta.vue'),
+      props: true,
+      meta: { requiresAdmin: true }
+    },
     {
-    path: "/servicios",
-    name: "nuestros servicios",
-    component: () => import('@/views/NuestrosServicios.vue'),
-  },
-      {
-    path: "/ayuda",
-    name: "centro de ayuda",
-    component: () => import('@/views/CentroDeAyuda.vue'),
-  },
-        {
-    path: "/contacto",
-    name: "contacto",
-    component: () => import('@/views/Contacto.vue'),
-  },
-        {
-    path: "/faqs",
-    name: "preguntas frecuentes",
-    component: () => import('@/views/FAQs.vue'),
-  },
-          {
-    path: "/servTerms",
-    name: "términos de servicio",
-    component: () => import('@/views/TerminosServicio.vue'),
-  },
-            {
-    path: "/privacidad",
-    name: "Politica de Privacidad",
-    component: () => import('@/views/PoliticaPrivacidad.vue'),
-  },
-  {
-    path:"/admin/oferta/:id",
-    name:"verOfertaAdmin",
-    component:() => import('@/views/admin/verOfertaAdmin.vue'),
-    props: true,
-    meta: { requiresAdmin: true }
-  },
-  {
-    path:"/estudiantes/:id/ofertas-recomendadas",
-    name:"ofertasRecomendadas",
-    component:() => import('@/views/OfertasPersonalizadas.vue'),
-    props: true,
-    meta: { requiresAdmin: false }
-  }
+      path: "/nosotros",
+      name: "sobre nosotros",
+      component: () => import('@/views/Nosotros.vue'),
+    },
+    {
+      path: "/servicios",
+      name: "nuestros servicios",
+      component: () => import('@/views/NuestrosServicios.vue'),
+    },
+    {
+      path: "/ayuda",
+      name: "centro de ayuda",
+      component: () => import('@/views/CentroDeAyuda.vue'),
+    },
+    {
+      path: "/contacto",
+      name: "contacto",
+      component: () => import('@/views/Contacto.vue'),
+    },
+    {
+      path: "/faqs",
+      name: "preguntas frecuentes",
+      component: () => import('@/views/FAQs.vue'),
+    },
+    {
+      path: "/servTerms",
+      name: "términos de servicio",
+      component: () => import('@/views/TerminosServicio.vue'),
+    },
+    {
+      path: "/privacidad",
+      name: "Politica de Privacidad",
+      component: () => import('@/views/PoliticaPrivacidad.vue'),
+    },
+    {
+      path: "/admin/oferta/:id",
+      name: "verOfertaAdmin",
+      component: () => import('@/views/admin/verOfertaAdmin.vue'),
+      props: true,
+      meta: { requiresAdmin: true }
+    },
+    {
+      path: "/estudiantes/:id/ofertas-recomendadas",
+      name: "ofertasRecomendadas",
+      component: () => import('@/views/OfertasPersonalizadas.vue'),
+      props: true,
+      meta: { requiresAdmin: false }
+    },
+    {
+      path: '/revision',
+      name: 'espera',
+      component: () => import('../views/EnEspera.vue')
+    },
   ],
 })
 
 //Tipo de middleware
 //meta ponemos el requisito para poder visitar esa ruta
-router.beforeEach((to, from, next) => {
-  // Obtenemos el rol y el estado de autenticación
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token');
-  const userRole = localStorage.getItem('role'); // 'admin' o 'estudiante'
+  const userRole = localStorage.getItem('role');
+  const userId = obtenerIdDesdeToken();
 
-  // 1. Verificar si la ruta requiere ser admin
-  if (to.matched.some(record => record.meta.requiresAdmin)) {
-    
-    if (token && userRole === 'admin') {
-      next(); // Es admin, puede pasar
-    } else {
-      // No es admin: lo mandamos a las ofertas o a una página de "No autorizado"
-      alert("Acceso denegado: Esta zona es solo para administradores.");
-      next({ name: 'ofertas' }); 
+  // 1. Si la ruta requiere autenticación
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!token) {
+      return next({ name: 'login' });
     }
 
-  } else if (to.matched.some(record => record.meta.requiresAuth)) {
-    // 2. Verificar rutas que solo requieren estar logueado (estudiante o admin)
-    if (token) {
-      next();
+    // --- LÓGICA DE BLOQUEO POR ESTADO ---
+    if (userRole === 'estudiante') {
+      try {
+
+        //VERSION CON ENDPOINT
+        // Llamamos a tu endpoint para obtener el estado actual del estudiante
+        const response = await fetch(`${URL_BACK}/estudiante/estado/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const estado = data.estado;
+
+        const estaPendiente = estado !== 'aprobado';
+        const permitePendientes = to.meta.allowPending;
+
+        if (estaPendiente && !permitePendientes && to.name !== 'espera') {
+          return next({ name: 'espera' });
+        }
+
+      } catch (error) {
+        console.error("Error verificando estado:", error);
+        // En caso de error de red, podrías decidir si dejarlo pasar o desloguearlo
+      }
+    }
+    // ------------------------------------
+
+    // 2. Verificar si requiere ser admin
+    if (to.matched.some(record => record.meta.requiresAdmin)) {
+      if (userRole === 'admin') {
+        next();
+      } else {
+        alert("Acceso denegado.");
+        next({ name: 'ofertas' });
+      }
     } else {
-      next({ name: 'login' });
+      next(); // Es una ruta auth normal y pasó el filtro de estado
     }
 
   } else {
-    // 3. Rutas públicas
-    next();
+    next(); // Ruta pública
   }
 });
 

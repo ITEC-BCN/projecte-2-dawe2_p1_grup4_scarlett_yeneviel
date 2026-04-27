@@ -75,7 +75,7 @@ onMounted(() => {
 const postularOferta = async () => {
 
 
-  if(estadoActual.value !== 'aprobado'){
+  if(estadoActual.value !== 'aprobado' && idEstudiante){
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden postular a ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
     modalInformativoEstado();
     return;
@@ -142,7 +142,7 @@ const postularOferta = async () => {
 
 const funGuardarOferta = async() => {
 
-  if(estadoActual.value !== 'aprobado'){
+  if(estadoActual.value !== 'aprobado' && idEstudiante){
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden guardar ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
     modalInformativoEstado();
     return;

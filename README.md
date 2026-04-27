@@ -305,6 +305,8 @@ Vuelta de las vacaciones de semana santa
 # Sprint 7 Daylies 
 
 **Planificación del sprint:**
+Poder subir diferentes tipos de archivos y que se puedan ver desde la web
+
 **HU14.5 - Mostrar archivos**
  - HU12.1 El estudiante puede ver su CV
  - HU14.2 El admin puede ver el CV del estudiante
@@ -372,6 +374,32 @@ Perfil del estudiante
 HU10.4  - Bloque de perfil hasta que el admin acepta
 - El estudiante no puede acceder a su dashboard, perfil o postularse a ofertas hasta que el admin acepte el registro.
 
+## Dia 28 - 27/04/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts 
+
+## 23/02/2025 Retrospective
+**Asistencia:** Scarlett Toala, Yeneviel Roberts i Silvia Serra
+
+| Qué ha ido bien | Qué hace falta mejorar | Qué he aprendido | Dificultat |
+|-----------------|------------------------|------------------|------------|
+| La planificación de las HU| El tiempo dedicado a cada HU | | Mostrar archivos guardados en el almacenamiento de Supabase|Leer un pdf para mostrar los datos en la web
+
+
+# Sprint 8 Daylies 
+
+**Planificación del sprint:**
+El estudiante recibe emails informativos sobre los estados de sus candidaturas, puede subir archivos y verlos
+
+HU08.1 El usuario puede modificar los datos de su perfil
+HU14.1 El estudiante puede ver su cv
+HU18.1 Recibe email cuando se actualiza la candidatura
+Publicar la web con vercel
+
+**Temas tratados**
+
+- Actualiza los datos del perfil apartir del cv subido
+- Enviar email con actualización de candidatura al estudiante
+- Publicar la web con vercel
 
 
 

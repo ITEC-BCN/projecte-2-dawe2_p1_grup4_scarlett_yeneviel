@@ -1,11 +1,3 @@
-/*const app = require("./app");
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
-});*/
-
 import express from 'express';
 import cors from 'cors'
 import bcrypt from 'bcryptjs';
@@ -14,7 +6,9 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';  //esto es para subir archivos, lo usaremos para subir fotos de perfil y cvs
 import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
+import dotenv from 'dotenv'// para cargar las variables de entorno desde el .env, como la URL de Supabase y la clave secreta del JWT
 
+dotenv.config() // Carga las variables de entorno desde el archivo .env
 .032
 import {
   obtenerOfertas,
@@ -54,17 +48,27 @@ const app = express();
 // Permitir cualquier origen (para desarrollo)
 app.use(cors({
   //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
-  origin: URL_FRONT, // Cambia esto por la URL de tu frontend
+  origin: [
+    "http://localhost:5173",
+    process.env.URL_FRONT,
+    "https://internia-web.vercel.app"
+  ], // Permitir múltiples orígenes
   credentials: true, // Permite enviar cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
+// RESPONDER A OPTIONS EXPLÍCITAMENTE
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return cors()(req, res, next);
+  }
+  next();
+});
 app.use(express.json());
 app.use(cookieParser());
 
 //Rutas
-
 app.post("/ofertas", async (req, res) => {
   try {
 
@@ -616,8 +620,6 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
-
 
 // GET: Obtener todas las skills para el menú desplegable del frontend
 app.get("/skills", async (req, res) => {
@@ -646,3 +648,6 @@ app.get('/get-cv/:nombreArchivo', async (req, res) => {
     res.status(500).json({ error: err.message || "Error interno del servidor" });
    }
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));

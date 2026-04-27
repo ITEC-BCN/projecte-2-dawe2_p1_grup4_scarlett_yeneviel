@@ -91,3 +91,9 @@ export const validSpanishCities = [
   "Getafe",
   "Torrejón"
 ];
+
+export const MAX_EDUCATION = 5;
+export const MAX_LANGUAGES = 5;
+export const MAX_LINKS = 3;
+export const MAX_HARD_SKILLS = 6;
+export const MAX_SOFT_SKILLS = 6;

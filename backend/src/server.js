@@ -48,12 +48,17 @@ const app = express();
 // Permitir cualquier origen (para desarrollo)
 app.use(cors({
   //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
-  origin: [URL_FRONT,process.env.URL_FRONT,"https://internia-web.vercel.app"], // Permitir múltiples orígenes
+  origin: [
+    "http://localhost:5173",
+    process.env.URL_FRONT,
+    "https://internia-web.vercel.app"
+  ], // Permitir múltiples orígenes
   credentials: true, // Permite enviar cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
+app.options('*', cors());
 app.use(express.json());
 app.use(cookieParser());
 
@@ -609,8 +614,6 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
-
 
 // GET: Obtener todas las skills para el menú desplegable del frontend
 app.get("/skills", async (req, res) => {
@@ -639,3 +642,5 @@ app.get('/get-cv/:nombreArchivo', async (req, res) => {
     res.status(500).json({ error: err.message || "Error interno del servidor" });
    }
 });
+
+app.listen(3000, () => console.log('Servidor en http://localhost:3000'));

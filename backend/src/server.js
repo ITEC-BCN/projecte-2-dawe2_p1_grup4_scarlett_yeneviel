@@ -56,7 +56,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 //Rutas
-
+app.use(cors(corsOptions));
 app.post("/ofertas", async (req, res) => {
   try {
 

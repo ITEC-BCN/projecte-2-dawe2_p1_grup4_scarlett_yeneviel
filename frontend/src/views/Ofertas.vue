@@ -6,7 +6,7 @@ import CardOferta from "../components/cardOferta.vue";
 import { URL_BACK } from "../../../config";
 
 const router = useRouter();
-const url = ref(`${URL_BACK}/ofertas`);
+const url = ref(`${process.env.URL_BACK}/ofertas`);
 const { data, error, loading, fetchData } = useFetch(url);
 
 // 1. Variables de estado para los filtros

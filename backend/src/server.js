@@ -55,7 +55,8 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   "http://localhost:5173",
   process.env.URL_FRONT,
-  "https://internia-web.vercel.app"
+  "https://internia-web.vercel.app",
+  "https://internia-web-yeneviel-roberts-projects.vercel.app"
 ].filter(Boolean);
 
 const corsOptions = {

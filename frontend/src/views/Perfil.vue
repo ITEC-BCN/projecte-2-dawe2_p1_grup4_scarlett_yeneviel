@@ -133,14 +133,21 @@ const restoreOriginalData = () => {
   contact.phone = source.telefono || "";
   contact.location = source.location || "";
 
-hardSkills.value = Array.isArray(source.skills?.hard)
-  ? JSON.parse(JSON.stringify(source.skills.hard))
-  : [];
+  const skills = source.estudiante_skill || [];
 
-softSkills.value = Array.isArray(source.skills?.soft)
-  ? JSON.parse(JSON.stringify(source.skills.soft))
-  : [];
+  hardSkills.value = skills
+    .filter((item) => item.skill?.tipo === "hard skill")
+    .map((item) => ({
+      id: item.skill.id,
+      nombre: item.skill.nombre,
+    }));
 
+  softSkills.value = skills
+    .filter((item) => item.skill?.tipo === "soft skill")
+    .map((item) => ({
+      id: item.skill.id,
+      nombre: item.skill.nombre,
+    }));
   // IMPORTANTE: Hacemos copias profundas (JSON parse/stringify) para romper la
   // referencia de los objetos. Así, si el usuario edita un input y luego cancela,
   // el objeto original de 'students' se mantiene intacto.
@@ -202,8 +209,9 @@ function addHardFromSelect() {
     return;
   }
   const skill = allDbSkills.value.find(
-    (s) => s.id === selectedHardSkillId.value,
+    (s) => s.id === Number(selectedHardSkillId.value),
   );
+
   if (skill) {
     hardSkills.value.push({ id: skill.id, nombre: skill.nombre });
     selectedHardSkillId.value = "";
@@ -217,7 +225,7 @@ function addSoftFromSelect() {
     return;
   }
   const skill = allDbSkills.value.find(
-    (s) => s.id === selectedSoftSkillId.value,
+    (s) => s.id === Number(selectedSoftSkillId.value),
   );
   if (skill) {
     softSkills.value.push({ id: skill.id, nombre: skill.nombre });
@@ -272,7 +280,7 @@ async function saveProfile() {
     skills_ids: allSelectedSkillIds,
     enlaces: documents.value,
   };
-console.log(payload);
+  console.log(payload);
   try {
     const response = await fetch(`${URL_BACK}/estudiantes/${studentId}`, {
       method: "PUT",

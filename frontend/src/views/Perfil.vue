@@ -133,31 +133,13 @@ const restoreOriginalData = () => {
   contact.phone = source.telefono || "";
   contact.location = source.location || "";
 
-  hardSkills.value = [];
-  softSkills.value = [];
+hardSkills.value = Array.isArray(source.skills?.hard)
+  ? JSON.parse(JSON.stringify(source.skills.hard))
+  : [];
 
-  if (source.estudiante_skill) {
-    source.estudiante_skill.forEach((item) => {
-      const datosSkill = item.skill;
-      if (datosSkill) {
-        const tipoSkill = datosSkill.tipo
-          ? datosSkill.tipo.toLowerCase().trim()
-          : "";
-        if (tipoSkill === "hard skill") {
-          hardSkills.value.push({
-            id: datosSkill.id,
-            nombre: datosSkill.nombre,
-          });
-        } else if (tipoSkill === "soft skill") {
-          softSkills.value.push({
-            id: datosSkill.id,
-            nombre: datosSkill.nombre,
-          });
-        }
-      }
-    });
-  }
-
+softSkills.value = Array.isArray(source.skills?.soft)
+  ? JSON.parse(JSON.stringify(source.skills.soft))
+  : [];
 
   // IMPORTANTE: Hacemos copias profundas (JSON parse/stringify) para romper la
   // referencia de los objetos. Así, si el usuario edita un input y luego cancela,

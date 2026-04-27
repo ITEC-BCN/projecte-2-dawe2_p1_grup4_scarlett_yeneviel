@@ -589,41 +589,7 @@ const groq = new Groq({
 /* ================= UPLOAD CV + GROQ ================= */
 
 // GET: Obtener datos procesados del CV de un estudiante
-app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
-  try {
-    const { studentId } = req.params;
-
-    // 🔒 seguridad
-    if (req.user.id !== studentId) {
-      return res.status(403).json({ error: "No autorizado" });
-    }
-
-    const { data, error } = await supabase
-      .from("usuario_estudiante")
-      .select("*")
-      .eq("id", studentId)
-      .single();
-
-    // error real
-    if (error && error.code !== "PGRST116") {
-      return res.status(500).json({ error: error.message });
-    }
-
-    // no encontrado
-    if (!data) {
-      return res.status(404).json({ error: "CV no encontrado" });
-    }
-
-    res.json({
-      message: "CV obtenido correctamente",
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST: guardar el CV original en Supabase Storage, procesarlo con Groq y guardar los datos extraídos en la base de datos
+// POST: subir CV y extraer datos
 app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
   try {
     if (!req.file || !req.body.studentId) {
@@ -633,14 +599,14 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
     const studentId = req.body.studentId;
     const file = req.file;
 
-    // 1. Guardar en Storage
+    // 1. Storage
     const fileName = `cv_${studentId}_${Date.now()}.pdf`;
     await supabase.storage.from("cvs").upload(fileName, file.buffer, {
       contentType: "application/pdf",
       upsert: true,
     });
 
-    // 2. Extraer texto
+    // 2. PDF text
     const pdfParse = (await import("pdf-parse")).default;
     const pdfResult = await pdfParse(file.buffer);
 
@@ -649,7 +615,7 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
       .replace(/\s+/g, " ")
       .trim();
 
-    // 3. Groq
+    // 3. GROQ
     const completion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
@@ -659,23 +625,12 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
 Eres un extractor de CV extremadamente preciso.
 
 REGLAS:
-- NO inventes datos.
-- NO repitas información.
-- NO mezcles formación y experiencia.
-- SI NO ESTÁ CLARO, IGNÓRALO.
-- Devuelve SOLO JSON válido.
+- NO inventes datos
+- NO repitas información
+- SI NO EXISTE, DEJA VACÍO
+- Devuelve SOLO JSON válido
 
-FORMACIÓN:
-- titulo = estudio
-- centro = institución
-- anio = año o rango
-
-EXPERIENCIA:
-- puesto = trabajo real
-- centro = empresa
-- anio = periodo laboral
-
-FORMATO EXACTO:
+FORMATO:
 {
   "nombre": "",
   "apellido": "",
@@ -684,16 +639,8 @@ FORMATO EXACTO:
   "location": "",
   "about": "",
   "idiomas": { "idiomas": [{ "name": "", "level": "" }] },
-  "formacion": {
-    "formacion": [
-      { "centro": "", "anio": "", "titulo": "" }
-    ]
-  },
-  "experiencia": {
-    "experiencia": [
-      { "centro": "", "anio": "", "puesto": "" }
-    ]
-  },
+  "formacion": { "formacion": [{ "centro": "", "anio": "", "titulo": "" }] },
+  "experiencia": { "experiencia": [{ "centro": "", "anio": "", "puesto": "" }] },
   "habilidades_hard": "",
   "habilidades_soft": ""
 }
@@ -706,10 +653,16 @@ FORMATO EXACTO:
 
     const datosExtraidos = JSON.parse(completion.choices[0].message.content);
 
-    // 🔧 HELPERS
+    // ----------------------------
+    // 🔧 NORMALIZADORES LIMPIOS
+    // ----------------------------
+
+    const normalizeArray = (data, key) => {
+      const arr = data?.[key];
+      return Array.isArray(arr) ? arr : [];
+    };
 
     const cleanDuplicates = (arr, key) => {
-      if (!Array.isArray(arr)) return [];
       const seen = new Set();
       return arr.filter((item) => {
         const val = item?.[key];
@@ -719,43 +672,34 @@ FORMATO EXACTO:
       });
     };
 
-    function normalizeFormacion(f) {
-      const data = f?.formacion || f;
+    // ----------------------------
+    // SKILLS (CLAVE DEL CAMBIO)
+    // ----------------------------
 
-      if (!Array.isArray(data)) return { formacion: [] };
+    const hardSkills = datosExtraidos.habilidades_hard
+      ? datosExtraidos.habilidades_hard
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
-      return {
-        formacion: data.map((x) => ({
-          centro: x.centro || "",
-          anio: x.anio || "",
-          titulo: x.titulo || "",
-        })),
-      };
-    }
+    const softSkills = datosExtraidos.habilidades_soft
+      ? datosExtraidos.habilidades_soft
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
-    function normalizeExperiencia(e) {
-      const data = e?.experiencia || e;
+    // ----------------------------
+    // FORMACIONES / EXPERIENCIA
+    // ----------------------------
 
-      if (!Array.isArray(data)) return { experiencia: [] };
+    const formacion = normalizeArray(datosExtraidos.formacion, "formacion");
+    const experiencia = normalizeArray(datosExtraidos.experiencia, "experiencia");
 
-      return {
-        experiencia: data.map((x) => ({
-          centro: x.centro || "",
-          anio: x.anio || "",
-          puesto: x.puesto || "",
-        })),
-      };
-    }
-
-    function normalizeIdiomas(i) {
-      const data = i?.idiomas;
-      if (!Array.isArray(data)) return { idiomas: [] };
-      return { idiomas: data };
-    }
-
-    // 4. MAPEO FINAL LIMPIO
-    const estudios = normalizeFormacion(datosExtraidos.formacion).formacion;
-    const experiencia = normalizeExperiencia(datosExtraidos.experiencia).experiencia;
+    // ----------------------------
+    // MAPEO FINAL SUPABASE
+    // ----------------------------
 
     const datosParaSupabase = {
       nombre: datosExtraidos.nombre || null,
@@ -769,19 +713,26 @@ FORMATO EXACTO:
       about: datosExtraidos.about || null,
 
       estudios: {
-        formacion: cleanDuplicates(estudios, "titulo"),
+        formacion: cleanDuplicates(formacion, "titulo"),
       },
 
       experiencia: {
         experiencia: cleanDuplicates(experiencia, "puesto"),
       },
 
-      idiomas: normalizeIdiomas(datosExtraidos.idiomas),
+      idiomas: datosExtraidos.idiomas || { idiomas: [] },
 
-      otra_informacion: `HARD: ${datosExtraidos.habilidades_hard || ""} | SOFT: ${datosExtraidos.habilidades_soft || ""}`,
+      // 🔥 NUEVO: guardado estructurado (NO string basura)
+      skills: {
+        hard: hardSkills,
+        soft: softSkills,
+      },
     };
 
-    // 5. Guardar en DB
+    // ----------------------------
+    // GUARDAR EN DB
+    // ----------------------------
+
     const { error: dbError } = await supabase
       .from("usuario_estudiante")
       .update(datosParaSupabase)

@@ -58,7 +58,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
 
-app.options('*', cors());
+// RESPONDER A OPTIONS EXPLÍCITAMENTE
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return cors()(req, res, next);
+  }
+  next();
+});
 app.use(express.json());
 app.use(cookieParser());
 
@@ -643,4 +649,5 @@ app.get('/get-cv/:nombreArchivo', async (req, res) => {
    }
 });
 
-app.listen(3000, () => console.log('Servidor en http://localhost:3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));

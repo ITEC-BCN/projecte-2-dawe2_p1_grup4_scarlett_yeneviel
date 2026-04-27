@@ -45,6 +45,12 @@ import {
 import requireAuth from './middleware/requireAuth.js';
 const app = express();
 
+// Log de todas las peticiones para depuración (origin y ruta)
+app.use((req, res, next) => {
+  console.log(`[REQ] ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
+
 // Permitir múltiples orígenes y soportar credentials correctamente
 const allowedOrigins = [
   "http://localhost:5173",
@@ -79,6 +85,11 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Health check simple
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
 //Rutas
 app.post("/ofertas", async (req, res) => {
@@ -632,7 +643,6 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   }
 });
 
-
 // GET: Obtener todas las skills para el menú desplegable del frontend
 app.get("/skills", async (req, res) => {
   try {
@@ -661,5 +671,43 @@ app.get('/get-cv/:nombreArchivo', async (req, res) => {
    }
 });
 
+// Catch-all 404 handler that también registra la ruta y origen
+app.use((req, res) => {
+  console.warn(`[NOT_FOUND] ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin || 'none'}`);
+  res.status(404).json({ error: 'Not Found' });
+});
+
+// Before starting, imprimir las rutas registradas para depuración
+function listRegisteredRoutes() {
+  try {
+    const routes = [];
+    app._router.stack.forEach((middleware) => {
+      if (middleware.route) {
+        // rutas registradas directamente en app
+        const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
+        routes.push(`${methods} ${middleware.route.path}`);
+      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
+        // rutas registradas en routers montados
+        middleware.handle.stack.forEach((handler) => {
+          if (handler.route) {
+            const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
+            routes.push(`${methods} ${handler.route.path}`);
+          }
+        });
+      }
+    });
+    console.log('[ROUTES] Registered routes:\n' + routes.join('\n'));
+  } catch (err) {
+    console.error('Error listing routes:', err);
+  }
+}
+
+listRegisteredRoutes();
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+try {
+  app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+} catch (err) {
+  console.error('Error arrancando el servidor:', err);
+  process.exit(1);
+}

@@ -45,16 +45,11 @@ import {
 import requireAuth from './middleware/requireAuth.js';
 const app = express();
 
-// Log de todas las peticiones para depuración (origin y ruta)
-app.use((req, res, next) => {
-  console.log(`[REQ] ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin || 'none'}`);
-  next();
-});
 
 // Permitir múltiples orígenes y soportar credentials correctamente
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.URL_FRONT,
+  process.env.URL_FRONT, //Variable de entorno de Render
   "https://internia-web.vercel.app",
   "https://internia-web-yeneviel-roberts-projects.vercel.app"
 ].filter(Boolean);

@@ -21,7 +21,6 @@ const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
 const volver = () => router.push({ name: "ofertas" });
 
 const idEstudiante = localStorage.getItem("studentId")
-const estudianteEstado = localStorage.getItem("estado") || "desconocido"
 const bodyPostulacion = ref({
   id_oferta: route.params.id,
   id_estudiante: idEstudiante
@@ -259,11 +258,11 @@ const funGuardarOferta = async() => {
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
 
-              <button @click="postularOferta" :disabled="yaPostulado" class="btn-postular">
+              <button @click="postularOferta" :disabled="yaPostulado || estadoActual === 'pendiente' || estadoActual === 'inactivo'" class="btn-postular">
                 {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
               </button>
 
-             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
+             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada || estadoActual === 'pendiente' || estadoActual === 'inactivo'" class="btn-guardar-oferta">
                 {{ ofertaYaGuardada ? 'Oferta guardada' : '🤍 Guardar oferta' }}
              </button>
 

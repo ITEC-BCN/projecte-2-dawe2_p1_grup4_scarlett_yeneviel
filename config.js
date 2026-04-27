@@ -8,6 +8,6 @@
 
 //PRODUCCIÓN
 export const URL_BACK = "https://internia-backend.onrender.com";
-export const URL_FRONT = "https://internia-web-yeneviel-roberts-projects.vercel.app/";
+export const URL_FRONT = "https://internia-web.vercel.app";
 export const SALT_ROUNDS=12
 

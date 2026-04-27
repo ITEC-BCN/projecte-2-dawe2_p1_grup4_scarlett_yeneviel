@@ -68,7 +68,14 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 // Manejar preflight para todas las rutas explícitamente
-app.options('*', cors(corsOptions));
+// Evitamos usar app.options('*', ...) porque la librería path-to-regexp no acepta '*'.
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    // Ejecutar cors para asegurarse de que los headers apropiados se añadan
+    return cors(corsOptions)(req, res, () => res.sendStatus(204));
+  }
+  next();
+});
 
 app.use(express.json());
 app.use(cookieParser());

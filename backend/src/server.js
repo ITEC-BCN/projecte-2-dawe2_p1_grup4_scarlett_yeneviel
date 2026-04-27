@@ -18,6 +18,7 @@ import { SECRET_JWT_KEY } from "../config.js";
 import { URL_FRONT } from "../../config.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
+import Groq from "groq-sdk";
 
 import {
   obtenerOfertas,
@@ -573,16 +574,19 @@ app.get("/skills", async (req, res) => {
   }
 });
 
-/* ================= SUPABASE + GEMINI ================= */
+/* ================= SUPABASE + GROQ ================= */
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Inicializar Groq
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
-/* ================= UPLOAD CV + GEMINI ================= */
+/* ================= UPLOAD CV + GROQ ================= */
 
 // GET: Obtener datos procesados del CV de un estudiante
 app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
@@ -619,78 +623,80 @@ app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
   }
 });
 
-// POST: Subir CV en PDF, procesarlo con Gemini y guardar los datos en Supabase
+// POST: Subir CV, guardarlo en Storage, procesarlo con Groq y actualizar DB
 app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No se subió archivo" });
+    if (!req.file || !req.body.studentId) {
+      return res.status(400).json({ error: "Faltan datos" });
     }
 
-    if (!req.body.studentId) {
-      return res.status(400).json({ error: "Falta studentId" });
+    const studentId = req.body.studentId;
+    const file = req.file;
+
+    // --- PASO 1: GUARDAR ARCHIVO ORIGINAL EN SUPABASE STORAGE ---
+    // Creamos un nombre único para el archivo
+    const fileName = `cv_${studentId}_${Date.now()}.pdf`;
+
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from("cvs") // Tu bucket se llama 'cvs' según la foto
+      .upload(fileName, file.buffer, {
+        contentType: "application/pdf",
+        upsert: true, // Si ya existe, lo sobrescribe
+      });
+
+    if (storageError) {
+      console.error("Error subiendo a Storage:", storageError);
+      return res.status(500).json({ error: "Error al guardar el archivo físico" });
     }
 
-    // PDF → TEXTO
+    // Obtenemos la URL pública del archivo para guardarla en la base de datos (opcional)
+    const { data: { publicUrl } } = supabase.storage
+      .from("cvs")
+      .getPublicUrl(fileName);
+
+
+    // --- PASO 2: EXTRAER TEXTO PARA LA IA ---
     const pdfParse = (await import("pdf-parse")).default;
-    const data = await pdfParse(req.file.buffer);
-    const text = data.text;
+    const pdfResult = await pdfParse(file.buffer);
+    const text = pdfResult.text;
 
-    // GEMINI
-    const model = genAI.getGenerativeModel({
-      model: "models/gemini-2.0-flash",
+
+    // --- PASO 3: PROCESAR CON GROQ ---
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: "Extrae datos de CV en JSON. Llaves: nombre, email, telefono, eduacion, idiomas, otra_informacion, about, location."
+        },
+        { role: "user", content: `CV: ${text}` }
+      ],
+      response_format: { type: "json_object" }
     });
 
-    const prompt = `
-Eres un extractor de datos de CV.
-Devuelve SOLO JSON válido sin texto adicional.
+    const datosExtraidos = JSON.parse(completion.choices[0].message.content);
 
-Extrae del siguiente CV:
-- nombre
-- email
-- teléfono
-- educación
-- experiencia
-- habilidades
 
-CV:
-${text}
-`;
+    // --- PASO 4: ACTUALIZAR BASE DE DATOS ---
+    const datosParaSupabase = {
+      ...datosExtraidos,
+      // Si tienes una columna para la URL del archivo, puedes guardarla aquí:
+      // archivo_url: publicUrl 
+    };
 
-    const result = await model.generateContent(prompt);
-
-    const raw = result.response.text();
-
-    // 🔥 LIMPIEZA DEFENSIVA (MUY IMPORTANTE)
-    const clean = raw
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    let datosExtraidos;
-
-    try {
-      datosExtraidos = JSON.parse(clean);
-    } catch (parseError) {
-      console.error("RAW GEMINI:", raw);
-      return res.status(500).json({
-        error: "Gemini no devolvió JSON válido",
-        raw,
-      });
-    }
-
-    const { error } = await supabase
+    const { error: dbError } = await supabase
       .from("usuario_estudiante")
-      .update(datosExtraidos)
-      .eq("id", req.body.studentId);
+      .update(datosParaSupabase)
+      .eq("id", studentId);
 
-    if (error) {
-      return res.status(500).json({ error: error.message });
-    }
+    if (dbError) throw dbError;
 
     res.json({
-      message: "CV procesado correctamente",
-      datosExtraidos,
+      message: "Archivo guardado y CV procesado con éxito",
+      urlArchivo: publicUrl,
+      datosExtraidos
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

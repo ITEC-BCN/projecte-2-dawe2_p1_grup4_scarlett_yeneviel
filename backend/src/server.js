@@ -6,7 +6,9 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';  //esto es para subir archivos, lo usaremos para subir fotos de perfil y cvs
 import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
+import dotenv from 'dotenv'// para cargar las variables de entorno desde el .env, como la URL de Supabase y la clave secreta del JWT
 
+dotenv.config() // Carga las variables de entorno desde el archivo .env
 .032
 import {
   obtenerOfertas,

@@ -7,6 +7,7 @@ import { URL_BACK } from "../../../config";
 
 const router = useRouter();
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);
+//const url = ref(`${RL_BACK}/ofertas`);
 const { data, error, loading, fetchData } = useFetch(url);
 console.log("Mi API URL es:", import.meta.env.VITE_API_URL);
 

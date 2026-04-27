@@ -12,7 +12,7 @@ const route = useRoute();
 const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
-const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas/${route.params.id}`);
 // 1. variable para guardar el mensaje personzalido dentro del mondal
 const mensajePersonalizado = ref("");
 const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);

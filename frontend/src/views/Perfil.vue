@@ -3,7 +3,8 @@ import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
-import { availableLanguagesList, languageLevels, allLinkTypes, validSpanishCities } from "../js/const.js"
+import { availableLanguagesList, languageLevels, allLinkTypes, validSpanishCities, MAX_EDUCATION, MAX_LANGUAGES, MAX_LINKS, MAX_HARD_SKILLS, MAX_SOFT_SKILLS } from "../js/const.js"
+
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +13,7 @@ const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 const role = localStorage.getItem('role');
 
 const { students, loadingStudents } = useStudents(url);
+
 
 const hasUnsavedChanges = ref(false); //Conocer si hay cambios sin guardar
 
@@ -52,7 +54,7 @@ const validationErrors = reactive({
   phone: "",
   location: "",
   about: "",
-  educationYear: ""
+  educationYear: {}
 });
 
 const MAX_PHONE_DIGITS = 9;
@@ -110,22 +112,30 @@ function validateLocation(value) {
   }
 }
 
-function validateEducationYear(yearValue) {
+function validateEducationYear(yearValue, index) {
   const trimmedValue = String(yearValue || "").trim();
+  const currentYear = new Date().getFullYear();
 
   if (!trimmedValue) {
-    validationErrors.educationYear = "";
+    validationErrors.educationYear[index] = "";
     return true;
   }
 
   const isValidNumber = /^\d+$/.test(trimmedValue);
 
   if (!isValidNumber) {
-    validationErrors.educationYear = "El año debe ser un número válido.";
+    validationErrors.educationYear[index] = "El año debe ser un número válido.";
     return false;
   }
 
-  validationErrors.educationYear = "";
+  const year = Number(trimmedValue);
+
+  if (year > currentYear) {
+    validationErrors.educationYear[index] = `El año no puede ser superior a ${currentYear}.`;
+    return false;
+  }
+
+  validationErrors.educationYear[index] = "";
   return true;
 }
 
@@ -144,7 +154,8 @@ function validateAbout(value) {
 const hardSkills = ref([]);
 const softSkills = ref([]);
 const languages = ref([]);
-const documents = ref([]);
+const documents = ref([]); //Lo que se gaurda en la vista (links, portfolio, etc)
+const editableDocuments = ref([]); // lo que editas
 const academicBackground = ref([]);
 const uploadingFile = ref(false);
 
@@ -326,48 +337,50 @@ function removeSoft(i) { softSkills.value.splice(i, 1); hasUnsavedChanges.value 
 async function saveProfile() {
   console.log("Iniciando guardado del perfil...");
 
-  // Validar todos los campos antes de guardar
   let isValid = true;
 
+  // 🧠 VALIDAR TELÉFONO
   if (contact.phone) {
-    validatePhone(contact.phone);
-    if (validationErrors.phone) isValid = false;
-  }
-  if (contact.location) {
-    if (!validateLocation(contact.location)) isValid = false;
-  }
-  if (user.about) {
-    validateAbout(user.about);
-    if (validationErrors.about) isValid = false;
+    const ok = validatePhone(contact.phone);
+    if (!ok || validationErrors.phone) isValid = false;
   }
 
-  // Si hay errores de validación, no guardar
+  // 🧠 VALIDAR UBICACIÓN
+  if (contact.location) {
+    const ok = validateLocation(contact.location);
+    if (!ok) isValid = false;
+  }
+
+  // 🧠 VALIDAR ABOUT
+  if (user.about) {
+    const ok = validateAbout(user.about);
+    if (!ok || validationErrors.about) isValid = false;
+  }
+
+  // 🧠 VALIDAR EDUCACIÓN EXISTENTE
+  academicBackground.value.forEach((edu, index) => {
+    const ok = validateEducationYear(edu.anio, index);
+    if (!ok) isValid = false;
+  });
+
+  // 🧠 VALIDAR NUEVO ESTUDIO
+  if (newEdu.anio || newEdu.titulo || newEdu.centro) {
+    const ok = validateEducationYear(newEdu.anio, 'new');
+    if (!ok) isValid = false;
+  }
+
+  // 🚨 BLOQUEO FINAL (IMPORTANTE: SOLO UNA VEZ)
   if (!isValid) {
-    alert("Por favor, corrige los errores de validación antes de guardar.");
+    alert("Corrige los errores antes de guardar.");
     return;
   }
 
-  console.log("Validaciones pasaron, preparando payload...");
+  console.log("Validaciones OK, enviando...");
 
   const allSelectedSkillIds = [
     ...hardSkills.value.map(s => s.id),
     ...softSkills.value.map(s => s.id)
   ];
-
-  // Preparar los idiomas en el formato correcto para el backend
-  const idiomasFormatted = languages.value.map(lang => ({
-    id: lang.id,
-    idioma: lang.name,
-    nivel: lang.level
-  }));
-
-  // Preparar los enlaces en el formato correcto para el backend
-  const enlacesFormatted = documents.value.map(doc => ({
-    name: doc.name,
-    label: doc.name, // El backend espera tanto name como label
-    tipo: doc.tipo,
-    url: doc.url
-  }));
 
   const payload = {
     foto_perfil: user.avatar,
@@ -375,12 +388,19 @@ async function saveProfile() {
     telefono: contact.phone,
     location: contact.location,
     estudios: { formacion: academicBackground.value },
-    idiomas: { idiomas: idiomasFormatted },
+    idiomas: { idiomas: languages.value.map(l => ({
+      id: l.id,
+      idioma: l.name,
+      nivel: l.level
+    })) },
     skills_ids: allSelectedSkillIds,
-    enlaces: enlacesFormatted
+    enlaces: documents.value.map(d => ({
+      name: d.name,
+      label: d.name,
+      tipo: d.tipo,
+      url: d.url
+    }))
   };
-
-  console.log("Payload preparado:", payload);
 
   try {
     const response = await fetch(`${URL_BACK}/estudiantes/${studentId}`, {
@@ -389,49 +409,34 @@ async function saveProfile() {
       body: JSON.stringify(payload)
     });
 
-    console.log("Respuesta del servidor:", response.status);
-
     if (response.ok) {
-      const result = await response.json();
-      console.log("Resultado del guardado:", result);
+      await response.json();
 
-      // Actualizar los datos locales inmediatamente después de guardar
+      // 💾 actualizar estado local
       if (students.value) {
-        students.value.foto_perfil = user.avatar;
-        students.value.about = user.about;
-        students.value.telefono = contact.phone;
-        students.value.location = contact.location;
-        students.value.estudios = { formacion: academicBackground.value };
-        students.value.idiomas = { idiomas: languages.value };
-        students.value.enlaces = documents.value;
-
-        // Actualizar las skills del estudiante
-        students.value.estudiante_skill = [];
-        allSelectedSkillIds.forEach(skillId => {
-          const skill = allDbSkills.value.find(s => s.id === skillId);
-          if (skill) {
-            students.value.estudiante_skill.push({
-              skill: skill
-            });
-          }
-        });
+        students.value = {
+          ...students.value,
+          foto_perfil: user.avatar,
+          about: user.about,
+          telefono: contact.phone,
+          location: contact.location,
+          estudios: { formacion: academicBackground.value },
+          idiomas: { idiomas: languages.value },
+          enlaces: documents.value
+        };
       }
 
       editing.value = false;
-      alert("¡Perfil actualizado correctamente!");
       hasUnsavedChanges.value = false;
 
-      // Ordenar academicBackground después de guardar para asegurar el orden
-      academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
-
+      alert("Perfil actualizado correctamente");
     } else {
       const err = await response.json();
-      console.error("Error del servidor:", err);
-      alert("Error al guardar: " + (err.error || "Error desconocido"));
+      alert("Error al guardar: " + err.error);
     }
   } catch (error) {
-    console.error("Error de conexión:", error);
-    alert("Error de conexión al guardar el perfil. Inténtalo de nuevo.");
+    console.error(error);
+    alert("Error de conexión");
   }
 }
 
@@ -447,11 +452,7 @@ const getDocIcon = (tipo) => {
 };
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR EDUCACIÓN ---
-const MAX_EDUCATION = 5;
-const MAX_LANGUAGES = 5;
-const MAX_LINKS = 3;
-const MAX_HARD_SKILLS = 6;
-const MAX_SOFT_SKILLS = 6;
+
 
 const newEdu = reactive({ centro: "", anio: "", titulo: "" });
 const remainingEducation = computed(() => MAX_EDUCATION - academicBackground.value.length);
@@ -466,7 +467,7 @@ function addEducation() {
     return;
   }
 
-  if (newEdu.anio && !validateEducationYear(newEdu.anio)) {
+  if (newEdu.anio && !validateEducationYear(newEdu.anio, 'new')) {
     alert("Introduce un año válido solo con números.");
     return;
   }
@@ -676,7 +677,8 @@ function removeDocument(id) {
             <div class="contact-content">
               <span class="contact-label">Ubicación</span>
               <template v-if="editing">
-                <select v-model="contact.location" @change="validateLocation(contact.location)" class="input input-sm contact-input">
+                <select v-model="contact.location" @change="validateLocation(contact.location)"
+                  class="input input-sm contact-input">
                   <option value="" disabled>Selecciona tu ciudad</option>
                   <option v-for="city in validSpanishCities" :key="city" :value="city">{{ city }}</option>
                 </select>
@@ -717,7 +719,12 @@ function removeDocument(id) {
           <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-grid-row">
             <div class="input-col">
               <label for="edu-anio">Año</label>
-              <input v-model="edu.anio" @input="validateEducationYear(edu.anio)" placeholder="Año" class="input" />
+              <input v-model="edu.anio" @input="validateEducationYear(edu.anio, index)" placeholder="Año"
+                class="input" />
+              <div v-if="validationErrors.educationYear[index]" class="error-message error-small">
+                <i class="fa-solid fa-exclamation-circle"></i>
+                {{ validationErrors.educationYear[index] }}
+              </div>
             </div>
             <div class="input-col">
               <label for="edu-titulo">Título</label>
@@ -740,9 +747,10 @@ function removeDocument(id) {
             <div class="edit-grid-row form-labels-top">
               <div class="input-col">
                 <label for="edu-anio">Año</label>
-                <input id="edu-anio" v-model="newEdu.anio" @input="validateEducationYear(newEdu.anio)" placeholder="Ej: 2026" class="input" />
-                <div v-if="validationErrors.educationYear" class="error-message error-small">
-                  <i class="fa-solid fa-exclamation-circle"></i> {{ validationErrors.educationYear }}
+                <input id="edu-anio" v-model="newEdu.anio" @input="validateEducationYear(newEdu.anio, 'new')"
+                  placeholder="Ej: 2026" class="input" />
+                <div v-if="validationErrors.educationYear['new']" class="error-message error-small">
+                  {{ validationErrors.educationYear['new'] }}
                 </div>
               </div>
 
@@ -757,7 +765,7 @@ function removeDocument(id) {
               </div>
 
               <button @click.prevent="addEducation" class="btn-icon-success btn-align-bottom" title="Añadir">
-                 <i class="fa-solid fa-plus"></i> Añadir
+                <i class="fa-solid fa-plus"></i> Añadir
               </button>
             </div>
           </div>
@@ -786,6 +794,7 @@ function removeDocument(id) {
             </div>
 
             <div v-if="editing" class="add-box">
+
               <p v-if="hardSkills.length >= MAX_HARD_SKILLS" class="empty-state">
                 <i class="fa-solid fa-circle-exclamation"></i> Límite de {{ MAX_HARD_SKILLS }} hard skills alcanzado.
               </p>
@@ -793,7 +802,8 @@ function removeDocument(id) {
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las hard skills disponibles!
               </p>
               <div v-else>
-                <p class="info-text" v-if="remainingHardSkills>1"> {{ remainingHardSkills }} hard skills disponibles.</p>
+                <p class="info-text" v-if="remainingHardSkills > 1"> {{ remainingHardSkills }} hard skills disponibles.
+                </p>
                 <p class="info-text" v-else> {{ remainingHardSkills }} hard skill disponible.</p>
                 <select v-model="selectedHardSkillId" class="input" :disabled="hardSkills.length >= MAX_HARD_SKILLS">
                   <option value="" disabled>Selecciona una skill...</option>
@@ -801,8 +811,8 @@ function removeDocument(id) {
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button class="btn-icon-success" @click.prevent="addHardFromSelect"
-                  :disabled="!selectedHardSkillId"><i class="fa-solid fa-plus"></i> Añadir</button>
+                <button class="btn-icon-success" @click.prevent="addHardFromSelect" :disabled="!selectedHardSkillId"><i
+                    class="fa-solid fa-plus"></i> Añadir</button>
               </div>
             </div>
           </div>
@@ -826,7 +836,8 @@ function removeDocument(id) {
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las soft skills disponibles!
               </p>
               <div v-else>
-                <p class="info-text" v-if="remainingSoftSkills>1"> {{ remainingSoftSkills }} soft skills disponibles.</p>
+                <p class="info-text" v-if="remainingSoftSkills > 1"> {{ remainingSoftSkills }} soft skills disponibles.
+                </p>
                 <p class="info-text" v-else> {{ remainingSoftSkills }} soft skill disponible.</p>
                 <select v-model="selectedSoftSkillId" class="input" :disabled="softSkills.length >= MAX_SOFT_SKILLS">
                   <option value="" disabled>Selecciona una skill...</option>
@@ -834,8 +845,8 @@ function removeDocument(id) {
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button class="btn-icon-success" @click.prevent="addSoftFromSelect"
-                  :disabled="!selectedSoftSkillId"><i class="fa-solid fa-plus"></i> Añadir</button>
+                <button class="btn-icon-success" @click.prevent="addSoftFromSelect" :disabled="!selectedSoftSkillId"><i
+                    class="fa-solid fa-plus"></i> Añadir</button>
               </div>
             </div>
           </div>
@@ -993,7 +1004,8 @@ function removeDocument(id) {
               <label for="input-sm">URL:</label>
               <input v-model="newDocURL" class="input" placeholder="URL (https://...)" />
 
-              <button class="btn-icon-success" @click.prevent="addDocument"><i class="fa-solid fa-plus"></i>Añadir</button>
+              <button class="btn-icon-success" @click.prevent="addDocument"><i
+                  class="fa-solid fa-plus"></i>Añadir</button>
             </div>
           </div>
         </section>
@@ -1023,7 +1035,7 @@ function removeDocument(id) {
   --accent-purple: #8b5cf6;
   --accent-purple-hover: #7c3aed;
   --text-main: #111827;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   --bg-main: #F3F4F6;
   --bg-card: #ffffff;
   --border-color: #e2e8f0;
@@ -1031,7 +1043,7 @@ function removeDocument(id) {
   display: flex;
   gap: 30px;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 40px 20px;
   background-color: var(--bg-main);
   min-height: 100vh;
@@ -1361,9 +1373,6 @@ function removeDocument(id) {
   z-index: -1;
 }
 
-.edu-info {
-  flex: 1;
-}
 
 .edu-title {
   font-weight: 800;
@@ -1380,9 +1389,9 @@ function removeDocument(id) {
 
 /* SKILLS Y CHIPS */
 .skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
+display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 .skill-subtitle {
@@ -1397,7 +1406,9 @@ function removeDocument(id) {
 .skill-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  justify-content: flex-start;
+  max-width: 100%;
 }
 
 .skill-chip {
@@ -1454,25 +1465,31 @@ function removeDocument(id) {
   transform: scale(1.1);
 }
 
-.subtitle{
-width:100%;
+.subtitle {
+  width: 100%;
 }
+
 /* ENLACES / LINKS */
 .grid-two-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.link-label {
+  word-break: break-word;
 }
 
 .links-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .link-item {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   background: #f8fafc;
@@ -1490,8 +1507,9 @@ width:100%;
 
 .link-content {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
-  gap: 14px;
   text-decoration: none;
   color: #0f172a;
   font-weight: 600;
@@ -1506,23 +1524,25 @@ width:100%;
   color: var(--accent-purple);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   font-size: 1.2rem;
 }
 
 /*Decoración para texto */
 .info-text {
-  color: #6c757d;          /* gris elegante */
+  color: #6c757d;
+  /* gris elegante */
   font-size: 0.95rem;
   font-weight: 500;
   text-align: center;
   margin: 8px 0 16px;
-  text-align:center;
-  width:100%;
+  text-align: center;
+  width: 100%;
 }
 
 .info-text strong {
-  color: #495057;          /* un poco más oscuro para el número */
+  color: #495057;
+  /* un poco más oscuro para el número */
 }
 
 /* =========================================
@@ -1539,11 +1559,20 @@ width:100%;
   color: #1e293b;
   transition: all 0.2s ease;
 }
+input, select, textarea {
+ font-size: 16px; /* evita zoom iOS y mejora legibilidad */
+  min-width: 0;
+}
 
 .input:focus {
-  outline: none;
-  border-color: var(--accent-purple);
+  outline: 3px solid var(--accent-purple);
+  outline-offset: 3px;
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+button {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .add-box {
@@ -1566,31 +1595,34 @@ width:100%;
   gap: 20px;
 }
 
-.edit-grid-row,
 .edit-row,
 .form-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   align-content: center;
-  justify-content: center;
-    
+  justify-content: flex-start;
+}
+
+.edit-grid-row, .form-row{
+ flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
 }
 
 .skill-group {
-display: flex;
-flex-direction: column;
-justify-content: flex-start;
-align-items: center;
-
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
 
 .input-col,
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width:100%;
+  width: 100%;
   /* Flexibilidad para grids responsivos */
 
 }
@@ -1602,7 +1634,7 @@ align-items: center;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  justify-content: center;
+  justify-content: flex-start;
   flex-direction: column;
 }
 
@@ -1614,7 +1646,7 @@ align-items: center;
   min-width: 44px;
   height: 44px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1827,6 +1859,21 @@ align-items: center;
 
   .edu-item:not(:last-child) .edu-dot::after {
     height: calc(100% + 15px);
+  }
+}
+
+@media (max-width: 480px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+  .grid-two-cols {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .link-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
   }
 }
 </style>

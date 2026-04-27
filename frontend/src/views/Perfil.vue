@@ -404,6 +404,7 @@ function removeDocument(id) {
 // --- NUEVO: FUNCIÓN PARA SUBIR CV ---
 const showModalDatosCV = ref(false);
 const datosExtraidosCV = ref(null);
+const hasCV = computed(() => !!cvUrl.value);
 
 const uploadCV = async (event) => {
   const file = event.target.files[0];
@@ -564,29 +565,52 @@ const uploadCV = async (event) => {
 
       <aside class="cv-card compact">
         <h3 class="sidebar-title">
-          <i class="fa-solid fa-file-pdf"></i> Sube tu CV en PDF
+          <i class="fa-solid fa-file-pdf"></i>
+          {{ cvUrl ? "Tu CV" : "Sube tu CV en PDF" }}
         </h3>
-        <div>
-          <input
-            id="cv-upload"
-            type="file"
-            accept="application/pdf"
-            style="display: none"
-            @change="uploadCV"
-            :disabled="uploadingCV"
-          />
-          <label for="cv-upload" class="btn-primaryCV" style="cursor: pointer">
-            <i class="fa-solid fa-upload"></i> Seleccionar archivo PDF
-          </label>
-          <span v-if="uploadingCV" style="font-size: 0.9rem; color: gray"
-            >Subiendo...</span
-          >
-          <div v-if="cvUrl" style="margin-top: 10px">
-            <a :href="cvUrl" target="_blank" class="cv-link">
-              <i class="fa-solid fa-file-pdf"></i> Ver CV subido
-            </a>
-          </div>
+
+        <p class="cv-subtitle">
+          {{
+            cvUrl
+              ? "Puedes verlo o actualizarlo cuando quieras"
+              : "Añade tu CV para que sea visible"
+          }}
+        </p>
+
+        <!-- SI EXISTE CV -->
+        <div v-if="cvUrl" class="cv-actions">
+          <a :href="cvUrl" target="_blank" class="cv-link">
+            <i class="fa-solid fa-eye"></i> Ver tu CV en PDF
+          </a>
+
+          <small class="cv-hint">
+            O actualiza con un nuevo archivo si lo necesitas
+          </small>
         </div>
+
+        <!-- SI NO EXISTE CV -->
+        <div v-else class="cv-actions">
+          <small class="cv-hint">Todavía no has subido ningún CV</small>
+        </div>
+
+        <!-- UPLOAD SIEMPRE DISPONIBLE -->
+        <input
+          id="cv-upload"
+          type="file"
+          accept="application/pdf"
+          style="display: none"
+          @change="uploadCV"
+          :disabled="uploadingCV"
+        />
+
+        <label for="cv-upload" class="btn-primaryCV">
+          <i class="fa-solid fa-upload"></i>
+          {{ cvUrl ? "Actualizar CV" : "Subir CV PDF" }}
+        </label>
+
+        <span v-if="uploadingCV" style="font-size: 0.9rem; color: gray">
+          Subiendo...
+        </span>
       </aside>
     </div>
 
@@ -1567,5 +1591,22 @@ const uploadCV = async (event) => {
     margin-bottom: 1rem;
     font-size: 0.9rem;
   }
+  .cv-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+.cv-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.cv-hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
 }
 </style>

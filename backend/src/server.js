@@ -659,6 +659,7 @@ app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
 
 
 // POST: subir CV y extraer datos
+// POST: subir CV y extraer datos
 app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
   try {
     if (!req.file || !req.body.studentId) {
@@ -668,7 +669,7 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
     const studentId = req.body.studentId;
     const file = req.file;
 
-    // 1. Storage
+    // 1. Subida a Storage
     const fileName = `cv_${studentId}_${Date.now()}.pdf`;
 
     await supabase.storage.from("cvs").upload(fileName, file.buffer, {
@@ -676,13 +677,13 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
       upsert: true,
     });
 
-    // 2. PDF → texto
+    // 2. Extraer texto del PDF
     const pdfParse = (await import("pdf-parse")).default;
     const pdfResult = await pdfParse(file.buffer);
 
     const cleanText = pdfResult.text
-      .replace(/\n/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/\r/g, " ")
+      .replace(/\n{2,}/g, "\n")
       .trim();
 
     // 3. GROQ
@@ -692,12 +693,7 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
         {
           role: "system",
           content: `
-Eres un extractor de CV.
-
-REGLAS:
-- NO inventes datos
-- SI NO EXISTE, DEJA VACÍO
-- Devuelve SOLO JSON válido
+Eres un extractor de CV profesional. Devuelve exclusivamente JSON.
 
 FORMATO:
 {
@@ -710,145 +706,98 @@ FORMATO:
   "idiomas": { "idiomas": [{ "name": "", "level": "" }] },
   "formacion": { "formacion": [{ "centro": "", "anio": "", "titulo": "" }] },
   "experiencia": { "experiencia": [{ "centro": "", "anio": "", "puesto": "" }] },
-  "habilidades_hard": "",
-  "habilidades_soft": ""
+  "habilidades": ["skill1", "skill2"]
 }
 `
         },
-        { role: "user", content: `CV: ${cleanText}` },
+        { role: "user", content: `CV:\n\n${cleanText}` }
       ],
-      response_format: { type: "json_object" },
+      response_format: { type: "json_object" }
     });
 
-    const datosExtraidos = JSON.parse(completion.choices[0].message.content);
+    const datosExtraidos = JSON.parse(
+      completion.choices[0].message.content
+    );
 
-    // ----------------------------
-    // NORMALIZADORES
-    // ----------------------------
+    // -------------------------
+    // NORMALIZACIÓN SEGURA
+    // -------------------------
+    const telefonoLimpio = datosExtraidos.telefono
+      ? Number(datosExtraidos.telefono.toString().replace(/\D/g, ""))
+      : undefined; // 👈 IMPORTANTE: NO null
 
-    const normalizeArray = (data, key) => {
-      const arr = data?.[key];
-      return Array.isArray(arr) ? arr : [];
-    };
-
-    const cleanDuplicates = (arr, key) => {
-      const seen = new Set();
-      return arr.filter((item) => {
-        const val = item?.[key];
-        if (!val || seen.has(val)) return false;
-        seen.add(val);
-        return true;
-      });
-    };
-
-    // ----------------------------
-    // SKILLS (del CV → strings)
-    // ----------------------------
-
-    const hardSkills = datosExtraidos.habilidades_hard
-      ? datosExtraidos.habilidades_hard
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+    const idiomas = datosExtraidos.idiomas?.idiomas || [];
+    const formacion = datosExtraidos.formacion?.formacion || [];
+    const experiencia = datosExtraidos.experiencia?.experiencia || [];
+    const habilidades = Array.isArray(datosExtraidos.habilidades)
+      ? datosExtraidos.habilidades
       : [];
 
-    const softSkills = datosExtraidos.habilidades_soft
-      ? datosExtraidos.habilidades_soft
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [];
+    // -------------------------
+    // 4. UPDATE USUARIO (CORREGIDO)
+    // -------------------------
 
-    const allSkills = [...hardSkills, ...softSkills];
+    const updateData = {
+      nombre: datosExtraidos.nombre || "",
+      apellido: datosExtraidos.apellido || "",
+      location: datosExtraidos.location || "",
+      about: datosExtraidos.about || "",
+      idiomas: { idiomas },
+      estudios: { formacion },
+      experiencia: { experiencia }
+    };
 
-    // ----------------------------
-    // FORMACIÓN / EXPERIENCIA
-    // ----------------------------
-
-    const formacion = normalizeArray(datosExtraidos.formacion, "formacion");
-    const experiencia = normalizeArray(datosExtraidos.experiencia, "experiencia");
-
-    // ----------------------------
-    // 1. UPDATE ESTUDIANTE
-    // ----------------------------
+    // 👇 SOLO AÑADIMOS TELÉFONO SI EXISTE
+    if (telefonoLimpio !== undefined) {
+      updateData.telefono = telefonoLimpio;
+    }
 
     const { error: updateError } = await supabase
       .from("usuario_estudiante")
-      .update({
-        nombre: datosExtraidos.nombre || null,
-        apellido: datosExtraidos.apellido || null,
-        telefono: datosExtraidos.telefono
-          ? Number(datosExtraidos.telefono.toString().replace(/\D/g, ""))
-          : null,
-        location: datosExtraidos.location || null,
-        about: datosExtraidos.about || null,
-        estudios: {
-          formacion: cleanDuplicates(formacion, "titulo"),
-        },
-        experiencia: {
-          experiencia: cleanDuplicates(experiencia, "puesto"),
-        },
-        idiomas: datosExtraidos.idiomas || { idiomas: [] },
-      })
+      .update(updateData)
       .eq("id", studentId);
 
     if (updateError) throw updateError;
 
-    // ----------------------------
-    // 2. BORRAR SKILLS ANTIGUAS
-    // ----------------------------
-
+    // -------------------------
+    // 5. SKILLS
+    // -------------------------
     await supabase
       .from("estudiante_skill")
       .delete()
       .eq("id_estudiante", studentId);
 
-    // ----------------------------
-    // 3. OBTENER SKILLS BD
-    // ----------------------------
-
-    const { data: skillsDB } = await supabase
+    const { data: skillsDB, error: skillsError } = await supabase
       .from("skill")
       .select("id, nombre");
 
-    // ----------------------------
-    // 4. MAPEAR NOMBRES → IDS
-    // ----------------------------
+    if (skillsError) throw skillsError;
 
-    const skillsToInsert = allSkills
-      .map((name) => {
-        const found = skillsDB.find(
-          (s) => s.nombre.toLowerCase() === name.toLowerCase()
-        );
+    const listaSkills = habilidades.map(s =>
+      s.toLowerCase().trim()
+    );
 
-        return found
-          ? {
-              id_estudiante: studentId,
-              id_skill: found.id,
-            }
-          : null;
-      })
-      .filter(Boolean);
+    const nuevasRelaciones = (skillsDB || [])
+      .filter(s =>
+        listaSkills.includes(s.nombre.toLowerCase())
+      )
+      .map(s => ({
+        id_estudiante: studentId,
+        id_skill: s.id
+      }));
 
-    // ----------------------------
-    // 5. INSERT SKILLS
-    // ----------------------------
-
-    if (skillsToInsert.length > 0) {
-      const { error: insertError } = await supabase
+    if (nuevasRelaciones.length > 0) {
+      await supabase
         .from("estudiante_skill")
-        .insert(skillsToInsert);
-
-      if (insertError) throw insertError;
+        .insert(nuevasRelaciones);
     }
 
-    // ----------------------------
+    // -------------------------
     // RESPONSE
-    // ----------------------------
-
+    // -------------------------
     res.json({
-      message: "CV procesado correctamente",
-      datosExtraidos,
+      message: "Perfil actualizado correctamente",
+      datosExtraidos
     });
 
   } catch (err) {

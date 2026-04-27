@@ -633,83 +633,155 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
     const studentId = req.body.studentId;
     const file = req.file;
 
-    // 1. Guardar en Storage (Bucket cvs)
+    // 1. Guardar en Storage
     const fileName = `cv_${studentId}_${Date.now()}.pdf`;
     await supabase.storage.from("cvs").upload(fileName, file.buffer, {
       contentType: "application/pdf",
       upsert: true,
     });
 
-    // 2. Extraer texto del PDF
+    // 2. Extraer texto
     const pdfParse = (await import("pdf-parse")).default;
     const pdfResult = await pdfParse(file.buffer);
-    const text = pdfResult.text;
 
-    // 3. Llamada a Groq con el nuevo esquema
-const completion = await groq.chat.completions.create({
+    const cleanText = pdfResult.text
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // 3. Groq
+    const completion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages: [
         {
           role: "system",
-          content: `Eres un experto extractor de CVs. Devuelve exclusivamente JSON con este formato exacto:
+          content: `
+Eres un extractor de CV extremadamente preciso.
+
+REGLAS:
+- NO inventes datos.
+- NO repitas información.
+- NO mezcles formación y experiencia.
+- SI NO ESTÁ CLARO, IGNÓRALO.
+- Devuelve SOLO JSON válido.
+
+FORMACIÓN:
+- titulo = estudio
+- centro = institución
+- anio = año o rango
+
+EXPERIENCIA:
+- puesto = trabajo real
+- centro = empresa
+- anio = periodo laboral
+
+FORMATO EXACTO:
 {
-  "nombre": "Nombre",
-  "apellido": "Apellido",
-  "email": "correo@ejemplo.com",
-  "telefono": "600000000",
-  "location": "Ciudad, País",
-  "about": "Resumen profesional corto",
-  "idiomas": { "idiomas": [{ "name": "Idioma", "level": "Nivel" }] },
+  "nombre": "",
+  "apellido": "",
+  "email": "",
+  "telefono": "",
+  "location": "",
+  "about": "",
+  "idiomas": { "idiomas": [{ "name": "", "level": "" }] },
   "formacion": {
     "formacion": [
-      { "centro": "Nombre del centro", "anio": "Año", "titulo": "Nombre del título" }
+      { "centro": "", "anio": "", "titulo": "" }
     ]
   },
   "experiencia": {
     "experiencia": [
-      { "centro": "Empresa/Centro", "anio": "Periodo", "puesto": "Cargo ocupado" }
+      { "centro": "", "anio": "", "puesto": "" }
     ]
   },
-  "habilidades_hard": "Tecnología 1, Tecnología 2",
-  "habilidades_soft": "Habilidad 1, Habilidad 2"
+  "habilidades_hard": "",
+  "habilidades_soft": ""
 }
-
-INSTRUCCIONES:
-- 'formacion' y 'experiencia' DEBEN ser objetos que contengan un array de objetos.
-- No devuelvas texto plano para la formación.
-- Si no hay datos, devuelve el array vacío [].`
+`
         },
-        { role: "user", content: `CV: ${text}` },
+        { role: "user", content: `CV: ${cleanText}` },
       ],
       response_format: { type: "json_object" },
     });
 
     const datosExtraidos = JSON.parse(completion.choices[0].message.content);
 
-    // --- 4. MAPEO MANUAL CORREGIDO ---
+    // 🔧 HELPERS
+
+    const cleanDuplicates = (arr, key) => {
+      if (!Array.isArray(arr)) return [];
+      const seen = new Set();
+      return arr.filter((item) => {
+        const val = item?.[key];
+        if (!val || seen.has(val)) return false;
+        seen.add(val);
+        return true;
+      });
+    };
+
+    function normalizeFormacion(f) {
+      const data = f?.formacion || f;
+
+      if (!Array.isArray(data)) return { formacion: [] };
+
+      return {
+        formacion: data.map((x) => ({
+          centro: x.centro || "",
+          anio: x.anio || "",
+          titulo: x.titulo || "",
+        })),
+      };
+    }
+
+    function normalizeExperiencia(e) {
+      const data = e?.experiencia || e;
+
+      if (!Array.isArray(data)) return { experiencia: [] };
+
+      return {
+        experiencia: data.map((x) => ({
+          centro: x.centro || "",
+          anio: x.anio || "",
+          puesto: x.puesto || "",
+        })),
+      };
+    }
+
+    function normalizeIdiomas(i) {
+      const data = i?.idiomas;
+      if (!Array.isArray(data)) return { idiomas: [] };
+      return { idiomas: data };
+    }
+
+    // 4. MAPEO FINAL LIMPIO
+    const estudios = normalizeFormacion(datosExtraidos.formacion).formacion;
+    const experiencia = normalizeExperiencia(datosExtraidos.experiencia).experiencia;
+
     const datosParaSupabase = {
       nombre: datosExtraidos.nombre || null,
       apellido: datosExtraidos.apellido || null,
-      email: datosExtraidos.email || null,
+
       telefono: datosExtraidos.telefono
         ? Number(datosExtraidos.telefono.toString().replace(/\D/g, ""))
         : null,
+
       location: datosExtraidos.location || null,
       about: datosExtraidos.about || null,
 
-      // CAMBIO AQUÍ: La IA ahora genera "formacion", pero tu columna se llama "estudios"
-      estudios: datosExtraidos.formacion || null,
+      estudios: {
+        formacion: cleanDuplicates(estudios, "titulo"),
+      },
 
-      // CAMBIO AQUÍ: La IA genera el objeto "idiomas", lo asignamos a tu columna "idiomas" [cite: 1, 5]
-      idiomas: datosExtraidos.idiomas || null,
+      experiencia: {
+        experiencia: cleanDuplicates(experiencia, "puesto"),
+      },
 
-      experiencia: datosExtraidos.experiencia || null,
+      idiomas: normalizeIdiomas(datosExtraidos.idiomas),
 
-      // Guardamos las habilidades en la columna que ya tienes
       otra_informacion: `HARD: ${datosExtraidos.habilidades_hard || ""} | SOFT: ${datosExtraidos.habilidades_soft || ""}`,
     };
 
-    // 5. Actualizar DB
+    // 5. Guardar en DB
     const { error: dbError } = await supabase
       .from("usuario_estudiante")
       .update(datosParaSupabase)
@@ -718,9 +790,10 @@ INSTRUCCIONES:
     if (dbError) throw dbError;
 
     res.json({
-      message: "¡Todo guardado! Archivo en Storage y datos en tabla.",
+      message: "CV procesado correctamente",
       datosExtraidos,
     });
+
   } catch (err) {
     console.error("Error:", err);
     res.status(500).json({ error: err.message });

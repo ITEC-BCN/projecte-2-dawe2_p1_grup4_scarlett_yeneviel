@@ -4,15 +4,19 @@ import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 import ModalDatosCV from "../components/ModalDatosCV.vue";
-import { availableLanguagesList, languageLevels, allLinkTypes } from "../js/const.js";
+import {
+  availableLanguagesList,
+  languageLevels,
+  allLinkTypes,
+} from "../js/const.js";
 
 const route = useRoute();
 const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
-const role = localStorage.getItem('role');
+const role = localStorage.getItem("role");
 
-const { students, loadingStudents } = useStudents(url);
+const { students, loadingStudents, refreshStudents } = useStudents(url);
 
 const hasUnsavedChanges = ref(false); //Conocer si hay cambios sin guardar
 
@@ -34,14 +38,16 @@ onMounted(async () => {
 
 // Filtramos las skills para los selects
 const availableHardSkills = computed(() => {
-  return allDbSkills.value.filter(s =>
-    s.tipo === 'hard skill' && !hardSkills.value.some(hs => hs.id === s.id)
+  return allDbSkills.value.filter(
+    (s) =>
+      s.tipo === "hard skill" && !hardSkills.value.some((hs) => hs.id === s.id),
   );
 });
 
 const availableSoftSkills = computed(() => {
-  return allDbSkills.value.filter(s =>
-    s.tipo === 'soft skill' && !softSkills.value.some(ss => ss.id === s.id)
+  return allDbSkills.value.filter(
+    (s) =>
+      s.tipo === "soft skill" && !softSkills.value.some((ss) => ss.id === s.id),
   );
 });
 
@@ -60,21 +66,19 @@ const cvUrl = ref("");
 // --- FILTROS Y HELPERS DE IDIOMAS Y ENLACES ---
 const filteredLanguages = computed(() => {
   return availableLanguagesList.filter(
-    lang => !languages.value.some(l => l.name === lang)
+    (lang) => !languages.value.some((l) => l.name === lang),
   );
 });
 
 const availableLanguages = computed(() => {
-  return languageLevels.filter(lvl =>
-    !languages.value.some(lang => lang.level === lvl)
+  return languageLevels.filter(
+    (lvl) => !languages.value.some((lang) => lang.level === lvl),
   );
 });
 
 const availableLinkTypes = computed(() => {
-  const usados = documents.value.map(d => d.tipo?.toLowerCase().trim());
-  return allLinkTypes.filter(tipo =>
-    !usados.includes(tipo.toLowerCase())
-  );
+  const usados = documents.value.map((d) => d.tipo?.toLowerCase().trim());
+  return allLinkTypes.filter((tipo) => !usados.includes(tipo.toLowerCase()));
 });
 
 //Añadir la FOTO DE PERFIL
@@ -83,35 +87,34 @@ const uploadAvatar = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  uploadingFile.value = true; 
+  uploadingFile.value = true;
 
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('studentId', students.value.id); 
+  formData.append("file", file);
+  formData.append("studentId", students.value.id);
 
   try {
     const response = await fetch(`${URL_BACK}/upload-avatar`, {
-      method: 'POST',
-      body: formData 
+      method: "POST",
+      body: formData,
     });
 
     const data = await response.json();
 
     if (response.ok) {
       // Como Node ya actualizó Supabase, solo actualizamos la pantalla
-      user.avatar = data.url; 
+      user.avatar = data.url;
 
       if (students.value) {
         students.value.foto_perfil = data.url;
       }
 
-      alert('¡Foto actualizada con éxito!');
+      alert("¡Foto actualizada con éxito!");
     } else {
-      alert('Error al subir: ' + data.error);
+      alert("Error al subir: " + data.error);
     }
-
   } catch (error) {
-    console.error('Error de conexión:', error);
+    console.error("Error de conexión:", error);
   } finally {
     uploadingFile.value = false;
   }
@@ -137,25 +140,38 @@ const restoreOriginalData = () => {
     source.estudiante_skill.forEach((item) => {
       const datosSkill = item.skill;
       if (datosSkill) {
-        const tipoSkill = datosSkill.tipo ? datosSkill.tipo.toLowerCase().trim() : '';
-        if (tipoSkill === 'hard skill') {
-          hardSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
-        } else if (tipoSkill === 'soft skill') {
-          softSkills.value.push({ id: datosSkill.id, nombre: datosSkill.nombre });
+        const tipoSkill = datosSkill.tipo
+          ? datosSkill.tipo.toLowerCase().trim()
+          : "";
+        if (tipoSkill === "hard skill") {
+          hardSkills.value.push({
+            id: datosSkill.id,
+            nombre: datosSkill.nombre,
+          });
+        } else if (tipoSkill === "soft skill") {
+          softSkills.value.push({
+            id: datosSkill.id,
+            nombre: datosSkill.nombre,
+          });
         }
       }
     });
   }
 
-  // IMPORTANTE: Hacemos copias profundas (JSON parse/stringify) para romper la 
+
+  // IMPORTANTE: Hacemos copias profundas (JSON parse/stringify) para romper la
   // referencia de los objetos. Así, si el usuario edita un input y luego cancela,
   // el objeto original de 'students' se mantiene intacto.
-  languages.value = source.idiomas?.idiomas
+  languages.value = Array.isArray(source.idiomas?.idiomas)
     ? JSON.parse(JSON.stringify(source.idiomas.idiomas))
     : [];
 
-  academicBackground.value = source.estudios?.formacion
+  academicBackground.value = Array.isArray(source.estudios?.formacion)
     ? JSON.parse(JSON.stringify(source.estudios.formacion))
+    : [];
+
+  experience.value = Array.isArray(source.experiencia?.experiencia)
+    ? JSON.parse(JSON.stringify(source.experiencia.experiencia))
     : [];
 
   if (source.enlaces) {
@@ -184,7 +200,7 @@ watch(
   () => {
     restoreOriginalData();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const editing = ref(false);
@@ -203,7 +219,9 @@ function addHardFromSelect() {
     alert("Has alcanzado el límite máximo de 6 Hard Skills.");
     return;
   }
-  const skill = allDbSkills.value.find(s => s.id === selectedHardSkillId.value);
+  const skill = allDbSkills.value.find(
+    (s) => s.id === selectedHardSkillId.value,
+  );
   if (skill) {
     hardSkills.value.push({ id: skill.id, nombre: skill.nombre });
     selectedHardSkillId.value = "";
@@ -216,7 +234,9 @@ function addSoftFromSelect() {
     alert("Has alcanzado el límite máximo de 6 Soft Skills.");
     return;
   }
-  const skill = allDbSkills.value.find(s => s.id === selectedSoftSkillId.value);
+  const skill = allDbSkills.value.find(
+    (s) => s.id === selectedSoftSkillId.value,
+  );
   if (skill) {
     softSkills.value.push({ id: skill.id, nombre: skill.nombre });
     selectedSoftSkillId.value = "";
@@ -224,14 +244,39 @@ function addSoftFromSelect() {
   hasUnsavedChanges.value = true;
 }
 
-function removeHard(i) { hardSkills.value.splice(i, 1); hasUnsavedChanges.value = true; }
-function removeSoft(i) { softSkills.value.splice(i, 1); hasUnsavedChanges.value = true; }
+function removeHard(i) {
+  hardSkills.value.splice(i, 1);
+  hasUnsavedChanges.value = true;
+}
+function removeSoft(i) {
+  softSkills.value.splice(i, 1);
+  hasUnsavedChanges.value = true;
+}
+
+// --- FUNCIONES PARA EXPERIENCIA ---
+
+const experience = ref([]);
+const newExp = reactive({ centro: "", anio: "", puesto: "" });
+function addExperience() {
+  if (newExp.centro && newExp.puesto) {
+    experience.value.push({ ...newExp });
+    newExp.centro = "";
+    newExp.anio = "";
+    newExp.puesto = "";
+  }
+  hasUnsavedChanges.value = true;
+}
+
+function removeExperience(index) {
+  experience.value.splice(index, 1);
+  hasUnsavedChanges.value = true;
+}
 
 // --- EL BOTÓN DE GUARDAR AHORA ENVÍA DATOS AL BACKEND ---
 async function saveProfile() {
   const allSelectedSkillIds = [
-    ...hardSkills.value.map(s => s.id),
-    ...softSkills.value.map(s => s.id)
+    ...hardSkills.value.map((s) => s.id),
+    ...softSkills.value.map((s) => s.id),
   ];
 
   const payload = {
@@ -241,15 +286,16 @@ async function saveProfile() {
     location: contact.location,
     estudios: { formacion: academicBackground.value },
     idiomas: { idiomas: languages.value },
+    experiencia: { experiencia: experience.value },
     skills_ids: allSelectedSkillIds,
-    enlaces: documents.value
+    enlaces: documents.value,
   };
-
+console.log(payload);
   try {
     const response = await fetch(`${URL_BACK}/estudiantes/${studentId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (response.ok) {
@@ -257,7 +303,7 @@ async function saveProfile() {
       alert("¡Perfil actualizado con éxito!");
       hasUnsavedChanges.value = false;
 
-      // NOTA: Aquí lo ideal sería volver a ejecutar tu 'useStudents(url)' o recargar 
+      // NOTA: Aquí lo ideal sería volver a ejecutar tu 'useStudents(url)' o recargar
       // los datos del backend para que 'students.value' tenga la información fresca.
     } else {
       const err = await response.json();
@@ -271,13 +317,13 @@ async function saveProfile() {
 
 // Función para obtener el icono según el tipo de enlace
 const getDocIcon = (tipo) => {
-  if (!tipo) return 'fa-solid fa-file-lines';
+  if (!tipo) return "fa-solid fa-file-lines";
 
   const tipoFormat = tipo.toLowerCase();
-  if (tipoFormat.includes('github')) return 'fa-brands fa-github';
-  if (tipoFormat.includes('linkedin')) return 'fa-brands fa-linkedin';
+  if (tipoFormat.includes("github")) return "fa-brands fa-github";
+  if (tipoFormat.includes("linkedin")) return "fa-brands fa-linkedin";
 
-  return 'fa-solid fa-file-lines';
+  return "fa-solid fa-file-lines";
 };
 
 // --- VARIABLES Y FUNCIONES PARA AÑADIR EDUCACIÓN ---
@@ -350,7 +396,7 @@ function addDocument() {
       id: Date.now(),
       name,
       url,
-      tipo
+      tipo,
     });
 
     newDocName.value = "";
@@ -377,13 +423,13 @@ const uploadCV = async (event) => {
   }
   uploadingCV.value = true;
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('studentId', students.value.id);
+  formData.append("file", file);
+  formData.append("studentId", students.value.id);
 
   try {
     const response = await fetch(`${URL_BACK}/api/upload-cv`, {
-      method: 'POST',
-      body: formData
+      method: "POST",
+      body: formData,
     });
     const data = await response.json();
     if (response.ok) {
@@ -393,12 +439,14 @@ const uploadCV = async (event) => {
         datosExtraidosCV.value = data.datosExtraidos;
         showModalDatosCV.value = true;
       }
-      alert('¡CV subido con éxito!');
+      await refreshStudents();
+      restoreOriginalData(); // 🔥 fuerza sincronización UI
+      alert("¡CV subido con éxito!");
     } else {
-      alert('Error al subir el CV: ' + data.error);
+      alert("Error al subir el CV: " + data.error);
     }
   } catch (error) {
-    console.error('Error de conexión:', error);
+    console.error("Error de conexión:", error);
   } finally {
     uploadingCV.value = false;
   }
@@ -413,13 +461,25 @@ const uploadCV = async (event) => {
           <div class="avatar-container">
             <img :src="user.avatar" alt="avatar" class="profile-avatar" />
 
-            <div v-if="editing" class="upload-section" style="margin-top: 10px;">
-              <label for="avatar-upload" class="btn-primary" style="cursor: pointer; font-size: 0.8rem;">
+            <div v-if="editing" class="upload-section" style="margin-top: 10px">
+              <label
+                for="avatar-upload"
+                class="btn-primary"
+                style="cursor: pointer; font-size: 0.8rem"
+              >
                 <i class="fa-solid fa-camera"></i> Cambiar foto
               </label>
-              <input id="avatar-upload" type="file" accept="image/*" style="display: none;" @change="uploadAvatar"
-                :disabled="uploadingFile" />
-              <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray;">Subiendo...</span>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="uploadAvatar"
+                :disabled="uploadingFile"
+              />
+              <span v-if="uploadingFile" style="font-size: 0.8rem; color: gray"
+                >Subiendo...</span
+              >
             </div>
           </div>
           <h2 class="profile-name">{{ user.name }}</h2>
@@ -427,8 +487,16 @@ const uploadCV = async (event) => {
         </div>
 
         <div class="profile-actions" v-if="role == 'estudiante'">
-          <button class="btn-primary" :class="{ 'btn-cancel': editing }" @click="toggleEdit">
-            <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
+          <button
+            class="btn-primary"
+            :class="{ 'btn-cancel': editing }"
+            @click="toggleEdit"
+          >
+            <i
+              :class="
+                editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'
+              "
+            ></i>
             {{ editing ? " Cancelar" : " Editar perfil" }}
           </button>
           <button v-if="editing" class="btn-save" @click="saveProfile">
@@ -448,56 +516,82 @@ const uploadCV = async (event) => {
         </div>
 
         <div class="sidebar-block">
-
-          <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
+          <h3 class="sidebar-title">
+            <i class="fa-solid fa-user"></i> Sobre mí
+          </h3>
           <p v-if="editing && hasUnsavedChanges" class="alert-warning">
-            ⚠️ No olvides dar al botón <strong>Guardar</strong> para que los cambios se registren.
+            ⚠️ No olvides dar al botón <strong>Guardar</strong> para que los
+            cambios se registren.
           </p>
-          <textarea v-if="editing" v-model="user.about" class="input" rows="4"
-            placeholder="Escribe algo sobre ti..."></textarea>
-          <p v-else class="sidebar-text">{{ user.about || 'Aún no has escrito nada sobre ti.' }}</p>
+          <textarea
+            v-if="editing"
+            v-model="user.about"
+            class="input"
+            rows="4"
+            placeholder="Escribe algo sobre ti..."
+          ></textarea>
+          <p v-else class="sidebar-text">
+            {{ user.about || "Aún no has escrito nada sobre ti." }}
+          </p>
         </div>
 
         <div class="sidebar-block">
-          <h3 class="sidebar-title"><i class="fa-solid fa-address-book"></i> Contacto</h3>
+          <h3 class="sidebar-title">
+            <i class="fa-solid fa-address-book"></i> Contacto
+          </h3>
           <div class="contact-links">
             <a :href="`mailto:${contact.email}`" class="contact-item">
               <i class="fa-solid fa-envelope"></i>
-              <span>{{ contact.email || 'Sin email' }}</span>
+              <span>{{ contact.email || "Sin email" }}</span>
             </a>
 
             <div class="contact-item">
               <i class="fa-solid fa-phone"></i>
-              <input v-if="editing" v-model="contact.phone" type="text" class="input input-sm" placeholder="Tu teléfono">
-              <span v-else>{{ contact.phone || 'Sin teléfono' }}</span>
+              <input
+                v-if="editing"
+                v-model="contact.phone"
+                type="text"
+                class="input input-sm"
+                placeholder="Tu teléfono"
+              />
+              <span v-else>{{ contact.phone || "Sin teléfono" }}</span>
             </div>
 
             <div class="contact-item">
               <i class="fa-solid fa-location-dot"></i>
-              <input v-if="editing" v-model="contact.location" type="text" class="input input-sm"
-                placeholder="Tu ciudad/ubicación">
-              <span v-else>{{ contact.location || 'Sin ubicación' }}</span>
+              <input
+                v-if="editing"
+                v-model="contact.location"
+                type="text"
+                class="input input-sm"
+                placeholder="Tu ciudad/ubicación"
+              />
+              <span v-else>{{ contact.location || "Sin ubicación" }}</span>
             </div>
           </div>
         </div>
       </aside>
 
       <aside class="cv-card compact">
-        <h3 class="sidebar-title"><i class="fa-solid fa-file-pdf"></i> Sube tu CV en PDF</h3>
+        <h3 class="sidebar-title">
+          <i class="fa-solid fa-file-pdf"></i> Sube tu CV en PDF
+        </h3>
         <div>
           <input
             id="cv-upload"
             type="file"
             accept="application/pdf"
-            style="display: none;"
+            style="display: none"
             @change="uploadCV"
             :disabled="uploadingCV"
           />
-          <label for="cv-upload" class="btn-primaryCV" style="cursor:pointer;">
+          <label for="cv-upload" class="btn-primaryCV" style="cursor: pointer">
             <i class="fa-solid fa-upload"></i> Seleccionar archivo PDF
           </label>
-          <span v-if="uploadingCV" style="font-size: 0.9rem; color: gray;">Subiendo...</span>
-          <div v-if="cvUrl" style="margin-top:10px;">
+          <span v-if="uploadingCV" style="font-size: 0.9rem; color: gray"
+            >Subiendo...</span
+          >
+          <div v-if="cvUrl" style="margin-top: 10px">
             <a :href="cvUrl" target="_blank" class="cv-link">
               <i class="fa-solid fa-file-pdf"></i> Ver CV subido
             </a>
@@ -507,78 +601,215 @@ const uploadCV = async (event) => {
     </div>
 
     <main class="profile-main">
+      <div class="grid-two-cols">
+        <!-- 🎓 FORMACIÓN ACADÉMICA -->
+        <section class="section">
+          <h2 class="section-title">
+            <i class="fa-solid fa-graduation-cap icon-green"></i> Formación
+            Académica
+          </h2>
+
+          <div v-if="!editing" class="education-timeline">
+            <div v-if="academicBackground.length === 0" class="empty-state">
+              Sin formación registrada aún.
+            </div>
+            <div
+              v-for="(edu, index) in academicBackground"
+              :key="index"
+              class="edu-item"
+            >
+              <div class="edu-year">{{ edu.anio }}</div>
+              <div class="edu-dot"></div>
+              <div class="edu-info">
+                <div class="edu-title">{{ edu.titulo }}</div>
+                <div class="edu-center">{{ edu.centro }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="edit-education">
+            <div
+              v-for="(edu, index) in academicBackground"
+              :key="'edit' + index"
+              class="edit-row"
+            >
+              <input
+                v-model="edu.anio"
+                placeholder="Año"
+                class="input input-sm"
+              />
+              <input v-model="edu.titulo" placeholder="Título" class="input" />
+              <input v-model="edu.centro" placeholder="Centro" class="input" />
+              <button @click="removeEducation(index)" class="btn-icon-danger">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+            <div class="add-box">
+              <p class="subtitle">Añadir nueva titulación</p>
+              <div class="edit-row">
+                <input
+                  v-model="newEdu.anio"
+                  placeholder="Ej: 2024"
+                  class="input input-sm"
+                />
+                <input
+                  v-model="newEdu.titulo"
+                  placeholder="Título"
+                  class="input"
+                />
+                <input
+                  v-model="newEdu.centro"
+                  placeholder="Centro"
+                  class="input"
+                />
+                <button @click.prevent="addEducation" class="btn-icon-success">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 💼 EXPERIENCIA -->
+        <section class="section">
+          <h2 class="section-title">
+            <i class="fa-solid fa-briefcase icon-purple"></i> Experiencia
+            Profesional
+          </h2>
+
+          <!-- 👁️ MODO VISUAL -->
+          <div v-if="!editing" class="education-timeline">
+            <div v-if="experience.length === 0" class="empty-state">
+              Sin experiencia registrada.
+            </div>
+
+            <div
+              v-for="(exp, index) in experience"
+              :key="index"
+              class="edu-item"
+            >
+              <div class="edu-year">{{ exp.anio }}</div>
+              <div class="edu-dot"></div>
+              <div class="edu-info">
+                <div class="edu-title">{{ exp.puesto }}</div>
+                <div class="edu-center">{{ exp.centro }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✏️ MODO EDICIÓN -->
+          <div v-else class="edit-education">
+            <div
+              v-for="(exp, index) in experience"
+              :key="'exp' + index"
+              class="edit-row"
+            >
+              <input
+                v-model="exp.anio"
+                placeholder="Periodo"
+                class="input input-sm"
+              />
+              <input v-model="exp.puesto" placeholder="Puesto" class="input" />
+              <input v-model="exp.centro" placeholder="Empresa" class="input" />
+              <button @click="removeExperience(index)" class="btn-icon-danger">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+
+            <div class="add-box">
+              <p class="subtitle">Añadir experiencia</p>
+              <div class="edit-row">
+                <input
+                  v-model="newExp.anio"
+                  placeholder="Periodo"
+                  class="input input-sm"
+                />
+                <input
+                  v-model="newExp.puesto"
+                  placeholder="Puesto"
+                  class="input"
+                />
+                <input
+                  v-model="newExp.centro"
+                  placeholder="Empresa"
+                  class="input"
+                />
+                <button @click.prevent="addExperience" class="btn-icon-success">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <section class="section">
         <h2 class="section-title">
-          <i class="fa-solid fa-graduation-cap icon-green"></i> Formación Académica
-        </h2>
-
-        <div v-if="!editing" class="education-timeline">
-          <div v-if="academicBackground.length === 0" class="empty-state">
-            Sin formación registrada aún.
-          </div>
-          <div v-for="(edu, index) in academicBackground" :key="index" class="edu-item">
-            <div class="edu-year">{{ edu.anio }}</div>
-            <div class="edu-dot"></div>
-            <div class="edu-info">
-              <div class="edu-title">{{ edu.titulo }}</div>
-              <div class="edu-center">{{ edu.centro }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="edit-education">
-          <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-row">
-            <input v-model="edu.anio" placeholder="Año" class="input input-sm" />
-            <input v-model="edu.titulo" placeholder="Título" class="input" />
-            <input v-model="edu.centro" placeholder="Centro" class="input" />
-            <button @click="removeEducation(index)" class="btn-icon-danger"><i class="fa-solid fa-trash"></i></button>
-          </div>
-          <div class="add-box">
-            <p class="subtitle">Añadir nueva titulación</p>
-            <div class="edit-row">
-              <input v-model="newEdu.anio" placeholder="Ej: 2024" class="input input-sm" />
-              <input v-model="newEdu.titulo" placeholder="Título" class="input" />
-              <input v-model="newEdu.centro" placeholder="Centro" class="input" />
-              <button @click.prevent="addEducation" class="btn-icon-success"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <h2 class="section-title">
-          <i class="fa-solid fa-bolt icon-purple"></i> Habilidades y Competencias
+          <i class="fa-solid fa-bolt icon-purple"></i> Habilidades y
+          Competencias
         </h2>
 
         <div class="skills-grid">
           <div class="skill-group">
             <h3 class="skill-subtitle">Hard Skills</h3>
             <div class="skill-list">
-              <span v-for="(s, i) in hardSkills" :key="i" class="skill-chip hard">
+              <span
+                v-for="(s, i) in hardSkills"
+                :key="i"
+                class="skill-chip hard"
+              >
                 {{ s.nombre }}
-                <button v-if="editing" @click="removeHard(i)" class="btn-remove-chip"><i
-                    class="fa-solid fa-xmark"></i></button>
+                <button
+                  v-if="editing"
+                  @click="removeHard(i)"
+                  class="btn-remove-chip"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </span>
-              <span v-if="hardSkills.length === 0" class="empty-state">No hay hard skills.</span>
+              <span v-if="hardSkills.length === 0" class="empty-state"
+                >No hay hard skills.</span
+              >
             </div>
 
-            <div v-if="editing" class="add-inline" style="margin-top: 10px;">
-              <p v-if="hardSkills.length >= 6" class="empty-state" style="color: #e74c3c;">
-                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 hard skills alcanzado.
+            <div v-if="editing" class="add-inline" style="margin-top: 10px">
+              <p
+                v-if="hardSkills.length >= 6"
+                class="empty-state"
+                style="color: #e74c3c"
+              >
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 hard
+                skills alcanzado.
               </p>
-              <p v-else-if="availableHardSkills.length === 0" class="empty-state">
-                <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las hard skills disponibles!
+              <p
+                v-else-if="availableHardSkills.length === 0"
+                class="empty-state"
+              >
+                <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las
+                hard skills disponibles!
               </p>
               <template v-else>
-                <select v-model="selectedHardSkillId" class="input" :disabled="hardSkills.length >= 6">
+                <select
+                  v-model="selectedHardSkillId"
+                  class="input"
+                  :disabled="hardSkills.length >= 6"
+                >
                   <option value="" disabled>Selecciona una skill...</option>
-                  <option v-for="skill in availableHardSkills" :key="skill.id" :value="skill.id">
+                  <option
+                    v-for="skill in availableHardSkills"
+                    :key="skill.id"
+                    :value="skill.id"
+                  >
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button class="btn-add-small" @click.prevent="addHardFromSelect"
-                  :disabled="!selectedHardSkillId">Añadir</button>
+                <button
+                  class="btn-add-small"
+                  @click.prevent="addHardFromSelect"
+                  :disabled="!selectedHardSkillId"
+                >
+                  Añadir
+                </button>
               </template>
             </div>
           </div>
@@ -586,30 +817,59 @@ const uploadCV = async (event) => {
           <div class="skill-group">
             <h3 class="skill-subtitle">Soft Skills</h3>
             <div class="skill-list">
-              <span v-for="(s, i) in softSkills" :key="i" class="skill-chip soft">
+              <span
+                v-for="(s, i) in softSkills"
+                :key="i"
+                class="skill-chip soft"
+              >
                 {{ s.nombre }}
-                <button v-if="editing" @click="removeSoft(i)" class="btn-remove-chip"><i
-                    class="fa-solid fa-xmark"></i></button>
+                <button
+                  v-if="editing"
+                  @click="removeSoft(i)"
+                  class="btn-remove-chip"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </span>
-              <span v-if="softSkills.length === 0" class="empty-state">No hay soft skills.</span>
+              <span v-if="softSkills.length === 0" class="empty-state"
+                >No hay soft skills.</span
+              >
             </div>
 
-            <div v-if="editing" class="add-inline" style="margin-top: 10px;">
-              <p v-if="softSkills.length >= 6" class="empty-state" style="color: #e74c3c;">
-                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 soft skills alcanzado.
+            <div v-if="editing" class="add-inline" style="margin-top: 10px">
+              <p
+                v-if="softSkills.length >= 6"
+                class="empty-state"
+                style="color: #e74c3c"
+              >
+                <i class="fa-solid fa-circle-exclamation"></i> Límite de 6 soft
+                skills alcanzado.
               </p>
-              <p v-else-if="availableSoftSkills.length === 0" class="empty-state">
-                <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las soft skills disponibles!
+              <p
+                v-else-if="availableSoftSkills.length === 0"
+                class="empty-state"
+              >
+                <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las
+                soft skills disponibles!
               </p>
               <template v-else>
                 <select v-model="selectedSoftSkillId" class="input">
                   <option value="" disabled>Selecciona una skill...</option>
-                  <option v-for="skill in availableSoftSkills" :key="skill.id" :value="skill.id">
+                  <option
+                    v-for="skill in availableSoftSkills"
+                    :key="skill.id"
+                    :value="skill.id"
+                  >
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button class="btn-add-small" @click.prevent="addSoftFromSelect"
-                  :disabled="!selectedSoftSkillId">Añadir</button>
+                <button
+                  class="btn-add-small"
+                  @click.prevent="addSoftFromSelect"
+                  :disabled="!selectedSoftSkillId"
+                >
+                  Añadir
+                </button>
               </template>
             </div>
           </div>
@@ -618,37 +878,65 @@ const uploadCV = async (event) => {
 
       <div class="grid-two-cols">
         <section class="section">
-          <h2 class="section-title"><i class="fa-solid fa-language icon-green"></i> Idiomas</h2>
+          <h2 class="section-title">
+            <i class="fa-solid fa-language icon-green"></i> Idiomas
+          </h2>
           <div class="skill-list">
-            <span v-for="(lang, i) in languages" :key="i" class="skill-chip lang">
-              <strong>{{ lang.name }}</strong> <span class="badge-level">{{ lang.level }}</span>
-              <button v-if="editing" @click="removeLanguage(i)" class="btn-remove-chip"><i
-                  class="fa-solid fa-xmark"></i></button>
+            <span
+              v-for="(lang, i) in languages"
+              :key="i"
+              class="skill-chip lang"
+            >
+              <strong>{{ lang.name }}</strong>
+              <span class="badge-level">{{ lang.level }}</span>
+              <button
+                v-if="editing"
+                @click="removeLanguage(i)"
+                class="btn-remove-chip"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
             </span>
-            <span v-if="languages.length === 0" class="empty-state">Sin idiomas registrados.</span>
+            <span v-if="languages.length === 0" class="empty-state"
+              >Sin idiomas registrados.</span
+            >
           </div>
 
           <div v-if="editing" class="add-inline">
-            <p v-if="languages.length >= 5" class="empty-state" style="color: #e74c3c;">
-              <i class="fa-solid fa-circle-exclamation"></i> Límite de 5 idiomas alcanzado.
+            <p
+              v-if="languages.length >= 5"
+              class="empty-state"
+              style="color: #e74c3c"
+            >
+              <i class="fa-solid fa-circle-exclamation"></i> Límite de 5 idiomas
+              alcanzado.
             </p>
             <p v-else-if="availableLanguages.length === 0" class="empty-state">
-              <i class="fa-solid fa-check-double"></i> ¡Has añadido todos los idiomas disponibles!
+              <i class="fa-solid fa-check-double"></i> ¡Has añadido todos los
+              idiomas disponibles!
             </p>
             <template v-else>
-              <input v-model="newLangName" class="input input-sm" placeholder="Idioma (Ej: Inglés)" />
+              <input
+                v-model="newLangName"
+                class="input input-sm"
+                placeholder="Idioma (Ej: Inglés)"
+              />
               <select v-model="newLangLevel" class="input input-sm">
                 <option v-for="lvl in languageLevels" :key="lvl" :value="lvl">
                   {{ lvl }}
                 </option>
               </select>
-              <button class="btn-add-small" @click.prevent="addLanguage">Añadir</button>
+              <button class="btn-add-small" @click.prevent="addLanguage">
+                Añadir
+              </button>
             </template>
           </div>
         </section>
 
         <section class="section">
-          <h2 class="section-title"><i class="fa-solid fa-link icon-purple"></i> Enlaces</h2>
+          <h2 class="section-title">
+            <i class="fa-solid fa-link icon-purple"></i> Enlaces
+          </h2>
 
           <div class="links-list">
             <div v-for="doc in documents" :key="doc.id" class="link-item">
@@ -656,36 +944,60 @@ const uploadCV = async (event) => {
                 <i :class="getDocIcon(doc.tipo)" class="link-icon"></i>
                 <span class="link-label">{{ doc.name }}</span>
               </a>
-              <button v-if="editing" class="btn-icon-danger-small" @click="removeDocument(doc.id)">
+              <button
+                v-if="editing"
+                class="btn-icon-danger-small"
+                @click="removeDocument(doc.id)"
+              >
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
-            <div v-if="documents.length === 0" class="empty-state">Aún no hay enlaces.</div>
+            <div v-if="documents.length === 0" class="empty-state">
+              Aún no hay enlaces.
+            </div>
           </div>
 
-          <div v-if="editing" class="add-box" style="margin-top: 1rem;">
-            <p v-if="documents.length >= 3" class="empty-state" style="color: #e74c3c; text-align: center;">
-              <i class="fa-solid fa-lock"></i> Has alcanzado el límite máximo de 3 enlaces.
+          <div v-if="editing" class="add-box" style="margin-top: 1rem">
+            <p
+              v-if="documents.length >= 3"
+              class="empty-state"
+              style="color: #e74c3c; text-align: center"
+            >
+              <i class="fa-solid fa-lock"></i> Has alcanzado el límite máximo de
+              3 enlaces.
             </p>
 
             <div v-else class="edit-row">
-              <input v-model="newDocName" class="input input-sm" placeholder="Nombre (Ej: Mi perfil)" />
+              <input
+                v-model="newDocName"
+                class="input input-sm"
+                placeholder="Nombre (Ej: Mi perfil)"
+              />
 
               <select v-model="newDocTipo" class="input input-sm">
                 <option value="" disabled>Tipo...</option>
-                <option v-for="tipo in availableLinkTypes" :key="tipo" :value="tipo">
+                <option
+                  v-for="tipo in availableLinkTypes"
+                  :key="tipo"
+                  :value="tipo"
+                >
                   {{ tipo }}
                 </option>
               </select>
 
-              <input v-model="newDocURL" class="input" placeholder="URL (https://...)" />
+              <input
+                v-model="newDocURL"
+                class="input"
+                placeholder="URL (https://...)"
+              />
 
-              <button class="btn-icon-success" @click.prevent="addDocument"><i class="fa-solid fa-plus"></i></button>
+              <button class="btn-icon-success" @click.prevent="addDocument">
+                <i class="fa-solid fa-plus"></i>
+              </button>
             </div>
           </div>
         </section>
       </div>
-
     </main>
 
     <ModalDatosCV
@@ -704,7 +1016,7 @@ const uploadCV = async (event) => {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
-  background-color: #F3F4F6;
+  background-color: #f3f4f6;
   /* Fondo gris muy suave y limpio */
   min-height: 100vh;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -731,7 +1043,11 @@ const uploadCV = async (event) => {
 .avatar-container {
   display: inline-block;
   padding: 4px;
-  background: linear-gradient(135deg, var(--accent-green), var(--accent-purple));
+  background: linear-gradient(
+    135deg,
+    var(--accent-green),
+    var(--accent-purple)
+  );
   border-radius: 50%;
   margin-bottom: 15px;
 }
@@ -953,7 +1269,7 @@ const uploadCV = async (event) => {
 }
 
 .edu-item:not(:last-child) .edu-dot::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 12px;
   left: 5px;
@@ -1050,7 +1366,9 @@ const uploadCV = async (event) => {
   border: 1px solid #e2e8f0;
   padding: 12px 16px;
   border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .link-item:hover {
@@ -1175,19 +1493,18 @@ const uploadCV = async (event) => {
 }
 
 .cv-card.compact {
-width: 320px;
-    background: #fff;
-    border-radius: 16px;
-    padding: 24px 24px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-    margin-top: 15px;
-    margin-bottom: 0;
-    display: block;
-
+  width: 320px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  margin-top: 15px;
+  margin-bottom: 0;
+  display: block;
 }
 
 .btn-primaryCV {
-width: 100%;
+  width: 100%;
   background: #f1f5f9;
   color: #334155;
   width: 90%;

@@ -46,7 +46,7 @@ const app = express();
 // Permitir cualquier origen (para desarrollo)
 app.use(cors({
   //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
-  origin: URL_FRONT, // Cambia esto por la URL de tu frontend
+  origin: URL_FRONT || process.env.URL_FRONT, // Cambia esto por la URL de tu frontend
   credentials: true, // Permite enviar cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

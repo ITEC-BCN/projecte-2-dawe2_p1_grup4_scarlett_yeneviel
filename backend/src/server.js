@@ -8,8 +8,8 @@ import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
 import dotenv from 'dotenv'// para cargar las variables de entorno desde el .env, como la URL de Supabase y la clave secreta del JWT
 
-dotenv.config() // Carga las variables de entorno desde el archivo .env
-.032
+dotenv.config(); // Carga las variables de entorno desde el archivo .env
+
 import {
   obtenerOfertas,
   crearOferta,
@@ -45,26 +45,31 @@ import {
 import requireAuth from './middleware/requireAuth.js';
 const app = express();
 
-// Permitir cualquier origen (para desarrollo)
-app.use(cors({
-  //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
-  origin: [
-    "http://localhost:5173",
-    process.env.URL_FRONT,
-    "https://internia-web.vercel.app"
-  ], // Permitir múltiples orígenes
-  credentials: true, // Permite enviar cookies
+// Permitir múltiples orígenes y soportar credentials correctamente
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.URL_FRONT,
+  "https://internia-web.vercel.app"
+].filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (herramientas como curl o requests del servidor)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origen no permitido por CORS'), false);
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}))
+};
 
-// RESPONDER A OPTIONS EXPLÍCITAMENTE
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return cors()(req, res, next);
-  }
-  next();
-});
+app.use(cors(corsOptions));
+// Manejar preflight para todas las rutas explícitamente
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(cookieParser());
 

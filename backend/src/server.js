@@ -49,7 +49,8 @@ const app = express();
 app.use(cors({
   //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
   origin: [
-    "http://localhost:5173",
+    "https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev",
+    // "http://localhost:5173",
     process.env.URL_FRONT,
     "https://internia-web.vercel.app"
   ], // Permitir múltiples orígenes

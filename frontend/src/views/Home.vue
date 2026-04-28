@@ -57,68 +57,77 @@
   </section>
 </template>
 <style scoped>
-/* Estilos Globales/Utiles */
+
 .resaltar {
-  color: #10b981;
+  color: var(--accent);
 }
 
-/* --- MAIN (Hero Section) --- */
+/* =========================
+   LAYOUT GENERAL
+========================= */
+main,
+.perfiles {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+/* =========================
+   HERO
+========================= */
 main {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  padding: 1.5rem;
-  gap: 2rem;
-  margin: 2rem 0; 
-  width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  margin-block: 2rem;
 }
 
+/* Texto */
 .hero-text {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Centra el texto verticalmente respecto a la imagen */
-  align-items: center;
+  gap: 1rem;
 }
 
-.home-img {
-  flex: 1;
-  max-width: 52%; 
-  object-fit: cover; /* Asegura que la imagen cubra el área sin deformarse */
-  border-radius: 10px;
-}
-
-/* Títulos y Párrafos Main */
 main h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-  margin-top: 0; /* Quita márgenes por defecto */
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.2;
+  color: var(--text);
+  margin: 0;
 }
 
 main p {
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
-  color: #333;
+  font-size: clamp(1rem, 1.3vw, 1.1rem);
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
 }
 
-/* Botonera */
+/* Imagen */
+.home-img {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* =========================
+   BOTONES
+========================= */
 .botonera {
   display: flex;
-  gap: 1rem; /* Espacio entre botones más limpio */
-  margin-bottom: 2rem; /* Espacio antes de los avatares */
-  max-width: 400px; /* Opcional: limita el ancho de la botonera */
-      width: 100%;
-    padding: 0 2rem;
-    box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  max-width: 420px;
 }
 
 .btn-link {
   flex: 1;
-  text-decoration: none;
+  min-width: 140px;
 }
 
 .botonera button {
@@ -127,14 +136,19 @@ main p {
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
   font-size: 1rem;
+  transition: 0.2s ease;
 }
 
 .btn-primary {
-  background: #4C1D95;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--primary);
   color: white;
-  border: none;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 .btn-primary:hover {
@@ -142,16 +156,17 @@ main p {
 }
 
 .btn-secondary {
-  background: white;
-  color: #10b981;
-  border: 2px solid #10b981;
+  color: var(--accent);
+  border: 2px solid var(--accent);
 }
 
 .btn-secondary:hover {
   background: #f0fdf4;
 }
 
-/* --- Info Extra (Avatares) --- */
+/* =========================
+   INFO EXTRA
+========================= */
 .info_extra {
   margin-top: 1rem;
 }
@@ -159,87 +174,147 @@ main p {
 .avatarGroup {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-}
-
-.avatarGroup img {
-  width: 150px; 
-  height: auto;
-}
-
-.avatarGroup p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #666;
-  white-space: nowrap;
-}
-
-/* --- SECCIÓN PERFILES (Cards) --- */
-.perfiles {
-  text-align: left;
-  padding: 0 1.5rem; 
-  margin-bottom: 3rem;
-  width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.perfiles h1 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-}
-
-.cards-container {
-  display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
+.avatarGroup img {
+  width: 120px;
+  max-width: 100%;
+}
+
+.avatarGroup p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* =========================
+   PERFILES
+========================= */
+.perfiles h1 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* GRID PRINCIPAL */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* CARD */
 .card {
   background: #f9f9f9;
-  border-radius: 10px;
-  padding: 1.5rem 1rem;
-  flex: 1 1 200px; /* Un poco más de ancho base */
+  border-radius: 14px;
+  padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.75rem;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 .card img {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
-  margin-bottom: 1rem;
 }
 
 .card h4 {
   font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  margin-top: 0;
-  font-weight: 700;
-  color: #333;
+  margin: 0;
+  color: var(--text, #111827);
 }
 
 .card p {
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  color: var(--muted, #6b7280);
   margin: 0;
+  line-height: 1.4;
 }
 
-/* Responsivo básico */
-@media (max-width: 768px) {
-  main {
-    flex-direction: column-reverse; /* Imagen arriba en móvil */
-  }
-  .home-img {
-    max-width: 100%;
-    height: 250px; /* Altura fija en móvil */
-  }
-  .botonera {
-    margin-right: 0;
+/* =========================
+   RESPONSIVE BREAKPOINTS
+========================= */
+
+@media (max-width: 1024px) {
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Tablet */
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-text {
+    align-items: center;
+  }
+
+  .botonera {
+    justify-content: center;
+    max-width: 100%;
+  }
+
+  .avatarGroup {
+    justify-content: center;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .home-img {
+    max-height: 220px;
+  }
+
+  .btn-link {
+    flex: 1 1 100%;
+  }
+
+  .cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+  
+  .card img {
+    width: 50px;
+    height: 50px;
+  }
+
+}
+
+/* Extra pequeño (WCAG / móviles muy pequeños) */
+@media (max-width: 360px) {
+  main {
+    padding: 1rem;
+  }
+
+  .avatarGroup img {
+    width: 90px;
+  }
+
+  .botonera {
+    gap: 0.75rem;
+  }
+} 
 </style>

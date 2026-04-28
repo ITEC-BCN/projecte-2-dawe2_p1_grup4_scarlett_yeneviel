@@ -120,7 +120,7 @@ const crearOferta = () => {
         <span class="spinner"></span>
         <p>Buscando las mejores ofertas para ti...</p>
     </div>
-    
+
     <div v-else-if="error" class="estado-mensaje error">
         <p>⚠️ Ocurrió un error: {{ error }}</p>
     </div>
@@ -136,17 +136,14 @@ const crearOferta = () => {
         <div class="search-panel">
             <div class="search-main">
                 <span class="icon-search">🔍</span>
-                <input 
-                    type="text" 
-                    v-model="searchQuery" 
-                    placeholder="Busca por empresa, puesto o palabra clave..." 
-                    class="input-main" 
-                />
+                <input type="text" v-model="searchQuery" placeholder="Busca por empresa, puesto o palabra clave..."  aria-label="Buscar ofertas por empresa o puesto"
+                    class="input-main" />
             </div>
 
             <div class="filters-row">
                 <div class="filter-group">
-                    <select v-model="searchUbicacion" class="select-filtro">
+                    <label for="ubicacion">Ciudad</label>
+                    <select v-model="searchUbicacion" class="select-filtro" aria-label="Filtrar por ciudad">
                         <option value="">📍 Todas las ciudades</option>
                         <option v-for="ciudad in ciudadesDisponibles" :key="ciudad" :value="ciudad">
                             {{ ciudad }}
@@ -155,7 +152,8 @@ const crearOferta = () => {
                 </div>
 
                 <div class="filter-group">
-                    <select v-model="searchSkill" class="select-filtro">
+                    <label for="skill">Tecnología</label>
+                    <select v-model="searchSkill" class="select-filtro" aria-label="Filtrar por tecnología">
                         <option value="">💻 Todas las tecnologías</option>
                         <option v-for="skill in skillsDisponibles" :key="skill" :value="skill">
                             {{ skill }}
@@ -164,7 +162,8 @@ const crearOferta = () => {
                 </div>
 
                 <div class="filter-group">
-                    <select v-model="selectedModalidad" class="select-filtro">
+                    <label for="modalidad">Modalidad</label>
+                    <select v-model="selectedModalidad" class="select-filtro" aria-label="Filtrar por modalidad">
                         <option value="">🏢 Todas las modalidades</option>
                         <option value="Presencial">Presencial</option>
                         <option value="Remoto">Remoto</option>
@@ -175,19 +174,16 @@ const crearOferta = () => {
         </div>
 
         <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
-            <CardOferta 
-                v-for="oferta in ofertasPaginadas" 
-                :key="oferta.id" 
-                :oferta="oferta"
-                @verDetalleOferta="verDetalle(oferta.id, roleUSer === 'admin' ? 'verOfertaAdmin' : 'OfertaDetalle')" 
-            />
+            <CardOferta v-for="oferta in ofertasPaginadas" :key="oferta.id" :oferta="oferta"
+                @verDetalleOferta="verDetalle(oferta.id, roleUSer === 'admin' ? 'verOfertaAdmin' : 'OfertaDetalle')" />
         </div>
 
         <!-- paginación -->
         <div v-if="totalPages > 1" class="pagination-container">
             <div class="pagination">
                 <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>
-                <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }" @click="goToPage(p)">{{ p }}</button>
+                <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }"
+                    @click="goToPage(p)">{{ p }}</button>
                 <button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">Siguiente</button>
             </div>
         </div>
@@ -195,7 +191,8 @@ const crearOferta = () => {
         <div v-if="ofertasFiltradas.length === 0" class="empty-state">
             <h3>No encontramos resultados</h3>
             <p>Prueba a cambiar los filtros o a usar términos más generales.</p>
-            <button class="btn-clear" @click="searchQuery=''; searchUbicacion=''; searchSkill=''; selectedModalidad=''">
+            <button class="btn-clear"
+                @click="searchQuery = ''; searchUbicacion = ''; searchSkill = ''; selectedModalidad = ''">
                 Limpiar filtros
             </button>
         </div>
@@ -205,7 +202,7 @@ const crearOferta = () => {
 <style scoped>
 /* Contenedor principal */
 .container-ofertas {
-    max-width: 1200px;
+    width: 90%;
     margin: 40px auto;
     padding: 0 20px;
     font-family: "Inter", "Segoe UI", sans-serif;
@@ -229,10 +226,24 @@ const crearOferta = () => {
     letter-spacing: -0.5px;
 }
 
+input:focus,
+select:focus,
+button:focus {
+    outline: 1px solid var(--focus);
+    outline-offset: 2px;
+}
+
+/*CARDS*/
+.card {
+    flex: 1 1 300px;   
+    max-width: 360px;  
+
+}
+
 /* Botón Admin */
 .btn-admin {
-    background-color: #4d1b95; /* Morado elegante */
-    color: white;
+    background-color: var(--primary);
+    color: #ffffff;
     border: none;
     padding: 12px 24px;
     border-radius: 10px;
@@ -247,9 +258,13 @@ const crearOferta = () => {
 }
 
 .btn-admin:hover {
-    background-color: #3b1473;
+    background-color: var(--primary-hover);
     transform: translateY(-2px);
     box-shadow: 0 6px 12px -2px rgba(77, 27, 149, 0.3);
+}
+
+.btn-admin:focus {
+    outline: 3px solid black;
 }
 
 /* === PANEL DE BÚSQUEDA === */
@@ -297,28 +312,54 @@ const crearOferta = () => {
 }
 
 .input-main::placeholder {
-    color: #94a3b8;
+    color: #475569;
 }
 
 /* Filtros secundarios (Selects) */
 .filters-row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
 }
 
+/* === LABELS DE FILTROS === */
 .filter-group {
-    flex: 1;
-    min-width: 220px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+
+/* Label bonito y legible */
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Hover suave */
+.filter-group:hover {
+    background: #f1f5f9;
+}
+
+/* Focus dentro del grupo */
+.filter-group:focus-within {
+    border-color: #4d1b95;
+    box-shadow: 0 0 0 3px rgba(77, 27, 149, 0.1);
 }
 
 .select-filtro {
     width: 100%;
     padding: 14px 16px;
     font-size: 15px;
-    color: #475569;
-    background-color: #f8fafc;
-    border: 2px solid #e2e8f0;
+    color: var(--text-main);
+    background-color: white;
+    border: 2px solid var(--border);
     border-radius: 10px;
     outline: none;
     cursor: pointer;
@@ -339,8 +380,9 @@ const crearOferta = () => {
 
 /* === GRID DE OFERTAS === */
 .grid-ofertas {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 24px;
 }
 
@@ -402,21 +444,65 @@ const crearOferta = () => {
 }
 
 /* === PAGINACIÓN === */
-.pagination-container { display:flex; justify-content:center; margin-top:20px; }
-.pagination { display:flex; gap:8px; align-items:center; }
-.page-btn, .page-number { border: 1px solid #e6e6e6; background: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight:700; color:#4d1b95; }
-.page-btn[disabled] { opacity:0.45; cursor:not-allowed; }
-.page-number.active { background:#10b981; color:white; border-color:#10b981; }
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.page-btn,
+.page-number {
+    border: 1px solid #e6e6e6;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    color: #4d1b95;
+}
+
+.page-btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.page-number.active {
+    background: #065f46;
+    /* verde oscuro AAA */
+    color: #ffffff;
+}
 
 /* Ajuste responsive para los botones */
 @media (max-width:600px) {
-    .page-number { padding:6px 8px; }
+    .page-number {
+        padding: 6px 8px;
+    }
 }
 
 /* === RESPONSIVE === */
+@media (max-width: 1200px) {
+    .grid-ofertas {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+}
+
 @media (max-width: 1024px) {
+    .container-ofertas {
+        padding: 0 15px;
+    }
     .grid-ofertas {
         grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+    .search-panel {
+        padding: 20px;
     }
 }
 
@@ -424,12 +510,66 @@ const crearOferta = () => {
     .ofertas-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 12px;
+    }
+    .main-title {
+        font-size: 28px;
     }
     .grid-ofertas {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
     .filter-group {
         min-width: 100%;
+    }
+    .filters-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .search-panel {
+        padding: 16px;
+        margin-bottom: 30px;
+    }
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .page-btn,
+    .page-number {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-ofertas {
+        margin: 20px auto;
+        padding: 0 10px;
+    }
+    .main-title {
+        font-size: 24px;
+    }
+    .search-main {
+        padding: 6px 12px;
+    }
+    .input-main {
+        font-size: 14px;
+    }
+    .select-filtro {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+    .btn-admin {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    .pagination-container {
+        margin-top: 15px;
+    }
+
+        .grid-ofertas > * {
+        flex: 1 1 100%;
+        max-width: 100%;
     }
 }
 </style>

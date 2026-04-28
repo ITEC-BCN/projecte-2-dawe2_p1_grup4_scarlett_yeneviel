@@ -6,5 +6,8 @@ export const URL_FRONT = "https://expert-space-robot-97j5v99r4575cr64-5173.app.g
 //export const URL_FRONT= "http://localhost:5173";
 
 
- export const SALT_ROUNDS=12
+//PRODUCCIÓN
+//export const URL_BACK = "https://internia-backend.onrender.com";
+//export const URL_FRONT = "https://internia-web.vercel.app";
+export const SALT_ROUNDS=12
 

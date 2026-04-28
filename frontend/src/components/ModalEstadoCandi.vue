@@ -2,9 +2,16 @@
   <!-- Modal para actualizar el estado de la candidatura -->
   <div v-if="isModalOpen" class="modal-backdrop">
     <div class="modal-content">
-      <input type="text" v-model="estado">
+      <select v-model="estado" v-show="!mensaje" >
+        <option value="" disabled>Selecciona un estado</option>
+        <option v-for="estadoOption in estadosCandidatura" :key="estadoOption" :value="estadoOption">
+          {{ estadoOption }}
+        </option>
+      </select>
       <div class="modal-buttons" v-if="!mensaje">
-        <button @click="actualizarEstado" class="btn-confirm">Actualiazar estado</button>
+        <button @click="actualizarEstado" class="btn-confirm" :disabled="!estado || loading">
+          {{ loading ? "Actualizando..." : "Actualizar" }}
+        </button>
         <button @click="closeModal" class="btn-cancel">No</button>
       </div>
       <div v-else>
@@ -20,13 +27,19 @@ import { ref, defineProps, defineEmits, defineExpose } from "vue";
 import { useRouter } from "vue-router";
 import { URL_BACK } from '../../../config';
 
+const estadosCandidatura = ["En Proceso", "Aceptado", "Rechazada","CV leido","Finalista"];
 // Props (camelCase to match Vue conventions)
 const props = defineProps({
   ofertaId: Number,
-  estudianteId: Number
+  estudiante: {
+    id: Number,
+    email: String,
+    nombre: String,
+    titulo: String
+  }
 });
 
-const emits = defineEmits(["actualizado", "cerrar"]);
+const emit = defineEmits(["actualizado", "cerrar"]);
 
 const router = useRouter();
 
@@ -43,7 +56,7 @@ const openModal = () => {
 };
 const closeModal = () => {
   isModalOpen.value = false;
-  emits("cerrar");
+  emit("cerrar");
 };
 const closeMensaje = () => {
   mensaje.value = "";
@@ -55,14 +68,14 @@ const actualizarEstado = async () => {
     loading.value = true;
 
     // Asegurarse de tener los ids antes de llamar al backend
-    if (!props.ofertaId || !props.estudianteId) {
+    if (!props.ofertaId || !props.estudiante.id) {
       mensaje.value = 'Faltan datos de oferta o estudiante';
       loading.value = false;
       return;
     }
 
     // Usar path params: /candidatura/estado/:ofertaId/:estudianteId
-    const url = `${URL_BACK}/candidatura/estado/${encodeURIComponent(props.ofertaId)}/${encodeURIComponent(props.estudianteId)}`;
+    const url = `${URL_BACK}/candidatura/estado/${encodeURIComponent(props.ofertaId)}/${encodeURIComponent(props.estudiante.id)}`;
 
     const response = await fetch(url, {
       method: "PUT",
@@ -74,12 +87,8 @@ const actualizarEstado = async () => {
 
     mensaje.value = "Candidatura actualizada correctamente";
 
-    emits("actualizado"); // Avisamos al padre que se actualizó
+    emit("actualizado", estado.value); // Avisamos al padre que se actualizó
 
-    setTimeout(() => {
-      // cerrar modal después de mostrar mensaje
-      closeModal();
-    }, 1200);
   } catch (err) {
     console.error(err);
     mensaje.value = "Hubo un error al actualizar la candidatura";
@@ -109,6 +118,6 @@ defineExpose({ openModal });
 
 .modal-buttons { margin-top: 20px; display: flex; justify-content: space-around; }
 
-.btn-confirm { background: #dc2626; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+.btn-confirm { background: #2E7D32; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
 .btn-cancel { background: #ccc; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
 </style>

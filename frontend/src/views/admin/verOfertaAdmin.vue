@@ -7,6 +7,7 @@ import { URL_BACK } from '../../../../config';
 import ModalEliminar from '../../components/Modal.vue';
 import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
 import { useStudents } from "../../composables/useStudents";
+import { sendEmail } from '../../js/funEmail';
 
 const {verCV} = useStudents('');
 
@@ -32,9 +33,8 @@ const abrirModal = (id) => {
   modalEliminar.value.openModal();
 };
 
-const ofertaEliminada = () => {
-  // Mensaje simple cuando se elimina la oferta (puedes mostrar notificación aquí)
-  console.log("La oferta fue eliminada");
+const ofertaEliminada = async() => {
+  console.log("La oferta fue desactivada");
 };
 
 
@@ -43,21 +43,47 @@ const ofertaEliminada = () => {
 const modalEstadoRef = ref(null);
 
 // Guardamos aquí los ids para pasarlos al modal
-const selectedOfertaId = ref(null);
-const selectedEstudianteId = ref(null);
+const selectedOferta = ref(null);
+const selectedEstudiante = ref(null);
 
-const modalEstadoCandi = (id_oferta, id_estudiante) => {
+const modalEstadoCandi = (oferta, estudiante) => {
   // Al pulsar 'Actualizar estado' guardamos los ids y abrimos el modal
-  selectedOfertaId.value = id_oferta;
-  selectedEstudianteId.value = id_estudiante;
+  selectedOferta.value = oferta;
+
+  selectedEstudiante.value = {
+    id: estudiante.id,
+    email: estudiante.email,
+    nombre: estudiante.nombre,
+    titulo: oferta.titulo,
+
+  };
 
   modalEstadoRef.value?.openModal();
 };
 
-const candidaturaActualizada = () => {
-  // Cuando el estado cambia, refrescamos la lista para ver el cambio
-  console.log('Estado de la candidatura actualizado');
-  obtenerPostulaciones();
+
+const candidaturaActualizada = async (nuevoEstado) => {
+  // nuevoEstado debería ser el string que devuelve el modal (ej: "Aceptado")
+  try {
+    const estudiante = selectedEstudiante.value;
+
+    if (estudiante && estudiante.email) {
+      await sendEmail(
+        estudiante.email, 
+        estudiante.nombre, 
+        'candidatura', // El estado que acaba de aplicarse
+        {
+          offerTitle: estudiante.titulo, // Usamos los datos del padre
+          newStatus: nuevoEstado
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Error en el proceso de actualización/email:", error);
+  }
+
+  // Refrescar la lista de la UI
+  await obtenerPostulaciones(); 
 };
 
 
@@ -158,10 +184,10 @@ const verDetallePerfil = (id) => {
         <!-- Botones juntos en una fila -->
         <div class="actions">
           <button class="btn-update" @click="ActualizarOferta(oferta.id)">Actualizar</button>
-          <button @click="abrirModal(oferta.id)" class="btn-delete">Eliminar</button>
+          <button @click="abrirModal(oferta.id)" class="btn-delete">{{ oferta.estado === 'ACTIVA' ? 'Desactivar' : 'Activar' }}</button>
 
           <!-- Componente del modal -->
-          <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id" @eliminado="ofertaEliminada" />
+          <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id" :estado="oferta.estado ==='ACTIVA' ? 'INACTIVA' : 'ACTIVAR'" @eliminado="ofertaEliminada" />
         </div>
          <!-- Sección de postulaciones con clases y estructura mejorada -->
     <section class="postulaciones-section">
@@ -188,7 +214,7 @@ const verDetallePerfil = (id) => {
           </div>
 
           <div class="candidato-actions">
-            <button @click="modalEstadoCandi(Number(route.params.id), item.usuario_estudiante.id)" class="btn-view">Actualizar estado</button>
+            <button @click="modalEstadoCandi(Number(route.params.id), item.usuario_estudiante)" class="btn-view">Actualizar estado</button>
             <button @click="verDetallePerfil(item.usuario_estudiante.id)" class="btn-view">Ver perfil</button>
             <button
               class="btn-view"
@@ -213,8 +239,8 @@ const verDetallePerfil = (id) => {
   <!-- Modal para actualizar estado (bindamos ids y manejamos evento actualizado) -->
   <ActualizarEstado
     ref="modalEstadoRef"
-    :oferta-id="selectedOfertaId"
-    :estudiante-id="selectedEstudianteId"
+    :oferta-id="selectedOferta"
+    :estudiante="selectedEstudiante"
     @actualizado="candidaturaActualizada"
   />
 </template>

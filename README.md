@@ -401,6 +401,15 @@ Publicar la web con vercel
 - Enviar email con actualización de candidatura al estudiante
 - Publicar la web con vercel
 
+## Dia 29 - 28/04/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+
+- Actualiza los datos del perfil apartir del cv subido
+- Enviar email con actualización de candidatura al estudiante
+- Mejora del diseño
+
+
 
 
 

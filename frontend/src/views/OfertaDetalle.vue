@@ -12,7 +12,7 @@ const route = useRoute();
 const router = useRouter();
 
 // Construimos la URL usando el ID que viene en la ruta
-const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas/${route.params.id}`);
 // 1. variable para guardar el mensaje personzalido dentro del mondal
 const mensajePersonalizado = ref("");
 const { data: oferta, error, loading, estudiantePostula, postulaciones } = useFetch(url);
@@ -21,7 +21,6 @@ const { guardarOferta, OfertasGuardadasUser } = useFetchUser();
 const volver = () => router.push({ name: "ofertas" });
 
 const idEstudiante = localStorage.getItem("studentId")
-const estudianteEstado = localStorage.getItem("estado") || "desconocido"
 const bodyPostulacion = ref({
   id_oferta: route.params.id,
   id_estudiante: idEstudiante
@@ -76,7 +75,7 @@ onMounted(() => {
 const postularOferta = async () => {
 
 
-  if(estadoActual.value !== 'aprobado'){
+  if(estadoActual.value !== 'aprobado' && idEstudiante){
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden postular a ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
     modalInformativoEstado();
     return;
@@ -143,7 +142,7 @@ const postularOferta = async () => {
 
 const funGuardarOferta = async() => {
 
-  if(estadoActual.value !== 'aprobado'){
+  if(estadoActual.value !== 'aprobado' && idEstudiante){
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden guardar ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
     modalInformativoEstado();
     return;
@@ -259,11 +258,11 @@ const funGuardarOferta = async() => {
                 <span>{{ oferta.fecha_expiracion }}</span>
               </div>
 
-              <button @click="postularOferta" :disabled="yaPostulado" class="btn-postular">
+              <button @click="postularOferta" :disabled="yaPostulado || estadoActual === 'pendiente' || estadoActual === 'inactivo'" class="btn-postular">
                 {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
               </button>
 
-             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada" class="btn-guardar-oferta">
+             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada || estadoActual === 'pendiente' || estadoActual === 'inactivo'" class="btn-guardar-oferta">
                 {{ ofertaYaGuardada ? 'Oferta guardada' : '🤍 Guardar oferta' }}
              </button>
 

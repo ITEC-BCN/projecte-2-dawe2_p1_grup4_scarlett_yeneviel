@@ -8,8 +8,8 @@ import { SECRET_JWT_KEY } from '../config.js';
 import { URL_FRONT } from '../../config.js';
 import dotenv from 'dotenv'// para cargar las variables de entorno desde el .env, como la URL de Supabase y la clave secreta del JWT
 
-dotenv.config() // Carga las variables de entorno desde el archivo .env
-.032
+dotenv.config(); // Carga las variables de entorno desde el archivo .env
+
 import {
   obtenerOfertas,
   crearOferta,
@@ -45,29 +45,47 @@ import {
 import requireAuth from './middleware/requireAuth.js';
 const app = express();
 
-// Permitir cualquier origen (para desarrollo)
-app.use(cors({
-  //origin: 'http://localhost:5173', // Cambia esto por la URL de tu frontend
-  origin: [
-    "https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev",
-    // "http://localhost:5173",
-    process.env.URL_FRONT,
-    "https://internia-web.vercel.app"
-  ], // Permitir múltiples orígenes
-  credentials: true, // Permite enviar cookies
+
+// Permitir múltiples orígenes y soportar credentials correctamente
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.URL_FRONT, //Variable de entorno de Render
+  "https://internia-web.vercel.app",
+  "https://internia-web-yeneviel-roberts-projects.vercel.app"
+].filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (herramientas como curl o requests del servidor)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origen no permitido por CORS'), false);
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}))
+};
 
-// RESPONDER A OPTIONS EXPLÍCITAMENTE
+app.use(cors(corsOptions));
+// Manejar preflight para todas las rutas explícitamente
+// Evitamos usar app.options('*', ...) porque la librería path-to-regexp no acepta '*'.
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
-    return cors()(req, res, next);
+    // Ejecutar cors para asegurarse de que los headers apropiados se añadan
+    return cors(corsOptions)(req, res, () => res.sendStatus(204));
   }
   next();
 });
+
 app.use(express.json());
 app.use(cookieParser());
+
+// Health check simple
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
 //Rutas
 app.post("/ofertas", async (req, res) => {
@@ -621,7 +639,6 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
   }
 });
 
-
 // GET: Obtener todas las skills para el menú desplegable del frontend
 app.get("/skills", async (req, res) => {
   try {
@@ -650,5 +667,43 @@ app.get('/get-cv/:nombreArchivo', async (req, res) => {
    }
 });
 
+// Catch-all 404 handler that también registra la ruta y origen
+app.use((req, res) => {
+  console.warn(`[NOT_FOUND] ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin || 'none'}`);
+  res.status(404).json({ error: 'Not Found' });
+});
+
+// Before starting, imprimir las rutas registradas para depuración
+function listRegisteredRoutes() {
+  try {
+    const routes = [];
+    app._router.stack.forEach((middleware) => {
+      if (middleware.route) {
+        // rutas registradas directamente en app
+        const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
+        routes.push(`${methods} ${middleware.route.path}`);
+      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
+        // rutas registradas en routers montados
+        middleware.handle.stack.forEach((handler) => {
+          if (handler.route) {
+            const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
+            routes.push(`${methods} ${handler.route.path}`);
+          }
+        });
+      }
+    });
+    console.log('[ROUTES] Registered routes:\n' + routes.join('\n'));
+  } catch (err) {
+    console.error('Error listing routes:', err);
+  }
+}
+
+listRegisteredRoutes();
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+try {
+  app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+} catch (err) {
+  console.error('Error arrancando el servidor:', err);
+  process.exit(1);
+}

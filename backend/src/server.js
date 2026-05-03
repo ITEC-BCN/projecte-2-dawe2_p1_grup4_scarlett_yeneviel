@@ -691,7 +691,12 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
         {
           role: "system",
           content: `
-Eres un extractor de CV profesional. Devuelve exclusivamente JSON.
+Eres un extractor de CV.
+
+REGLAS:
+- NO inventes datos
+- SI NO EXISTE, DEJA VACÍO
+- Devuelve SOLO JSON válido
 
 FORMATO:
 {
@@ -704,7 +709,8 @@ FORMATO:
   "idiomas": { "idiomas": [{ "name": "", "level": "" }] },
   "formacion": { "formacion": [{ "centro": "", "anio": "", "titulo": "" }] },
   "experiencia": { "experiencia": [{ "centro": "", "anio": "", "puesto": "" }] },
-  "habilidades": ["skill1", "skill2"]
+  "habilidades_hard": "",
+  "habilidades_soft": ""
 }
 `
         },

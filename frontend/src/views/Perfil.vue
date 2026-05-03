@@ -21,7 +21,7 @@ const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 const role = localStorage.getItem("role");
 
-const { students, loadingStudents } = useStudents(url);
+const { students, loadingStudents, refreshStudents } = useStudents(url);
 
 const hasUnsavedChanges = ref(false); //Conocer si hay cambios sin guardar
 

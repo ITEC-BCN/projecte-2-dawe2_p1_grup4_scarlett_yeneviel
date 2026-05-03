@@ -269,6 +269,10 @@ const restoreOriginalData = () => {
     ? JSON.parse(JSON.stringify(source.estudios.formacion))
     : [];
 
+  experience.value = Array.isArray(source.experiencia?.experiencia)
+    ? JSON.parse(JSON.stringify(source.experiencia.experiencia))
+    : [];
+
   // Ordenar por año descendente (más recientes primero)
   academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
 
@@ -320,6 +324,25 @@ function toggleEdit() {
     restoreOriginalData();
   }
   editing.value = !editing.value;
+}
+
+// --- FUNCIONES PARA EXPERIENCIA ---
+
+const experience = ref([]);
+const newExp = reactive({ centro: "", anio: "", puesto: "" });
+function addExperience() {
+  if (newExp.centro && newExp.puesto) {
+    experience.value.push({ ...newExp });
+    newExp.centro = "";
+    newExp.anio = "";
+    newExp.puesto = "";
+  }
+  hasUnsavedChanges.value = true;
+}
+
+function removeExperience(index) {
+  experience.value.splice(index, 1);
+  hasUnsavedChanges.value = true;
 }
 
 // --- FUNCIONES DE SKILLS CON LÍMITE DE 6 ---
@@ -827,7 +850,7 @@ const uploadCV = async (event) => {
             <i class="fa-solid fa-file-pdf"></i>
             {{ cvUrl ? "Tu CV" : "Sube tu CV en PDF" }}
           </h3>
-  
+
           <p class="cv-subtitle">
             {{
               cvUrl
@@ -835,23 +858,23 @@ const uploadCV = async (event) => {
                 : "Añade tu CV para que sea visible"
             }}
           </p>
-  
+
           <!-- SI EXISTE CV -->
           <div v-if="cvUrl" class="cv-actions">
             <a :href="cvUrl" target="_blank" class="cv-link">
               <i class="fa-solid fa-eye"></i> Ver tu CV en PDF
             </a>
-  
+
             <small class="cv-hint">
               O actualiza con un nuevo archivo si lo necesitas
             </small>
           </div>
-  
+
           <!-- SI NO EXISTE CV -->
           <div v-else class="cv-actions">
             <small class="cv-hint">Todavía no has subido ningún CV</small>
           </div>
-  
+
           <!-- UPLOAD SIEMPRE DISPONIBLE -->
           <input
             id="cv-upload"
@@ -861,12 +884,12 @@ const uploadCV = async (event) => {
             @change="uploadCV"
             :disabled="uploadingCV"
           />
-  
+
           <label for="cv-upload" class="btn-primary">
             <i class="fa-solid fa-upload"></i>
             {{ cvUrl ? "Actualizar CV" : "Subir CV PDF" }}
           </label>
-  
+
           <span v-if="uploadingCV" style="font-size: 0.9rem; color: gray">
             Subiendo...
           </span>
@@ -1002,6 +1025,74 @@ const uploadCV = async (event) => {
             <i class="fa-solid fa-circle-exclamation"></i> Límite de
             {{ MAX_EDUCATION }} estudios alcanzado.
           </p>
+        </div>
+      </section>
+
+      <!-- 💼 EXPERIENCIA -->
+      <section class="section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-briefcase icon-purple"></i> Experiencia
+          Profesional
+        </h2>
+
+        <!-- 👁️ MODO VISUAL -->
+        <div v-if="!editing" class="education-timeline">
+          <div v-if="experience.length === 0" class="empty-state">
+            Sin experiencia registrada.
+          </div>
+
+          <div v-for="(exp, index) in experience" :key="index" class="edu-item">
+            <div class="edu-year">{{ exp.anio }}</div>
+            <div class="edu-dot"></div>
+            <div class="edu-info">
+              <div class="edu-title">{{ exp.puesto }}</div>
+              <div class="edu-center">{{ exp.centro }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✏️ MODO EDICIÓN -->
+        <div v-else class="edit-education">
+          <div
+            v-for="(exp, index) in experience"
+            :key="'exp' + index"
+            class="edit-row"
+          >
+            <input
+              v-model="exp.anio"
+              placeholder="Periodo"
+              class="input input-sm"
+            />
+            <input v-model="exp.puesto" placeholder="Puesto" class="input" />
+            <input v-model="exp.centro" placeholder="Empresa" class="input" />
+            <button @click="removeExperience(index)" class="btn-icon-danger">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+          <div class="add-box">
+            <p class="subtitle">Añadir experiencia</p>
+            <div class="edit-row">
+              <input
+                v-model="newExp.anio"
+                placeholder="Periodo"
+                class="input input-sm"
+              />
+              <input
+                v-model="newExp.puesto"
+                placeholder="Puesto"
+                class="input"
+              />
+              <input
+                v-model="newExp.centro"
+                placeholder="Empresa"
+                class="input"
+              />
+              <button @click.prevent="addExperience" class="btn-icon-success">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 

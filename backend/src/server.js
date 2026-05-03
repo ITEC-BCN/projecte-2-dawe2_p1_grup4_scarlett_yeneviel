@@ -16,7 +16,6 @@ import dotenv from "dotenv";
 
 import { SECRET_JWT_KEY } from "../config.js";
 import { URL_FRONT } from "../../config.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
 import Groq from "groq-sdk";
 
@@ -50,7 +49,6 @@ import requireAuth from "./middleware/requireAuth.js";
 
 /* ================= INIT ================= */
 dotenv.config();
-console.log("GEMINI_API_KEY =", process.env.GEMINI_API_KEY);
 const app = express();
 
 /* ================= MIDDLEWARE ================= */

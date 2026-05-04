@@ -224,6 +224,7 @@ export const obtenerEstudiantePorId = async (id) => {
       otra_informacion, 
       estado,
       about,
+      documento_cv,
       location,
         enlaces(*),
         estudiante_skill(

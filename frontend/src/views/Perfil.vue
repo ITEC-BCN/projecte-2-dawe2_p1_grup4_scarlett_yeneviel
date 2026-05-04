@@ -223,6 +223,7 @@ const restoreOriginalData = () => {
 
   hardSkills.value = [];
   softSkills.value = [];
+  cvUrl.value = source.documento_cv || "";
 
   if (source.estudiante_skill) {
     source.estudiante_skill.forEach((item) => {
@@ -667,7 +668,7 @@ const uploadCV = async (event) => {
     });
     const data = await response.json();
     if (response.ok) {
-      cvUrl.value = data.url;
+      cvUrl.value = data.documento_cv;
       // Mostrar modal con datos extraídos si existen
       if (data.datosExtraidos) {
         datosExtraidosCV.value = data.datosExtraidos;
@@ -861,13 +862,9 @@ const uploadCV = async (event) => {
 
           <!-- SI EXISTE CV -->
           <div v-if="cvUrl" class="cv-actions">
-            <a :href="cvUrl" target="_blank" class="cv-link">
-              <i class="fa-solid fa-eye"></i> Ver tu CV en PDF
+            <a :href="'https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/' +  cvUrl" target="_blank" class="btn-primary" style="text-decoration: none;">
+              <i class="fa-solid fa-eye"></i> Ver CV
             </a>
-
-            <small class="cv-hint">
-              O actualiza con un nuevo archivo si lo necesitas
-            </small>
           </div>
 
           <!-- SI NO EXISTE CV -->
@@ -882,6 +879,7 @@ const uploadCV = async (event) => {
             accept="application/pdf"
             style="display: none"
             @change="uploadCV"
+            @click="$event.target.value = null"
             :disabled="uploadingCV"
           />
 

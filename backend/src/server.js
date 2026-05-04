@@ -687,7 +687,7 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
     // 1. Subida a Storage
     const fileName = `cv_${studentId}_${Date.now()}.pdf`;
 
-    await supabase.storage.from("cvs").upload(fileName, file.buffer, {
+    const supabasePDF = await supabase.storage.from("cvs").upload(fileName, file.buffer, {
       contentType: "application/pdf",
       upsert: true,
     });
@@ -795,7 +795,8 @@ FORMATO:
       about: datosExtraidos.about || "",
       idiomas: { idiomas },
       estudios: { formacion },
-      experiencia: { experiencia }
+      experiencia: { experiencia },
+      documento_cv: supabasePDF.data.path
     };
 
     // 👇 SOLO AÑADIMOS TELÉFONO SI EXISTE
@@ -848,7 +849,8 @@ FORMATO:
     // -------------------------
     res.json({
       message: "Perfil actualizado correctamente",
-      datosExtraidos
+      datosExtraidos,
+      documento_cv: supabasePDF.data.path
     });
 
   } catch (err) {

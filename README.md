@@ -410,7 +410,20 @@ Publicar la web con vercel
 - Mejora del diseño
 
 
+## Dia 30 - 30/04/2026
+**Asistencia:** Scarlett Toala y Yeneviel Roberts
 
+- Correción de errores en el despliguen de la web (Render y Vercel)
+- Enviar email con actualización de candidatura al estudiante
+- Mejora del diseño del listado de ofertas
+
+## Dia 31 - 04/05/2026
+**Asistencia:** Scarlett Toala y Yeneviel Roberts 
+**Temas tratados**
+
+- Validación de errores en formularios
+- Mejora del diseño - colores, detalle de oferta...
+- Recuperar contraseña
 
 
 

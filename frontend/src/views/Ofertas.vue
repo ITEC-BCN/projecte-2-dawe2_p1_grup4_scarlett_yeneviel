@@ -7,16 +7,16 @@ import { URL_BACK } from "../../../config";
 
 const router = useRouter();
 const url = ref(`${URL_BACK}/ofertas`);
-//const url = ref(`${URL_BACK}/ofertas`);
-const { data, error, loading, fetchData } = useFetch(url);
+const { data, error, loading } = useFetch(url);
 
 // 1. Variables de estado para los filtros
 const searchQuery = ref("");
-const selectedModalidad = ref(""); // Para: Hibrido, Presencial, Remoto
-const searchUbicacion = ref("");   // Para buscar por ciudad
-const searchSkill = ref("");       // Para buscar por tecnología
+const selectedModalidad = ref("");
+const searchUbicacion = ref("");
+const selectedSkills = ref([]); // Array para multiselect
+const skillToAdd = ref("");
+const selectedModeloPracticas = ref('');
 
-// ESTO DEBE ESTAR AQUÍ ADENTRO:
 const ciudadesDisponibles = computed(() => {
     if (!data.value) return [];
     const ciudades = data.value.map(oferta => oferta.ubicacion?.ciudad);
@@ -24,82 +24,100 @@ const ciudadesDisponibles = computed(() => {
     return [...new Set(ciudadesValidas)].sort();
 });
 
-// MAGIA DE VUE: Sacamos una lista de skills únicas de todas las ofertas
 const skillsDisponibles = computed(() => {
     if (!data.value) return [];
 
-    const skillsSet = new Set(); // El Set evita duplicados automáticamente
+    const set = new Set();
 
     data.value.forEach(oferta => {
-        // Verificamos que la oferta tenga skills asociadas
-        if (oferta.oferta_skill && Array.isArray(oferta.oferta_skill)) {
-            oferta.oferta_skill.forEach(os => {
-                if (os.skill?.nombre) {
-                    skillsSet.add(os.skill.nombre); // Añadimos el nombre exacto
-                }
-            });
-        }
+        oferta.oferta_skill?.forEach(os => {
+            if (os.skill?.nombre) set.add(os.skill.nombre);
+        });
     });
 
-    // Convertimos el Set a un Array y lo ordenamos alfabéticamente
-    return [...skillsSet].sort();
+    return [...set].sort();
 });
 
-// 2. MAGIA DE VUE: Filtramos la data combinando todos los criterios
+const skillsDisponiblesFiltradas = computed(() => {
+    return skillsDisponibles.value.filter(skill =>
+        !selectedSkills.value.includes(skill)
+    );
+});
+
+const addSkill = () => {
+    if (!skillToAdd.value) return;
+
+    if (!selectedSkills.value.includes(skillToAdd.value)) {
+        selectedSkills.value.push(skillToAdd.value);
+    }
+
+    skillToAdd.value = "";
+};
+
+const removeSkill = (skill) => {
+    selectedSkills.value = selectedSkills.value.filter(s => s !== skill);
+};
+
+// 2. Lógica de Filtrado Combinada
 const ofertasFiltradas = computed(() => {
     if (!data.value) return [];
 
-    const q = (searchQuery.value || '').toLowerCase().trim();
-    const selectedMod = (selectedModalidad.value || '').toLowerCase().trim();
-    const selectedCity = (searchUbicacion.value || '').toLowerCase().trim();
-    const selectedSk = (searchSkill.value || '').toLowerCase().trim();
+    const q = searchQuery.value.toLowerCase().trim();
+    const city = searchUbicacion.value.toLowerCase().trim();
+    const modalidad = selectedModalidad.value.toLowerCase().trim();
+    const modelo = selectedModeloPracticas.value.toLowerCase().trim();
 
     return data.value.filter((oferta) => {
+        // Preparar datos de la oferta
         const empresa = (oferta.nombre_empresa || '').toLowerCase();
         const puesto = (oferta.tipo_puesto || '').toLowerCase();
-        const modalidad = (oferta.tipo_jornada?.modalidad || oferta.modalidad || '').toLowerCase();
         const ciudadOferta = (oferta.ubicacion?.ciudad || '').toLowerCase();
+        const modalidadOferta = (oferta.modalidad || '').toLowerCase();
+        const modeloOferta = (oferta.modelo_practicas || '').toLowerCase();
 
-        // Buscador genérico
-        const coincideGenerico = q === '' || empresa.includes(q) || puesto.includes(q);
+        // Extraer nombres de skills de la oferta actual para comparar fácilmente
+        const skillsDeLaOferta = oferta.oferta_skill?.map(os =>
+            (os.skill?.nombre || '').toLowerCase()
+        ) || [];
 
-        // Modalidad
-        const coincideModalidad = selectedMod === '' || modalidad === selectedMod;
+        // Filtro búsqueda global (Empresa o Puesto)
+        const matchSearch = !q || empresa.includes(q) || puesto.includes(q);
 
-        // Ubicación
-        const coincideUbicacion = selectedCity === '' || ciudadOferta === selectedCity;
+        // Filtro ciudad
+        const matchCity = !city || ciudadOferta === city;
 
-        // Skill
-        let coincideSkill = true;
-        if (selectedSk !== '') {
-            coincideSkill = false;
-            if (oferta.oferta_skill && Array.isArray(oferta.oferta_skill)) {
-                for (const os of oferta.oferta_skill) {
-                    const nombreSkill = (os.skill?.nombre || '').toLowerCase();
-                    if (nombreSkill === selectedSk) { coincideSkill = true; break; }
-                }
-            }
-        }
+        // Filtro modalidad
+        const matchModalidad = !modalidad || modalidadOferta === modalidad;
 
-        return coincideGenerico && coincideModalidad && coincideUbicacion && coincideSkill;
+        // Filtro modelo prácticas
+        const matchModelo = !modelo || modeloOferta === modelo;
+
+        // --- FILTRO MULTI-SKILL (Aquí estaba el fallo) --
+        // SKILLS (OR lógico: basta con 1 coincidencia)
+        const matchSkill =
+            selectedSkills.value.length === 0 ||
+            selectedSkills.value.every(skillSel =>
+                skillsDeLaOferta.includes(skillSel.toLowerCase())
+            );
+
+        return matchSearch && matchCity && matchModalidad && matchSkill && matchModelo;
     });
 });
 
-// --- PAGINACIÓN CLIENT-SIDE ---
+// --- PAGINACIÓN ---
 const currentPage = ref(1);
-const pageSize = ref(9); // items por página
+const pageSize = ref(9);
 
 const totalPages = computed(() => Math.max(1, Math.ceil(ofertasFiltradas.value.length / pageSize.value)));
 const ofertasPaginadas = computed(() => {
-    const page = Math.max(1, Math.min(currentPage.value, totalPages.value || 1));
-    const start = (page - 1) * pageSize.value;
+    const start = (currentPage.value - 1) * pageSize.value;
     return ofertasFiltradas.value.slice(start, start + pageSize.value);
 });
 
-// Watchers para mantener la página en rango y reiniciar al cambiar filtros
-watch([searchQuery, searchUbicacion, searchSkill, selectedModalidad], () => { currentPage.value = 1; });
-watch(ofertasFiltradas, () => { currentPage.value = 1; });
-watch(totalPages, (tp) => { if (currentPage.value > tp) currentPage.value = tp; });
+// Reiniciar página cuando cambie cualquier filtro
+watch([searchQuery, searchUbicacion, selectedSkills, selectedModalidad, selectedModeloPracticas], () => {
+    currentPage.value = 1;
+});
 
 const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
@@ -110,9 +128,16 @@ const verDetalle = (id, namePath) => {
 };
 
 const roleUSer = localStorage.getItem('role');
+const crearOferta = () => { router.push('/crear'); };
 
-const crearOferta = () => {
-    router.push('/crear');
+// Función para limpiar filtros
+const clearFilters = () => {
+    searchQuery.value = '';
+    searchUbicacion.value = '';
+    selectedSkills.value = [];
+    selectedModalidad.value = '';
+    selectedModeloPracticas.value = '';
+    currentPage.value = 1;
 };
 </script>
 
@@ -137,8 +162,8 @@ const crearOferta = () => {
         <div class="search-panel">
             <div class="search-main">
                 <span class="icon-search">🔍</span>
-                <input type="text" v-model="searchQuery" placeholder="Busca por empresa, puesto o palabra clave..."  aria-label="Buscar ofertas por empresa o puesto"
-                    class="input-main" />
+                <input type="text" v-model="searchQuery" placeholder="Busca por empresa, puesto o palabra clave..."
+                    aria-label="Buscar ofertas por empresa o puesto" class="input-main" />
             </div>
 
             <div class="filters-row">
@@ -150,16 +175,37 @@ const crearOferta = () => {
                             {{ ciudad }}
                         </option>
                     </select>
+
+
                 </div>
 
                 <div class="filter-group">
-                    <label for="skill">Tecnología</label>
-                    <select v-model="searchSkill" class="select-filtro" aria-label="Filtrar por tecnología">
-                        <option value="">💻 Todas las tecnologías</option>
-                        <option v-for="skill in skillsDisponibles" :key="skill" :value="skill">
-                            {{ skill }}
-                        </option>
-                    </select>
+                    <label for="skill">Skills</label>
+                    <div class="skills-custom-select">
+                        <select v-model="skillToAdd" class="select-filtro" @change="addSkill"
+                            aria-label="Seleccionar skill para filtrar">
+                            <option value="">✨ Seleccionar skill</option>
+                            <option v-for="skill in skillsDisponiblesFiltradas" :key="skill" :value="skill">
+                                {{ skill }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="skills-selected">
+                        <transition-group name="list">
+                            <span v-for="skill in selectedSkills" :key="skill" class="chip">
+                                {{ skill }}
+                                <button @click="removeSkill(skill)" class="btn-remove-skill" title="Eliminar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </span>
+                        </transition-group>
+                    </div>
                 </div>
 
                 <div class="filter-group">
@@ -171,8 +217,26 @@ const crearOferta = () => {
                         <option value="Hibrido">Híbrido</option>
                     </select>
                 </div>
+
+                <div class="filter-group">
+                    <label>Modelo prácticas</label>
+                    <select v-model="selectedModeloPracticas" class="select-filtro">
+                        <option value="">📚 Todos</option>
+                        <option value="GENERAL">General</option>
+                        <option value="INTENSIVAS">Intensivas</option>
+                    </select>
+                </div>
             </div>
+                      <div class="clear-box">
+                <button class="btn-clear-filters" @click="clearFilters">
+                    🧹 Limpiar filtros
+                </button>
+            </div>
+
+            
         </div>
+
+
 
         <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
             <CardOferta v-for="oferta in ofertasPaginadas" :key="oferta.id" :oferta="oferta"
@@ -193,7 +257,7 @@ const crearOferta = () => {
             <h3>No encontramos resultados</h3>
             <p>Prueba a cambiar los filtros o a usar términos más generales.</p>
             <button class="btn-clear"
-                @click="searchQuery = ''; searchUbicacion = ''; searchSkill = ''; selectedModalidad = ''">
+                @click="searchQuery = ''; searchUbicacion = ''; selectedSkills = []; selectedModalidad = ''; selectedModeloPracticas = ''">
                 Limpiar filtros
             </button>
         </div>
@@ -236,8 +300,8 @@ button:focus {
 
 /*CARDS*/
 .card {
-    flex: 1 1 300px;   
-    max-width: 360px;  
+    flex: 1 1 300px;
+    max-width: 360px;
 
 }
 
@@ -325,10 +389,9 @@ button:focus {
 
 /* === LABELS DE FILTROS === */
 .filter-group {
-    padding: 12px;
-    border-radius: 10px;
-    border: 2px solid #e2e8f0;
-    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 
@@ -352,6 +415,11 @@ button:focus {
 .filter-group:focus-within {
     border-color: #4d1b95;
     box-shadow: 0 0 0 3px rgba(77, 27, 149, 0.1);
+}
+
+/* Ocultar el botón original de añadir si no lo borraste del HTML */
+.filter-group button:not(.btn-remove-skill):not(.btn-admin) {
+    display: none;
 }
 
 .select-filtro {
@@ -479,6 +547,100 @@ button:focus {
     color: #ffffff;
 }
 
+.skills-selected {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    min-height: 32px;
+    /* Evita saltos de layout */
+}
+
+.chip {
+    background: #4d1b95;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    border: 1px solid #e0e7ff;
+    transition: all 0.2s ease;
+    animation: fadeIn 0.3s ease;
+}
+
+.chip:hover {
+    background: #e0e7ff;
+    transform: translateY(-1px);
+}
+
+.chip button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-remove-skill {
+    background: #4d1b95;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+}
+
+.btn-remove-skill:hover {
+    background: #ef4444;
+    /* Rojo al querer borrar */
+}
+
+/* Animación para que aparezcan suaves */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.clear-box {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    border: none;
+}
+
+
+.btn-clear-filters {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-clear-filters:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+
 /* Ajuste responsive para los botones */
 @media (max-width:600px) {
     .page-number {
@@ -498,10 +660,12 @@ button:focus {
     .container-ofertas {
         padding: 0 15px;
     }
+
     .grid-ofertas {
         grid-template-columns: repeat(2, 1fr);
         gap: 18px;
     }
+
     .search-panel {
         padding: 20px;
     }
@@ -513,28 +677,35 @@ button:focus {
         align-items: flex-start;
         gap: 12px;
     }
+
     .main-title {
         font-size: 28px;
     }
+
     .grid-ofertas {
         grid-template-columns: 1fr;
         gap: 16px;
     }
+
     .filter-group {
         min-width: 100%;
     }
+
     .filters-row {
         grid-template-columns: 1fr;
         gap: 12px;
     }
+
     .search-panel {
         padding: 16px;
         margin-bottom: 30px;
     }
+
     .pagination {
         flex-wrap: wrap;
         justify-content: center;
     }
+
     .page-btn,
     .page-number {
         padding: 6px 10px;
@@ -547,28 +718,34 @@ button:focus {
         margin: 20px auto;
         padding: 0 10px;
     }
+
     .main-title {
         font-size: 24px;
     }
+
     .search-main {
         padding: 6px 12px;
     }
+
     .input-main {
         font-size: 14px;
     }
+
     .select-filtro {
         padding: 12px 14px;
         font-size: 14px;
     }
+
     .btn-admin {
         padding: 10px 20px;
         font-size: 14px;
     }
+
     .pagination-container {
         margin-top: 15px;
     }
 
-        .grid-ofertas > * {
+    .grid-ofertas>* {
         flex: 1 1 100%;
         max-width: 100%;
     }

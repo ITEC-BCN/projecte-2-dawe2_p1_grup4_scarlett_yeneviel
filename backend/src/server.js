@@ -55,7 +55,7 @@ const app = express();
 
 // Permitir múltiples orígenes y soportar credentials correctamente
 const allowedOrigins = [
-  "https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev/",
+  "https://expert-space-robot-97j5v99r4575cr64-5173.app.github.dev",
   process.env.URL_FRONT, //Variable de entorno de Render
   "https://internia-web.vercel.app",
   "https://internia-web-yeneviel-roberts-projects.vercel.app"

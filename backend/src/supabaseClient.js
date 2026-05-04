@@ -153,6 +153,7 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
 // ================== USUARIOS =======================
 
 export const crearEstudiante = async (nuevoEstudiante) => {
+  
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .insert([{
@@ -540,6 +541,7 @@ export const obtenerSkills = async () => {
 
 
 export const updatedRequestRegistration= async(id_estudiante,estado) => {
+
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .update({ estado: estado })

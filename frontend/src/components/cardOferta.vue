@@ -9,6 +9,14 @@ const emit = defineEmits(["verDetalleOferta"])
 const verDetalle = () => {
     emit("verDetalleOferta", props.oferta.id)
 }
+
+const limitarTexto = (texto, max = 120) => {
+    if (!texto) return "";
+    return texto.length > max
+        ? texto.slice(0, max) + "..."
+        : texto;
+};
+
 </script>
 
 <template>
@@ -18,10 +26,12 @@ const verDetalle = () => {
         @click="verDetalle"
     >
         <div class="card-content">
-            <span class="tag">{{ oferta.etiqueta }}</span>
+            <span class="tag">{{ oferta.modelo_practicas }}</span>
             <h2 class="titulo-puesto">{{ oferta.tipo_puesto }}</h2>
             <p class="nombre-empresa">{{ oferta.nombre_empresa }}</p>
-            <p class="descripcion-card">{{ oferta.descripcion }}</p>
+            <p class="descripcion-card">
+  {{ limitarTexto(oferta.descripcion, 120) }}
+</p>
         </div>
 
         <div class="footer-card">

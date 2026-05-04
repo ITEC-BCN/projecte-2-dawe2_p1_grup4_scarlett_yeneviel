@@ -3,7 +3,6 @@
 import { ref,onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
-import { URL_BACK } from '../../../../config';
 import ModalEliminar from '../../components/Modal.vue';
 import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
 import { useStudents } from "../../composables/useStudents";
@@ -14,10 +13,10 @@ const {verCV} = useStudents('');
 const route = useRoute();
 const router = useRouter();
 
-const url = ref(`${URL_BACK}/ofertas/${route.params.id}`);
+const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas/${route.params.id}`);
 const { data: oferta, error, loading, postulaciones } = useFetch(url);
 
-const volver = () => router.back();
+const volver = () => router.push({ name: 'ofertas' });
 
 const ActualizarOferta = (id) => {
   router.push({ name: "ActualizarOferta", params: { id: id } });
@@ -95,7 +94,7 @@ const obtenerPostulaciones =async()=>{
   try {
     cargandoPostulaciones.value = true;
     // Llamamos a la función del composable pasándole el ID
-    const res = await postulaciones(`${URL_BACK}/postulaciones/${route.params.id}`);
+    const res = await postulaciones(`${import.meta.env.VITE_URL_BACK}/postulaciones/${route.params.id}`);
     listaPostulaciones.value = res || [];
   } catch (err) {
     console.error("Error cargando postulaciones:", err);

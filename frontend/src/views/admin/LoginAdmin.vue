@@ -1,5 +1,4 @@
 <script setup>
-import { URL_BACK } from '../../../../config'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -15,7 +14,7 @@ const handleLoginAdmin = async(e) => {
   error.value = ''
   loading.value = true
   try {
-    const response = await fetch(`${URL_BACK}/login-admin`, {
+    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/login-admin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

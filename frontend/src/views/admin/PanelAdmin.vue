@@ -2,13 +2,12 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFetchUser } from '../../composables/userFetchUser';
-import { URL_BACK } from '../../../../config';
 import { sendEmail } from '../../js/funEmail';
 
 const router = useRouter();
 
 // Usuarios
-const urlUsers = ref(`${URL_BACK}/estudiantes`);
+const urlUsers = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes`);
 const { data: users, error: usersError, loading: loadingUsers, fetchData: fetchUsers, actualizarEstado } = useFetchUser(urlUsers);
 
 // Filtro por pestañas: 'todos', 'pendiente', 'aprobado', 'rechazado'

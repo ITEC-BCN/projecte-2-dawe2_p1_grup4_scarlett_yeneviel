@@ -1,12 +1,11 @@
 <script setup>
 import { ref, reactive, watch, computed } from "vue";
 import { useRoute } from "vue-router";
-import { URL_BACK } from "../../../../config";
 import { useStudents } from "../../composables/useStudents";
 
 const route = useRoute();
 const studentId = route.params.id;
-const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
+const url = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes/${studentId}`);
 
 const { students, loadingStudents, verCV } = useStudents(url);
 

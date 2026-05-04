@@ -25,6 +25,8 @@ export const crearOferta = async (nuevaOferta) => {
       funciones: nuevaOferta.funciones,
       requisitos: nuevaOferta.requisitos,
       beneficios: nuevaOferta.beneficios,
+      id_ubicacion: nuevaOferta.id_ubicacion,
+      estado: 'activa' // Si no viene, por defecto 'activa'
     }])
     .select(); // .select() devuelve el objeto creado
 
@@ -179,7 +181,19 @@ export const crearEstudiante = async (nuevoEstudiante) => {
 export const obtenerEstudiantes = async () => {
   const { data, error } = await supabase
     .from('usuario_estudiante')
-    .select(`*,
+    .select(`id, 
+      nombre, 
+      apellido, 
+      email, 
+      telefono,
+      email, 
+      eduacion, 
+      idiomas, 
+      foto_perfil, 
+      otra_informacion, 
+      estado,
+      about,
+      location,
       documento(
           id,
           ruta_archivo,
@@ -196,7 +210,19 @@ export const obtenerEstudiantePorId = async (id) => {
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .select(`
-        *,
+        id, 
+      nombre, 
+      apellido, 
+      email, 
+      telefono,
+      email, 
+      eduacion, 
+      idiomas, 
+      foto_perfil, 
+      otra_informacion, 
+      estado,
+      about,
+      location,
         enlaces(*),
         estudiante_skill(
           skill(*)
@@ -425,7 +451,7 @@ export const crearAdmin = async (nuevoAdmin) => {
 export const obtenerAdmins = async () => {
   const { data, error } = await supabase
     .from('usuario_admi')
-    .select('*');
+    .select('id,nombre_centro,nombre,apellido,email,telefono');
 
   if (error) throw error;
   return data;
@@ -435,7 +461,7 @@ export const obtenerAdmins = async () => {
 export const obtenerAdminPorId = async (id) => {
   const { data, error } = await supabase
     .from('usuario_admi')
-    .select('*')
+    .select('id,nombre_centro,nombre,apellido,email,telefono')
     .eq('id', id)
     .single();
 
@@ -449,7 +475,7 @@ export const actualizarAdmin = async (id, datosActualizados) => {
     .from('usuario_admi')
     .update(datosActualizados)
     .eq('id', id)
-    .select();
+    .select('id,nombre_centro,nombre,apellido,email,telefono');
 
   if (error) throw error;
   return data;
@@ -555,6 +581,17 @@ export const updatedRequestRegistration= async(id_estudiante,estado) => {
   return data;
 }
 
+export const cargarCiudades = async () => {
+  const { data, error } = await supabase
+    .from('ubicacion')
+    .select('*')
+    .order('ciudad', { ascending: true });
+  if (error) {
+    console.error("Error al cargar ciudades:", error.message);
+    throw error;
+  }
+  return data;
+};
 
 /**
  * Obtiene la URL pública de un archivo en el storage

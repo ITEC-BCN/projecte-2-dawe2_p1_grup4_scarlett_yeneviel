@@ -3,7 +3,6 @@ import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useFetch } from "../composables/useFetchOfertas";
 import CardOferta from "../components/cardOferta.vue";
-import { URL_BACK } from "../../../config";
 
 const router = useRouter();
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);

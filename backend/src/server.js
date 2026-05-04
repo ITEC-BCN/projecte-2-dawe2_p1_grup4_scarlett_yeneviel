@@ -1,11 +1,3 @@
-/*const app = require("./app");
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
-});*/
-
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcryptjs";
@@ -15,7 +7,6 @@ import multer from "multer";
 import dotenv from "dotenv";
 
 import { SECRET_JWT_KEY } from "../config.js";
-import { URL_FRONT } from "../../config.js";
 import { createClient } from "@supabase/supabase-js";
 import Groq from "groq-sdk";
 
@@ -44,6 +35,7 @@ import {
   obtenerSkills,
   subirAvatarStorage,
   guardarFotoPerfil,
+  cargarCiudades
 } from "./supabaseClient.js";
 import requireAuth from "./middleware/requireAuth.js";
 
@@ -110,9 +102,11 @@ app.post("/ofertas", async (req, res) => {
       funciones: req.body.funciones,
       requisitos: req.body.requisitos,
       beneficios: req.body.beneficios || null,
+      id_ubicacion: req.body.id_ubicacion,
+      modalidad: req.body.modalidad,
+      jornada: req.body.jornada,
+      modelo_practicas: req.body.modelo_practicas,
     });
-    console.log("BODY:", req.body); // prueba esto
-
     res.status(201).json(nuevaOferta);
   } catch (err) {
     res.status(400).json({ error: err.message || String(err) });
@@ -517,7 +511,7 @@ app.post("/login-admin", async (req, res) => {
 
     // Generar el token JWT igual que estudiante
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, tipo: "admin" },
+      { id: admin.id, email: admin.email, role: "admin" },
       SECRET_JWT_KEY,
       { expiresIn: "2h" },
     );
@@ -537,7 +531,7 @@ app.post("/login-admin", async (req, res) => {
         id: admin.id,
         nombre: admin.nombre,
         email: admin.email,
-        tipo: "admin",
+        role: "admin",
       },
       token,
     });
@@ -863,6 +857,18 @@ FORMATO:
   }
 });
 
+
+app.get("/ubicaciones", async (req, res) => {
+
+  try {
+    const ciudades = await cargarCiudades();
+    res.json(ciudades);
+  } catch (err) {
+    console.error("Error obteniendo ubicaciones:", err);
+    res.status(500).json({ error: err.message });
+  }
+
+})
 /* ================= SERVER, LÍNEA SIEMPRE AL FINAL ================= */
 
 app.listen(3000, () => {

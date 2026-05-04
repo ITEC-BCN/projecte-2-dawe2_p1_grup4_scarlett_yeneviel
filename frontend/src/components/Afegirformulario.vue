@@ -1,18 +1,26 @@
 <script setup>
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { URL_BACK } from '../../../config';
+import { useValidacionOferta } from '../composables/useValidacionOferta';
 
 const router = useRouter();
+const { erroresValidacion, validarFormulario } = useValidacionOferta();
 
 // CAMPOS del formulario FALTAN MÁS LAS FK (id_ubicación, id_tipo_jornada, contenido_extra )
-const nombre_empresa = ref("");
-const tipo_puesto = ref("");
-const fecha_expiracion = ref("");
-const descripcion = ref("");
-const funciones = ref("");
-const requisitos = ref("");
-const beneficios = ref("");
+// Agrupamos los refs en un objeto para facilitar la validación
+const form = ref({
+  nombre_empresa: "",
+  tipo_puesto: "",
+  fecha_expiracion: "",
+  descripcion: "",
+  funciones: "",
+  requisitos: "",
+  beneficios: "",
+  id_ubicacion: 0,
+  jornada: "",
+  modelo_practicas: "",
+  modalidad: "",
+});
 
 //Ha accedido al input
 const touched = ref({
@@ -23,115 +31,72 @@ const touched = ref({
   funciones: false,
   requisitos: false,
   beneficios: false,
+  id_ubicacion: false,
+  jornada: false,
+  modelo_practicas: false,
+  modalidad: false,
 });
 
+const ubicaciones = ref([]);
+
+const cargarCiudades = async () => {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ubicaciones`);
+    if (!res.ok) {
+      throw new Error("Error al cargar ubicaciones");
+    }
+    return ubicaciones.value = await res.json();
+  } catch (err) {
+    console.error("Error cargando ubicaciones:", err);
+    return [];
+  }
+};
+
+onMounted(() => {
+  cargarCiudades();
+});
 
 // ESTADO
 const loading = ref(false);
-const error = ref(null);
-const erroresValidacion = ref({});
+const serverError = ref(null);
 
-// VALIDACIÓN
-const validarFormulario = () => {
-  const errores = {};
-
-  // EMPRESA
-  if (!nombre_empresa.value.trim()) {
-    errores.nombre_empresa = "El nombre de la empresa es obligatorio";
-  }
-
-  // TIPO DE PUESTO
-  if (!tipo_puesto.value || tipo_puesto.value.trim().length < 3) {
-    errores.tipo_puesto =
-      "El tipo de puesto es obligatorio";
-  }
-
-  // FUNCIONES
-  if (!funciones.value || funciones.value.trim().length < 5) {
-    errores.funciones =
-      "Las funciones son obligatorias";
-  }
-
-  // REQUISITOS
-  if (!requisitos.value || requisitos.value.trim().length < 5) {
-    errores.requisitos =
-      "Los requisitos son obligatorios";
-  }
-
-  // BENEFICIOS
-  if (!beneficios.value || beneficios.value.trim().length < 5) {
-    errores.beneficios =
-      "Los beneficios son obligatorios";
-  }
-
-  // Validación de fecha expiración
-  // * controla que sea mayor que hoy y que la fehca de expiración se mayor de 29 días
-  if (fecha_expiracion.value) {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-
-    const exp = new Date(fecha_expiracion.value);
-
-    if (exp < hoy) {
-      errores.fecha_expiracion =
-        "La fecha NO puede ser menor a hoy";
-    } else {
-      const diffDias = Math.ceil(
-        (exp - hoy) / (1000 * 60 * 60 * 24)
-      );
-
-      if (diffDias < 28) {
-        errores.fecha_expiracion =
-          "La expiración debe ser al menos 30 días desde hoy";
-      }
-    }
-  }
-
-
-  // Descripción: mínimo 1 
-  if (!descripcion.value || descripcion.value.trim().split(/\s+/).length < 2) {
-    errores.descripcion = "Debe tener al menos una frase";
-  }
-
-  erroresValidacion.value = errores;
-
-  // Retorna true si no hay errores
-  return Object.keys(errores).length === 0;
-};
-
-// Observa cambios en fecha_expiracion y valida en tiempo real
-watch([fecha_expiracion, descripcion, nombre_empresa, tipo_puesto, funciones, requisitos, beneficios], () => {
-  validarFormulario();
-});
+// Validar cada vez que cambie cualquier campo del objeto form
+watch(form, () => {
+  validarFormulario(form.value);
+}, { deep: true });
 
 // Enviar formulario
 const submitFormulario = async () => {
 
-  if (!validarFormulario()) return;
+  if (!validarFormulario(form.value)) return;
 
   loading.value = true;
-  error.value = null;
+  serverError.value = null;
 
   try {
-    const res = await fetch(`${URL_BACK}/ofertas/`, {
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertas/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        nombre_empresa: nombre_empresa.value,
-        tipo_puesto: tipo_puesto.value,
-        fecha_expiracion: fecha_expiracion.value,
-        descripcion: descripcion.value,
-        funciones: funciones.value,
-        requisitos: requisitos.value,
-        beneficios: beneficios.value,
+        nombre_empresa: form.value.nombre_empresa,
+        tipo_puesto: form.value.tipo_puesto,
+        fecha_expiracion: form.value.fecha_expiracion,
+        descripcion: form.value.descripcion,
+        funciones: form.value.funciones,
+        requisitos: form.value.requisitos,
+        beneficios: form.value.beneficios,
+        id_ubicacion: parseInt(form.value.id_ubicacion),
+        jornada: form.value.jornada,
+        modelo_practicas: form.value.modelo_practicas,
+        modalidad:form.value.modalidad,
       }),
     });
 
     const data = await res.json().catch(() => null);
 
-    if (!validarFormulario()) {
+    if (!validarFormulario(form.value)) {
       console.log(" Validación falló", erroresValidacion.value);
       return;
     }
@@ -146,7 +111,7 @@ const submitFormulario = async () => {
     router.push("/ofertas");
   } catch (err) {
     console.error(err);
-    error.value = err.message;
+    serverError.value = err.message;
   } finally {
     loading.value = false;
   }
@@ -168,7 +133,7 @@ const volver = () => router.back();
       <form @submit.prevent="submitFormulario" class="form">
         <div class="input-group">
           <label>Empresa</label>
-          <input v-model="nombre_empresa" placeholder="Nombre de la empresa" required
+          <input v-model="form.nombre_empresa" placeholder="Nombre de la empresa" required
             @blur="touched.nombre_empresa = true" />
           <p v-if="touched.nombre_empresa && erroresValidacion.nombre_empresa" class="error">
             {{ erroresValidacion.nombre_empresa }}
@@ -177,7 +142,7 @@ const volver = () => router.back();
 
         <div class="input-group">
           <label>Tipo de puesto</label>
-          <input v-model="tipo_puesto" placeholder="Ej. Desarrollador Web" @blur="touched.tipo_puesto = true" />
+          <input v-model="form.tipo_puesto" placeholder="Ej. Desarrollador Web" @blur="touched.tipo_puesto = true" />
           <p v-if="touched.tipo_puesto && erroresValidacion.tipo_puesto" class="error">
             {{ erroresValidacion.tipo_puesto }}
           </p>
@@ -185,15 +150,52 @@ const volver = () => router.back();
 
         <div class="input-group">
           <label>Fecha de expiración</label>
-          <input v-model="fecha_expiracion" type="date" @blur="touched.fecha_expiracion = true" />
+          <input v-model="form.fecha_expiracion" type="date" @blur="touched.fecha_expiracion = true" />
           <p v-if="touched.fecha_expiracion && erroresValidacion.fecha_expiracion" class="error">
             {{ erroresValidacion.fecha_expiracion }}
           </p>
         </div>
 
         <div class="input-group">
+          <label>Tipo de jornada</label>
+          <select v-model="form.jornada" @blur="touched.jornada = true">
+            <option value="" disabled>Seleciona un tipo de jornada</option>
+            <option value="completa">Jornada Completa</option>
+            <option value="Jornada parcial">Jornada Parcial</option>
+          </select>
+            <p v-if="touched.jornada && erroresValidacion.jornada" class="error">
+              {{ erroresValidacion.jornada }}
+            </p>
+        </div>
+
+        <div class="input-group">
+          <label>Modalidad</label>
+          <select v-model="form.modalidad" @blur="touched.modalidad = true">
+            <option value="" disabled>Seleciona una modalidad</option>
+            <option value="Presencial">Presencial</option>
+            <option value="Remoto">Remoto</option>
+            <option value="Híbrido">Híbrido</option>
+          </select>
+            <p v-if="touched.modalidad && erroresValidacion.modalidad" class="error">
+              {{ erroresValidacion.modalidad }}
+            </p>
+        </div>
+
+        <div class="input-group">
+          <label>Modelo de practicas</label>
+          <select v-model="form.modelo_practicas" @blur="touched.modelo_practicas = true">
+            <option value="" disabled>Seleciona un modelo de prácticas</option>
+            <option value="INTENSIVAS">Intensivas</option>
+            <option value="GENERAL">General</option>
+          </select>
+            <p v-if="touched.modelo_practicas && erroresValidacion.modelo_practicas" class="error">
+              {{ erroresValidacion.modelo_practicas }}
+            </p>
+        </div>
+
+        <div class="input-group">
           <label>Descripción general</label>
-          <textarea v-model="descripcion" placeholder="Describe el puesto"
+          <textarea v-model="form.descripcion" placeholder="Describe el puesto"
             @blur="touched.descripcion = true"></textarea>
           <p v-if="touched.descripcion && erroresValidacion.descripcion" class="error">
             {{ erroresValidacion.descripcion }}
@@ -202,15 +204,27 @@ const volver = () => router.back();
 
         <div class="input-group">
           <label>Funciones del puesto</label>
-          <textarea v-model="funciones" placeholder="Responsabilidades" @blur="touched.funciones = true"></textarea>
+          <textarea v-model="form.funciones" placeholder="Responsabilidades" @blur="touched.funciones = true"></textarea>
           <p v-if="touched.funciones && erroresValidacion.funciones" class="error">
             {{ erroresValidacion.funciones }}
           </p>
         </div>
 
         <div class="input-group">
+        <label>Ubicación</label>
+        <select v-model="form.id_ubicacion" @blur="touched.id_ubicacion = true">
+          <option value="" disabled>Selecciona una ciudad</option>
+          <option v-for="c in ubicaciones" :key="c.id" :value="c.id">
+            {{ c.ciudad }} ({{ c.comunidad }})
+          </option>
+        </select>
+          <p v-if="touched.id_ubicacion && erroresValidacion.id_ubicacion" class="error">
+            {{ erroresValidacion.id_ubicacion }}
+          </p>
+        </div>
+        <div class="input-group">
           <label>Requisitos / conocimientos</label>
-          <textarea v-model="requisitos" placeholder="Habilidades y conocimientos necesarios"
+          <textarea v-model="form.requisitos" placeholder="Habilidades y conocimientos necesarios"
             @blur="touched.requisitos = true"></textarea>
           <p v-if="touched.requisitos && erroresValidacion.requisitos" class="error">
             {{ erroresValidacion.requisitos }}
@@ -219,7 +233,7 @@ const volver = () => router.back();
 
         <div class="input-group">
           <label>Beneficios</label>
-          <textarea v-model="beneficios" placeholder="Beneficios que ofrece la empresa"
+          <textarea v-model="form.beneficios" placeholder="Beneficios que ofrece la empresa"
             @blur="touched.beneficios = true"></textarea>
           <p v-if="touched.beneficios && erroresValidacion.beneficios" class="error">
             {{ erroresValidacion.beneficios }}
@@ -230,7 +244,7 @@ const volver = () => router.back();
           {{ loading ? "Guardando..." : "Crear oferta" }}
         </button>
 
-        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="serverError" class="error">{{ serverError }}</p>
       </form>
     </div>
   </div>
@@ -326,6 +340,28 @@ textarea:focus {
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
+/* Estilo específico para el Select (Ubicación) */
+select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fcfcfc;
+  font-size: 1rem;
+  appearance: none; /* Elimina la flecha por defecto en algunos navegadores */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+select:focus {
+  outline: none;
+border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
 /* Textarea más grande */
 textarea {
   min-height: 100px;

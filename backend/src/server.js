@@ -694,9 +694,21 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
 Eres un extractor de CV.
 
 REGLAS:
-- NO inventes datos
-- SI NO EXISTE, DEJA VACÍO
-- Devuelve SOLO JSON válido
+- NO inventes datos.
+- NO repitas información.
+- NO mezcles formación y experiencia.
+- SI NO ESTÁ CLARO, IGNÓRALO.
+- Devuelve SOLO JSON válido.
+
+FORMACIÓN:
+- titulo = estudio
+- centro = institución
+- anio = año o rango
+
+EXPERIENCIA:
+- puesto = trabajo real
+- centro = empresa
+- anio = periodo laboral
 
 FORMATO:
 {
@@ -733,9 +745,27 @@ FORMATO:
     const idiomas = datosExtraidos.idiomas?.idiomas || [];
     const formacion = datosExtraidos.formacion?.formacion || [];
     const experiencia = datosExtraidos.experiencia?.experiencia || [];
-    const habilidades = Array.isArray(datosExtraidos.habilidades)
+  /*   const habilidades = Array.isArray(datosExtraidos.habilidades)
       ? datosExtraidos.habilidades
+      : []; */
+    const hardSkills = datosExtraidos.habilidades_hard
+      ? datosExtraidos.habilidades_hard
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
+
+    const softSkills = datosExtraidos.habilidades_soft
+      ? datosExtraidos.habilidades_soft
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    /* Unimos en una constante habilidades las softSkill y las hardSkill
+    para no tener que modificar la logica de inserción de las relaciones del 
+    estudiante con las skills */
+    const habilidades = [...hardSkills, ...softSkills];
 
     // -------------------------
     // 4. UPDATE USUARIO (CORREGIDO)

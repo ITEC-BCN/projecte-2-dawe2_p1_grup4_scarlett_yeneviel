@@ -6,8 +6,8 @@ import CardOferta from "../components/cardOferta.vue";
 import { URL_BACK } from "../../../config";
 
 const router = useRouter();
-const url = ref(`${URL_BACK}/ofertas`);
-const { data, error, loading } = useFetch(url);
+const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);
+const { data, error, loading, fetchData } = useFetch(url);
 
 // 1. Variables de estado para los filtros
 const searchQuery = ref("");
@@ -233,7 +233,7 @@ const clearFilters = () => {
                 </button>
             </div>
 
-            
+
         </div>
 
 

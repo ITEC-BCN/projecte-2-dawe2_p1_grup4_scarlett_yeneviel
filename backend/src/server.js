@@ -1,14 +1,23 @@
-import express from 'express';
-import cors from 'cors'
-import bcrypt from 'bcryptjs';
-import cookieParser from 'cookie-parser';
-import jwt from 'jsonwebtoken';
-import multer from 'multer';  //esto es para subir archivos, lo usaremos para subir fotos de perfil y cvs
-import { SECRET_JWT_KEY } from '../config.js';
-import { URL_FRONT } from '../../config.js';
-import dotenv from 'dotenv'// para cargar las variables de entorno desde el .env, como la URL de Supabase y la clave secreta del JWT
+/*const app = require("./app");
 
-dotenv.config(); // Carga las variables de entorno desde el archivo .env
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en puerto ${PORT}`);
+});*/
+
+import express from "express";
+import cors from "cors";
+import bcrypt from "bcryptjs";
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
+import multer from "multer";
+import dotenv from "dotenv";
+
+import { SECRET_JWT_KEY } from "../config.js";
+import { URL_FRONT } from "../../config.js";
+import { createClient } from "@supabase/supabase-js";
+import Groq from "groq-sdk";
 
 import {
   obtenerOfertas,
@@ -35,16 +44,14 @@ import {
   obtenerSkills,
   subirAvatarStorage,
   guardarFotoPerfil,
-  updatedRequestRegistration,
-  desactivarOferta,
-  getCVUrl,
-  getUserState
+} from "./supabaseClient.js";
+import requireAuth from "./middleware/requireAuth.js";
 
-
-} from './supabaseClient.js'
-import requireAuth from './middleware/requireAuth.js';
+/* ================= INIT ================= */
+dotenv.config();
 const app = express();
 
+/* ================= MIDDLEWARE ================= */
 
 // Permitir múltiples orígenes y soportar credentials correctamente
 const allowedOrigins = [
@@ -82,16 +89,17 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check simple
-app.get('/', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
-});
+/* ================= MULTER ================= */
+// Multer guarda archivos temporalmente en memoria (fotos, pdf...)
+const upload = multer({ storage: multer.memoryStorage() });
 
-//Rutas
+/* ================= RUTAS ================= */
+
+/* ================= ofertas ================= */
+
 app.post("/ofertas", async (req, res) => {
   try {
-
-    console.log("Body", req.body)
+    console.log("Body", req.body);
 
     const nuevaOferta = await crearOferta({
       nombre_empresa: req.body.nombre_empresa,
@@ -110,7 +118,7 @@ app.post("/ofertas", async (req, res) => {
   }
 });
 
-app.get('/ofertas', async (req, res) => {
+app.get("/ofertas", async (req, res) => {
   try {
     const ofertas = await obtenerOfertas();
     res.json(ofertas);
@@ -119,7 +127,7 @@ app.get('/ofertas', async (req, res) => {
   }
 });
 
-app.get('/ofertas/:id', async (req, res) => {
+app.get("/ofertas/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const oferta = await obtenerOfertaPorId(id);
@@ -135,13 +143,11 @@ app.get('/ofertas/:id', async (req, res) => {
 });
 
 //Actualiza las ofertas
-app.put('/oferta/:id', async (req, res) => {
-
+app.put("/oferta/:id", async (req, res) => {
   try {
-
     const body = req.body;
     const id = req.params.id;
-    const oferta = await actualizarOferta(id, body)
+    const oferta = await actualizarOferta(id, body);
 
     //Valido que exista la oferta
     // Supabase devuelve un array vacío [] si no encuentra el ID al usar .select()
@@ -152,17 +158,16 @@ app.put('/oferta/:id', async (req, res) => {
     //  Respuesta exitosa
     res.status(200).json({
       message: "Oferta actualizada con éxito",
-      data: oferta[0] // Devolvemos el registro actualizado
+      data: oferta[0], // Devolvemos el registro actualizado
     });
-
   } catch (err) {
-    res.status(500).json({ error: err.message || String(err) })
+    res.status(500).json({ error: err.message || String(err) });
   }
-})
+});
 
 //delete
 
-app.delete('/ofertas/:id', async (req, res) => {
+app.delete("/ofertas/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -174,26 +179,9 @@ app.delete('/ofertas/:id', async (req, res) => {
   }
 });
 
-//Desactivar oferta (en lugar de eliminarla físicamente, la marcamos como inactiva)
+/*========OFERTAS RECOMENDADAS Filtradas=========*/
 
-app.put('/ofertas/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    // Leer el nuevo estado desde el body
-    const { estado } = req.body;
-    if (!estado) return res.status(400).json({ error: 'Falta el campo "estado" en el body' });
-
-    const resultado = await desactivarOferta(id, estado);
-
-    res.json(resultado);
-  } catch (err) {
-    res.status(500).json({ error: err.message || String(err) });
-  }
-});
-
-/*========OFERTAS Filtradas=========*/
-
-app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
+app.get("/estudiantes/:id/ofertas-recomendadas", async (req, res) => {
   try {
     const estudianteId = req.params.id;
 
@@ -202,20 +190,21 @@ app.get('/estudiantes/:id/ofertas-recomendadas', async (req, res) => {
 
     // Devolvemos el resultado al frontend
     res.json(ofertas);
-
   } catch (err) {
     console.error("🔥 Error en el endpoint de recomendaciones:", err);
-    res.status(500).json({ error: err.message || "Error interno del servidor" });
+    res
+      .status(500)
+      .json({ error: err.message || "Error interno del servidor" });
   }
 });
 
-//====================== Usuario Estudiante =======================
+//====================== ESTUDIANTES =======================
 
 // POST: Registrar un nuevo estudiante
 app.post("/estudiantes", async (req, res) => {
   try {
     const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
-    req.body.password_hash = newPassword_hash
+    req.body.password_hash = newPassword_hash;
     const nuevoEstudiante = await crearEstudiante(req.body);
 
     // 3. GENERAR EL TOKEN JWT
@@ -223,24 +212,24 @@ app.post("/estudiantes", async (req, res) => {
     const token = jwt.sign(
       { id: nuevoEstudiante.id, email: nuevoEstudiante.email },
       SECRET_JWT_KEY,
-      { expiresIn: '2h' }
+      { expiresIn: "2h" },
     );
 
     // 4. GUARDAR EN COOKIE
-    res.cookie('access_token', token, {
-      httpOnly: true,    // Seguridad: No accesible desde JS del frontend
-      secure: true,      // Obligatorio para SameSite: 'none'
-      sameSite: 'none',  // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
-      maxAge: 1000 * 60 * 60 // 1 hora
+    res.cookie("access_token", token, {
+      httpOnly: true, // Seguridad: No accesible desde JS del frontend
+      secure: true, // Obligatorio para SameSite: 'none'
+      sameSite: "none", // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
+      maxAge: 1000 * 60 * 60, // 1 hora
     });
 
     res.status(201).json({
       message: "Registro exitoso",
       user: {
         id: nuevoEstudiante.id,
-        email: nuevoEstudiante.email
+        email: nuevoEstudiante.email,
       },
-      token: token
+      token: token,
     });
   } catch (err) {
     res.status(400).json({ error: err.message || String(err) });
@@ -258,28 +247,10 @@ app.get("/estudiantes", async (req, res) => {
 });
 
 // GET: Obtener un estudiante por ID
-// GET: Obtener un estudiante por ID
 app.get("/estudiantes/:id", requireAuth, async (req, res) => {
   try {
-
-    const { id } = req.params;
-    const userRequesting = req.user; // Datos del token (id, role, etc.)
-
-    // --- VALIDACIÓN DE AUTORIZACIÓN ---
-    // Un usuario solo puede verse a sí mismo, A MENOS que sea admin
-    if (userRequesting.role !== 'admin' && userRequesting.id !== parseInt(id)) {
-        return res.status(403).json({ 
-            error: "No tienes permiso para ver este perfil" 
-        });
-    }
-
-    const estudiante = await obtenerEstudiantePorId(id);
-
-    if (!estudiante) {
-      return res.status(404).json({ error: "Estudiante no encontrado" });
-    }
+    const estudiante = await obtenerEstudiantePorId(req.params.id);
     res.json(estudiante);
-
   } catch (err) {
     console.error("Error obteniendo estudiante:", err);
     res.status(404).json({ error: err.message || "Estudiante no encontrado" });
@@ -297,48 +268,31 @@ app.put("/estudiantes/:id", async (req, res) => {
   }
 });
 
+/*======== POSTULACIONES Y GUARDADOS =========*/
+
 app.post("/estudiante/postular", async (req, res) => {
-
   try {
-    const { id_oferta, id_estudiante } = req.body
-    const postulacion = await postularOferta(id_oferta, id_estudiante)
+    const { id_oferta, id_estudiante } = req.body;
+    const postulacion = await postularOferta(id_oferta, id_estudiante);
     res.json(postulacion);
-    console.log("inscripción hecha correctamente")
-
+    console.log("inscripción hecha correctamente");
   } catch (err) {
     res.status(400).json({ error: err.message || String(err) });
   }
-})
+});
 
 app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
   try {
-    const { estado } = req.body;
-    const id_estudiante = req.params.idEstudiante;
-    if (!estado) {
+    const { id_estudiante, estado } = req.body;
+
+    if (!id_estudiante || !estado) {
       return res.status(400).json({ error: "Faltan datos en el body" });
     }
 
-    const resultado = await updatedRequestRegistration(id_estudiante, estado);
+    const resultado = await actualizarSolicitudPendiente(id_estudiante, estado);
     res.status(200).json({
       message: "Solicitud actualizada exitosamente",
-      data: resultado
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/estudiante/estado/:idEstudiante", async (req, res) => {
-  try {
-    const id_estudiante = req.params.idEstudiante;
-    if (!id_estudiante) {
-      return res.status(400).json({ error: "Falta el id del estudiante en la URL" });
-    }
-
-    const resultado = await getUserState(id_estudiante);
-    res.status(200).json({
-      message: "Estado obtenido exitosamente",
-      estado: resultado
+      data: resultado,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -350,13 +304,15 @@ app.post("/guardar-oferta", async (req, res) => {
     const { id_estudiante, id_oferta } = req.body;
 
     if (!id_estudiante || !id_oferta) {
-      return res.status(400).json({ error: "Falta id del estudiante o id de la oferta en el body" });
+      return res.status(400).json({
+        error: "Falta id del estudiante o id de la oferta en el body",
+      });
     }
 
     const resultado = await guardarOferta(id_estudiante, id_oferta);
     res.status(200).json({
       message: "Oferta guardada exitosamente",
-      data: resultado
+      data: resultado,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -368,70 +324,69 @@ app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
     const estudianteId = req.params.id;
 
     if (!estudianteId) {
-      return res.status(400).json({ error: "Falta el id del estudiante en la URL" });
+      return res
+        .status(400)
+        .json({ error: "Falta el id del estudiante en la URL" });
     }
     // Llamamos a la función  de supabaseCliente.js
     const data = await obtenerOfertasGuardadas(estudianteId);
 
     // Devolvemos al frontend
     res.json(data);
-
   } catch (err) {
     console.error("Error en endpoint de ofertas guardadas:", err);
     res.status(500).json({ error: err.message });
   }
-
 });
 
-// Multer guarda la foto temporalmente en memoria
-const upload = multer({ storage: multer.memoryStorage() });
+/*======== FOTOGRAFIA DE PERFIL =========*/
 
-app.post('/upload-avatar', upload.single('file'), async (req, res) => {
+app.post("/upload-avatar", upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
     const studentId = req.body.studentId;
 
     if (!file) {
-      return res.status(400).json({ error: 'No se subió ningún archivo' });
+      return res.status(400).json({ error: "No se subió ningún archivo" });
     }
-    if (!file.mimetype.startsWith('image/')) return res.status(400).json({ error: 'Solo se permiten imágenes' });
-    if (file.size > 2 * 1024 * 1024) return res.status(400).json({ error: 'El tamaño máximo es 2MB' });
+    if (!file.mimetype.startsWith("image/"))
+      return res.status(400).json({ error: "Solo se permiten imágenes" });
+    if (file.size > 2 * 1024 * 1024)
+      return res.status(400).json({ error: "El tamaño máximo es 2MB" });
 
-    const fileExt = file.originalname.split('.').pop();
+    const fileExt = file.originalname.split(".").pop();
     const fileName = `avatar_${studentId}_${Date.now()}.${fileExt}`;
 
     // 1. Subir a Supabase Storage
     const urlPublica = await subirAvatarStorage(
       fileName,
       file.buffer,
-      file.mimetype
+      file.mimetype,
     );
 
     // 2. GUARDAR EN LA BASE DE DATOS (AQUÍ, NO EN VUE)
     await guardarFotoPerfil(studentId, urlPublica);
 
     return res.json({
-      message: 'Subida exitosa',
+      message: "Subida exitosa",
       url: urlPublica,
-      studentId
+      studentId,
     });
-
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Falló la subida', details: error.message }); 
+    return res
+      .status(500)
+      .json({ error: "Falló la subida", details: error.message });
   }
-  });
+});
 
-
-//================ Adminsitrador ====================
-
-// --- RUTAS PARA ADMINISTRADORES ---
+//================ ADMINISTRADOR ====================
 
 // POST: Registrar un nuevo administrador
 app.post("/admin/registro", async (req, res) => {
   try {
     const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
-    req.body.password_hash = newPassword_hash
+    req.body.password_hash = newPassword_hash;
     const nuevo = await crearAdmin(req.body);
     res.status(201).json({
       message: "Registro de administrador exitoso",
@@ -458,7 +413,9 @@ app.get("/admins/:id", async (req, res) => {
     const admin = await obtenerAdminPorId(req.params.id);
     res.json(admin);
   } catch (err) {
-    res.status(404).json({ error: err.message || "Administrador no encontrado" });
+    res
+      .status(404)
+      .json({ error: err.message || "Administrador no encontrado" });
   }
 });
 
@@ -471,7 +428,7 @@ app.put("/admins/:id", async (req, res) => {
     }
     res.json({
       message: "Administrador actualizado con éxito",
-      data: actualizado[0]
+      data: actualizado[0],
     });
   } catch (err) {
     res.status(400).json({ error: err.message || String(err) });
@@ -481,7 +438,6 @@ app.put("/admins/:id", async (req, res) => {
 //================ LOGIN ====================
 
 // POST: Login de estudiante
-
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -491,22 +447,11 @@ app.post("/login", async (req, res) => {
     }
 
     // 1. Buscar estudiante
-    let estudiante;
-    try {
-      estudiante = await obtenerEstudiantePorEmail(email);
-    } catch (err) {
-      // Manejar caso específico de PostgREST cuando no hay filas (PGRST116)
-      if (err && err.code === 'PGRST116') {
-        return res.status(401).json({ error: "Email o contraseña incorrectos" });
-      }
-      throw err; // re-lanzar para que el catch exterior lo trate
-    }
+    const estudiante = await obtenerEstudiantePorEmail(email);
 
-    // Normalizar diferentes retornos: objeto o array
-    if (!estudiante || (Array.isArray(estudiante) && estudiante.length === 0)) {
+    if (!estudiante) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
-    if (Array.isArray(estudiante)) estudiante = estudiante[0];
 
     // 2. Comparar contraseñas
     const isSuccess = await bcrypt.compare(password, estudiante.password_hash);
@@ -519,15 +464,15 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: estudiante.id, email: estudiante.email },
       SECRET_JWT_KEY,
-      { expiresIn: '2h' }
+      { expiresIn: "2h" },
     );
 
     // 4. GUARDAR EN COOKIE
-    res.cookie('access_token', token, {
-      httpOnly: true,    // Seguridad: No accesible desde JS del frontend
-      secure: true,      // Obligatorio para SameSite: 'none'
-      sameSite: 'none',  // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
-      maxAge: 1000 * 60 * 60 // 1 hora
+    res.cookie("access_token", token, {
+      httpOnly: true, // Seguridad: No accesible desde JS del frontend
+      secure: true, // Obligatorio para SameSite: 'none'
+      sameSite: "none", // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
+      maxAge: 1000 * 60 * 60, // 1 hora
     });
 
     // 5. Respuesta al Frontend
@@ -535,14 +480,15 @@ app.post("/login", async (req, res) => {
       message: "Login exitoso",
       user: {
         id: estudiante.id,
-        email: estudiante.email
+        email: estudiante.email,
       },
-      token
+      token,
     });
-
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || "Error interno del servidor" });
+    res
+      .status(500)
+      .json({ error: err.message || "Error interno del servidor" });
   }
 });
 
@@ -556,20 +502,11 @@ app.post("/login-admin", async (req, res) => {
     }
 
     // Buscar admin por email
-    let admin;
-    try {
-      admin = await obtenerAdminPorEmail(email);
-    } catch (err) {
-      if (err && err.code === 'PGRST116') {
-        return res.status(401).json({ error: "Email o contraseña incorrectos" });
-      }
-      throw err;
-    }
+    const admin = await obtenerAdminPorEmail(email);
 
-    if (!admin || (Array.isArray(admin) && admin.length === 0)) {
+    if (!admin) {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
-    if (Array.isArray(admin)) admin = admin[0];
 
     // Comparar contraseñas
     const isSuccess = await bcrypt.compare(password, admin.password_hash);
@@ -579,17 +516,17 @@ app.post("/login-admin", async (req, res) => {
 
     // Generar el token JWT igual que estudiante
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, role: "admin" },
+      { id: admin.id, email: admin.email, tipo: "admin" },
       SECRET_JWT_KEY,
-      { expiresIn: '2h' }
+      { expiresIn: "2h" },
     );
 
     // Guardar en cookie (nombre correcto)
-    res.cookie('access_token', token, {
+    res.cookie("access_token", token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 // 1 hora
+      sameSite: "none",
+      maxAge: 1000 * 60 * 60, // 1 hora
     });
 
     // Respuesta consistente con login estudiante
@@ -599,15 +536,14 @@ app.post("/login-admin", async (req, res) => {
         id: admin.id,
         nombre: admin.nombre,
         email: admin.email,
-        role: "admin"
+        tipo: "admin",
       },
-      token
+      token,
     });
   } catch (err) {
     res.status(500).json({ error: err.message || String(err) });
   }
 });
-
 
 //=================== Funcionalidades administrador ===================
 
@@ -617,7 +553,9 @@ app.get("/postulaciones/:id", async (req, res) => {
     const datos = await VerPostulacionesAdmin(req.params.id);
     res.json(datos);
   } catch (err) {
-    res.status(404).json({ error: err.message || "Postulaciones para esta ofert no encontradas" });
+    res.status(404).json({
+      error: err.message || "Postulaciones para esta ofert no encontradas",
+    });
   }
 });
 
@@ -628,16 +566,22 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
     const { estado } = req.body;
 
     if (!estado) {
-      return res.status(400).json({ error: "Falta el campo 'estado' en el body" });
+      return res
+        .status(400)
+        .json({ error: "Falta el campo 'estado' en el body" });
     }
 
     const datos = await actualizarEstadoOferta(ofertaId, estudianteId, estado);
     res.json(datos);
   } catch (err) {
     console.error(err);
-    res.status(404).json({ error: err.message || "Oferta o estudiante no encontrado" });
+    res
+      .status(404)
+      .json({ error: err.message || "Oferta o estudiante no encontrado" });
   }
 });
+
+//================ SKILLS ====================
 
 // GET: Obtener todas las skills para el menú desplegable del frontend
 app.get("/skills", async (req, res) => {
@@ -650,60 +594,276 @@ app.get("/skills", async (req, res) => {
   }
 });
 
+/* ================= SUPABASE + GROQ ================= */
 
-app.get('/get-cv/:nombreArchivo', async (req, res) => {
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
+
+// Inicializar Groq
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+/* ================= UPLOAD CV + GROQ ================= */
+
+// GET: Obtener datos del estudiante + skills (hard/soft)
+app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
   try {
-    const { nombreArchivo } = req.params;
+    const { studentId } = req.params;
 
-
-    if(!nombreArchivo) {
-      return res.status(400).json({ error: "Nombre de archivo requerido" });
+    // 🔒 seguridad
+    if (req.user.id !== studentId) {
+      return res.status(403).json({ error: "No autorizado" });
     }
-    const url = getCVUrl(nombreArchivo);
-    res.json({ url });
-  } catch (err) {
-    console.error("Error obteniendo CV:", err);
-    res.status(500).json({ error: err.message || "Error interno del servidor" });
-   }
-});
 
-// Catch-all 404 handler that también registra la ruta y origen
-app.use((req, res) => {
-  console.warn(`[NOT_FOUND] ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - Origin: ${req.headers.origin || 'none'}`);
-  res.status(404).json({ error: 'Not Found' });
-});
+    // 1. Datos del estudiante
+    const { data: student, error: studentError } = await supabase
+      .from("usuario_estudiante")
+      .select("*")
+      .eq("id", studentId)
+      .single();
 
-// Before starting, imprimir las rutas registradas para depuración
-function listRegisteredRoutes() {
-  try {
-    const routes = [];
-    app._router.stack.forEach((middleware) => {
-      if (middleware.route) {
-        // rutas registradas directamente en app
-        const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
-        routes.push(`${methods} ${middleware.route.path}`);
-      } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
-        // rutas registradas en routers montados
-        middleware.handle.stack.forEach((handler) => {
-          if (handler.route) {
-            const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
-            routes.push(`${methods} ${handler.route.path}`);
-          }
-        });
+    if (studentError) throw studentError;
+    if (!student) {
+      return res.status(404).json({ error: "Estudiante no encontrado" });
+    }
+
+    // 2. Skills del estudiante (JOIN manual)
+    const { data: skillsData, error: skillsError } = await supabase
+      .from("estudiante_skill")
+      .select(`
+        id_skill,
+        skill:skill (
+          id,
+          nombre,
+          tipo
+        )
+      `)
+      .eq("id_estudiante", studentId);
+
+    if (skillsError) throw skillsError;
+
+    // 3. Separar hard / soft
+    const hard = [];
+    const soft = [];
+
+    (skillsData || []).forEach((row) => {
+      const skill = row.skill;
+      if (!skill) return;
+
+      if (skill.tipo === "hard skill") {
+        hard.push(skill);
+      } else if (skill.tipo === "soft skill") {
+        soft.push(skill);
       }
     });
-    console.log('[ROUTES] Registered routes:\n' + routes.join('\n'));
+
+    // 4. Respuesta final
+    res.json({
+      message: "CV obtenido correctamente",
+      data: {
+        ...student,
+        skills: {
+          hard,
+          soft,
+        },
+      },
+    });
   } catch (err) {
-    console.error('Error listing routes:', err);
+    console.error("Error GET CV:", err);
+    res.status(500).json({ error: err.message });
   }
-}
+});
 
-listRegisteredRoutes();
 
-const PORT = process.env.PORT || 3000;
-try {
-  app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
-} catch (err) {
-  console.error('Error arrancando el servidor:', err);
-  process.exit(1);
+// POST: subir CV y extraer datos
+// POST: subir CV y extraer datos
+app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file || !req.body.studentId) {
+      return res.status(400).json({ error: "Faltan datos" });
+    }
+
+    const studentId = req.body.studentId;
+    const file = req.file;
+
+    // 1. Subida a Storage
+    const fileName = `cv_${studentId}_${Date.now()}.pdf`;
+
+    await supabase.storage.from("cvs").upload(fileName, file.buffer, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+
+    // 2. Extraer texto del PDF
+    const pdfParse = (await import("pdf-parse")).default;
+    const pdfResult = await pdfParse(file.buffer);
+
+    const cleanText = pdfResult.text
+      .replace(/\r/g, " ")
+      .replace(/\n{2,}/g, "\n")
+      .trim();
+
+    // 3. GROQ
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: `
+Eres un extractor de CV.
+
+REGLAS:
+- NO inventes datos.
+- NO repitas información.
+- NO mezcles formación y experiencia.
+- SI NO ESTÁ CLARO, IGNÓRALO.
+- Devuelve SOLO JSON válido.
+
+FORMACIÓN:
+- titulo = estudio
+- centro = institución
+- anio = año o rango
+
+EXPERIENCIA:
+- puesto = trabajo real
+- centro = empresa
+- anio = periodo laboral
+
+FORMATO:
+{
+  "nombre": "",
+  "apellido": "",
+  "email": "",
+  "telefono": "",
+  "location": "",
+  "about": "",
+  "idiomas": { "idiomas": [{ "name": "", "level": "" }] },
+  "formacion": { "formacion": [{ "centro": "", "anio": "", "titulo": "" }] },
+  "experiencia": { "experiencia": [{ "centro": "", "anio": "", "puesto": "" }] },
+  "habilidades_hard": "",
+  "habilidades_soft": ""
 }
+`
+        },
+        { role: "user", content: `CV:\n\n${cleanText}` }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const datosExtraidos = JSON.parse(
+      completion.choices[0].message.content
+    );
+
+    // -------------------------
+    // NORMALIZACIÓN SEGURA
+    // -------------------------
+    const telefonoLimpio = datosExtraidos.telefono
+      ? Number(datosExtraidos.telefono.toString().replace(/\D/g, ""))
+      : undefined; // 👈 IMPORTANTE: NO null
+
+    const idiomas = datosExtraidos.idiomas?.idiomas || [];
+    const formacion = datosExtraidos.formacion?.formacion || [];
+    const experiencia = datosExtraidos.experiencia?.experiencia || [];
+  /*   const habilidades = Array.isArray(datosExtraidos.habilidades)
+      ? datosExtraidos.habilidades
+      : []; */
+    const hardSkills = datosExtraidos.habilidades_hard
+      ? datosExtraidos.habilidades_hard
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    const softSkills = datosExtraidos.habilidades_soft
+      ? datosExtraidos.habilidades_soft
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    /* Unimos en una constante habilidades las softSkill y las hardSkill
+    para no tener que modificar la logica de inserción de las relaciones del 
+    estudiante con las skills */
+    const habilidades = [...hardSkills, ...softSkills];
+
+    // -------------------------
+    // 4. UPDATE USUARIO (CORREGIDO)
+    // -------------------------
+
+    const updateData = {
+      nombre: datosExtraidos.nombre || "",
+      apellido: datosExtraidos.apellido || "",
+      location: datosExtraidos.location || "",
+      about: datosExtraidos.about || "",
+      idiomas: { idiomas },
+      estudios: { formacion },
+      experiencia: { experiencia }
+    };
+
+    // 👇 SOLO AÑADIMOS TELÉFONO SI EXISTE
+    if (telefonoLimpio !== undefined) {
+      updateData.telefono = telefonoLimpio;
+    }
+
+    const { error: updateError } = await supabase
+      .from("usuario_estudiante")
+      .update(updateData)
+      .eq("id", studentId);
+
+    if (updateError) throw updateError;
+
+    // -------------------------
+    // 5. SKILLS
+    // -------------------------
+    await supabase
+      .from("estudiante_skill")
+      .delete()
+      .eq("id_estudiante", studentId);
+
+    const { data: skillsDB, error: skillsError } = await supabase
+      .from("skill")
+      .select("id, nombre");
+
+    if (skillsError) throw skillsError;
+
+    const listaSkills = habilidades.map(s =>
+      s.toLowerCase().trim()
+    );
+
+    const nuevasRelaciones = (skillsDB || [])
+      .filter(s =>
+        listaSkills.includes(s.nombre.toLowerCase())
+      )
+      .map(s => ({
+        id_estudiante: studentId,
+        id_skill: s.id
+      }));
+
+    if (nuevasRelaciones.length > 0) {
+      await supabase
+        .from("estudiante_skill")
+        .insert(nuevasRelaciones);
+    }
+
+    // -------------------------
+    // RESPONSE
+    // -------------------------
+    res.json({
+      message: "Perfil actualizado correctamente",
+      datosExtraidos
+    });
+
+  } catch (err) {
+    console.error("Error upload CV:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ================= SERVER, LÍNEA SIEMPRE AL FINAL ================= */
+
+app.listen(3000, () => {
+  console.log("Servidor en http://localhost:3000");
+});

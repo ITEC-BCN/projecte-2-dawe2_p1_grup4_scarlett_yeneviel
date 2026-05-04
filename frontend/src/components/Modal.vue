@@ -21,6 +21,7 @@ import { URL_BACK } from '../../../config';
 
 const props = defineProps({
   ofertaId: Number,
+  estado: String,
   mensajeConfirmacion: { type: String, default: "¿Estás seguro de eliminar?" }
 });
 
@@ -47,13 +48,15 @@ const confirmDelete = async () => {
   
   try {
      loading.value = true;
-    const response = await fetch(`${URL_BACK}/ofertas/${props.ofertaId}`, {
-      method: "DELETE",
+    const res = await fetch(`${URL_BACK}/ofertas/${props.ofertaId}`, 
+    { 
+     method: 'PUT',
+     headers: { 'Content-Type':  'application/json' }, 
+     body: JSON.stringify({ estado: props.estado }) 
     });
+    if (!res.ok) throw new Error('Error desactivando oferta');
 
-    if (!response.ok) throw new Error("Error al eliminar la oferta");
-
-    mensaje.value = "Oferta eliminada correctamente";
+    mensaje.value = "Oferta desactivada correctamente";
 
     emits("eliminado"); // Avisamos al padre que eliminó
 
@@ -62,7 +65,7 @@ const confirmDelete = async () => {
     }, 1500);
   } catch (err) {
     console.error(err);
-    mensaje.value = "Hubo un error al eliminar la oferta";
+    mensaje.value = "Hubo un error al desactivar la oferta";
   } finally {
     loading.value = false;
   }

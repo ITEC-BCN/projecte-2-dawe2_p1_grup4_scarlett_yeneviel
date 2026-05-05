@@ -167,50 +167,29 @@ const clearFilters = () => {
 
             <div class="filters-row">
                 <div class="filter-group">
-                    <label for="ubicacion">Ciudad</label>
-                    <select v-model="searchUbicacion" class="select-filtro" aria-label="Filtrar por ciudad">
-                        <option value="">📍 Todas las ciudades</option>
+                    <label>📍 Ciudad</label>
+                    <select v-model="searchUbicacion" class="select-filtro">
+                        <option value="">Todas las ciudades</option>
                         <option v-for="ciudad in ciudadesDisponibles" :key="ciudad" :value="ciudad">
                             {{ ciudad }}
                         </option>
                     </select>
-
-
                 </div>
 
                 <div class="filter-group">
-                    <label for="skill">Skills</label>
-                    <div class="skills-custom-select">
-                        <select v-model="skillToAdd" class="select-filtro" @change="addSkill"
-                            aria-label="Seleccionar skill para filtrar">
-                            <option value="">✨ Seleccionar skill</option>
-                            <option v-for="skill in skillsDisponiblesFiltradas" :key="skill" :value="skill">
-                                {{ skill }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="skills-selected">
-                        <transition-group name="list">
-                            <span v-for="skill in selectedSkills" :key="skill" class="chip">
-                                {{ skill }}
-                                <button @click="removeSkill(skill)" class="btn-remove-skill" title="Eliminar">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </button>
-                            </span>
-                        </transition-group>
-                    </div>
+                    <label>✨ Skills</label>
+                    <select v-model="skillToAdd" class="select-filtro" @change="addSkill">
+                        <option value="">Seleccionar skill</option>
+                        <option v-for="skill in skillsDisponiblesFiltradas" :key="skill" :value="skill">
+                            {{ skill }}
+                        </option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="modalidad">Modalidad</label>
-                    <select v-model="selectedModalidad" class="select-filtro" aria-label="Filtrar por modalidad">
-                        <option value="">🏢 Todas las modalidades</option>
+                    <label>🏢 Modalidad</label>
+                    <select v-model="selectedModalidad" class="select-filtro">
+                        <option value="">Todas</option>
                         <option value="Presencial">Presencial</option>
                         <option value="Remoto">Remoto</option>
                         <option value="Hibrido">Híbrido</option>
@@ -218,31 +197,36 @@ const clearFilters = () => {
                 </div>
 
                 <div class="filter-group">
-                    <label>Modelo prácticas</label>
+                    <label>📚 Modelo</label>
                     <select v-model="selectedModeloPracticas" class="select-filtro">
-                        <option value="">📚 Todos</option>
+                        <option value="">Todos</option>
                         <option value="GENERAL">General</option>
                         <option value="INTENSIVAS">Intensivas</option>
                     </select>
                 </div>
-            </div>
-                      <div class="clear-box">
-                <button class="btn-clear-filters" @click="clearFilters">
-                    🧹 Limpiar filtros
-                </button>
+
+                <div class=" action-group">
+                    <button class="btn-clear-filters" @click="clearFilters" title="Limpiar todos los filtros">
+                        🧹 Limpiar
+                    </button>
+                </div>
             </div>
 
-
+            <div v-if="selectedSkills.length > 0" class="skills-selected">
+                <transition-group name="list">
+                    <span v-for="skill in selectedSkills" :key="skill" class="chip">
+                        {{ skill }}
+                        <button @click="removeSkill(skill)" class="btn-remove-skill">✕</button>
+                    </span>
+                </transition-group>
+            </div>
         </div>
-
-
 
         <div v-if="ofertasFiltradas.length > 0" class="grid-ofertas">
             <CardOferta v-for="oferta in ofertasPaginadas" :key="oferta.id" :oferta="oferta"
                 @verDetalleOferta="verDetalle(oferta.id, roleUSer === 'admin' ? 'verOfertaAdmin' : 'OfertaDetalle')" />
         </div>
 
-        <!-- paginación -->
         <div v-if="totalPages > 1" class="pagination-container">
             <div class="pagination">
                 <button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>
@@ -255,10 +239,6 @@ const clearFilters = () => {
         <div v-if="ofertasFiltradas.length === 0" class="empty-state">
             <h3>No encontramos resultados</h3>
             <p>Prueba a cambiar los filtros o a usar términos más generales.</p>
-            <button class="btn-clear"
-                @click="searchQuery = ''; searchUbicacion = ''; selectedSkills = []; selectedModalidad = ''; selectedModeloPracticas = ''">
-                Limpiar filtros
-            </button>
         </div>
     </section>
 </template>
@@ -270,6 +250,8 @@ const clearFilters = () => {
     margin: 40px auto;
     padding: 0 20px;
     font-family: "Inter", "Segoe UI", sans-serif;
+    background: var(--bg-main);
+    color: var(--text);
 }
 
 /* Cabecera */
@@ -293,8 +275,7 @@ const clearFilters = () => {
 input:focus,
 select:focus,
 button:focus {
-    outline: 1px solid var(--focus);
-    outline-offset: 2px;
+    outline: none;
 }
 
 /*CARDS*/
@@ -303,6 +284,7 @@ button:focus {
     max-width: 360px;
 
 }
+
 
 /* Botón Admin */
 .btn-admin {
@@ -336,32 +318,36 @@ button:focus {
     background: #ffffff;
     padding: 24px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-    border: 1px solid #f1f5f9;
-    margin-bottom: 40px;
+    box-shadow: 0 0 0 1px #4b5563, 0 6px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid #dde1e7;
+    margin-bottom: 30px;
 }
 
 /* Buscador de texto (Principal) */
 .search-main {
     display: flex;
     align-items: center;
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
     border-radius: 12px;
     padding: 8px 16px;
     margin-bottom: 20px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .search-main:focus-within {
     border-color: #4d1b95;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(77, 27, 149, 0.1);
+    box-shadow: 0 0 0 3px rgba(77, 27, 149, 0.15);
+}
+
+/* SOLO el div reacciona */
+.search-main:hover {
+    border-color: #94a3b8;
 }
 
 .icon-search {
     font-size: 20px;
-    color: #64748b;
+    color: var(--text);
     margin-right: 12px;
 }
 
@@ -376,33 +362,32 @@ button:focus {
 }
 
 .input-main::placeholder {
-    color: #475569;
+    color: #64748b;
 }
 
 /* Filtros secundarios (Selects) */
 .filters-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 16px;
+
 }
 
 /* === LABELS DE FILTROS === */
 .filter-group {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    gap: 8px;
 }
 
 
 /* Label bonito y legible */
 .filter-group label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: #334155;
-    letter-spacing: 0.3px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    color: #475569;
+    margin-bottom: 2px;
+
 }
 
 /* Hover suave */
@@ -421,36 +406,36 @@ button:focus {
     display: none;
 }
 
+.select-filtro,
+.btn-clear-filters {
+    height: 44px;
+}
+
 .select-filtro {
     width: 100%;
-    padding: 14px 16px;
-    font-size: 15px;
-    color: var(--text-main);
-    background-color: white;
-    border: 2px solid var(--border);
+    padding: 12px 16px;
+    font-size: 14px;
+    box-shadow: 0 0 0 4px rgba(77, 27, 149, 0.1);
     border-radius: 10px;
-    outline: none;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
     cursor: pointer;
-    transition: all 0.3s ease;
-    appearance: none;
-    /* Flechita personalizada para el select */
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    background-size: 16px;
+}
+
+.select-filtro:hover {
+    border-color: var(--primary);
 }
 
 .select-filtro:focus {
-    border-color: #4d1b95;
-    background-color: #ffffff;
-    box-shadow: 0 0 0 4px rgba(77, 27, 149, 0.1);
+    border-color: var(--primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(77, 27, 149, 0.1);
 }
 
 /* === GRID DE OFERTAS === */
 .grid-ofertas {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
 }
 
@@ -497,7 +482,7 @@ button:focus {
 
 .btn-clear {
     background: white;
-    border: 2px solid #e2e8f0;
+    border: 1px solid (var(--danger));
     padding: 10px 20px;
     border-radius: 8px;
     color: #475569;
@@ -548,31 +533,32 @@ button:focus {
 
 .skills-selected {
     display: flex;
-    gap: 6px;
     flex-wrap: wrap;
-    margin-top: 12px;
-    min-height: 32px;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #e2e8f0;
     /* Evita saltos de layout */
 }
 
 .chip {
     background: #4d1b95;
     color: white;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 12px;
-    display: flex;
+    /* Más redondeado queda más moderno */
+    font-size: 13px;
+    display: inline-flex;
+    /* Cambiado de display: flex */
     align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    border: 1px solid #e0e7ff;
-    transition: all 0.2s ease;
-    animation: fadeIn 0.3s ease;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .chip:hover {
-    background: #e0e7ff;
-    transform: translateY(-1px);
+    background: var(--primary-hover);
+    color: #ffffff;
+    /* mantener contraste */
 }
 
 .chip button {
@@ -583,23 +569,26 @@ button:focus {
 }
 
 .btn-remove-skill {
-    background: #4d1b95;
+    background: rgba(255, 255, 255, 0.2);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    font-size: 10px;
+    line-height: 1;
     padding: 0;
-    transition: background 0.2s;
+    transition: all 0.2s;
 }
 
 .btn-remove-skill:hover {
     background: #ef4444;
-    /* Rojo al querer borrar */
+    /* Rojo al pasar el ratón */
+    transform: scale(1.1);
 }
 
 /* Animación para que aparezcan suaves */
@@ -624,19 +613,27 @@ button:focus {
 
 
 .btn-clear-filters {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 12px 18px;
+    height: 44px;
+    /* Misma altura que los selects */
+    background: #fee2e2;
+
+    color: #ef4444;
+    border: 1px solid var(--danger-hover);
     border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s;
+    width: 100%;
 }
 
 .btn-clear-filters:hover {
-    background: #dc2626;
-    transform: translateY(-1px);
+    background: #ef4444;
+    color: white;
+}
+
+.action-group {
+    display: flex;
+    align-items: flex-end;
 }
 
 
@@ -668,9 +665,29 @@ button:focus {
     .search-panel {
         padding: 20px;
     }
+
+    .filters-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .action-group {
+        grid-column: span 2;
+    }
 }
 
 @media (max-width: 768px) {
+
+    .filters-row {
+        /* En tablets usamos 2 columnas */
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .action-group {
+        grid-column: span 2;
+        /* Botón limpiar ocupa todo el ancho abajo */
+    }
+
     .ofertas-header {
         flex-direction: column;
         align-items: flex-start;
@@ -683,7 +700,7 @@ button:focus {
 
     .grid-ofertas {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 20px;
     }
 
     .filter-group {
@@ -712,7 +729,8 @@ button:focus {
     }
 }
 
-@media (max-width: 480px) {
+
+@media (max-width: 600px) {
     .container-ofertas {
         margin: 20px auto;
         padding: 0 10px;
@@ -745,8 +763,24 @@ button:focus {
     }
 
     .grid-ofertas>* {
-        flex: 1 1 100%;
-        max-width: 100%;
+         background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px; 
+        transition: all 0.2s ease;
     }
+
+    .filters-row {
+        grid-template-columns: 1fr;
+    }
+
+    .action-group {
+        grid-column: span 1;
+    }
+
+
 }
 </style>

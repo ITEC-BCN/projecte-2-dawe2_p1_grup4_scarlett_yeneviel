@@ -46,10 +46,9 @@ const limitarTexto = (texto, max = 120) => {
   background-color: #ffffff;
   border-radius: 16px;
   padding: 24px;
-  width: 100%; 
   display: flex;
   flex-direction: column;
-  border: 1px solid #e2e8f0; /* Borde más sutil pero definido */
+  border: 1px solid #334155;;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInUp 0.5s ease-out both;

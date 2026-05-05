@@ -425,6 +425,14 @@ Publicar la web con vercel
 - Mejora del diseño - colores, detalle de oferta...
 - Recuperar contraseña
 
+## Dia 32 - 05/05/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+
+- Mejora del diseño - colores, detalle de oferta, formularios...
+- Validación de errores al subir CV
+- Agregación de más filtros de busqueda
+
 
 
 

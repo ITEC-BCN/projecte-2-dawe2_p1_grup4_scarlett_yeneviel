@@ -674,7 +674,6 @@ app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
 
 
 // POST: subir CV y extraer datos
-// POST: subir CV y extraer datos
 app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
   try {
     if (!req.file || !req.body.studentId) {
@@ -683,6 +682,17 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
 
     const studentId = req.body.studentId;
     const file = req.file;
+
+     // Validar archivo
+    if (!file) {
+      return res.status(400).json({ error: 'No se subió ningún archivo' });
+    }
+    if (file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'Solo se permiten archivos PDF' });
+    }
+    if (!file.buffer || file.buffer.length === 0) {
+      return res.status(400).json({ error: 'El archivo PDF está vacío o corrupto' });
+    }
 
     // 1. Subida a Storage
     const fileName = `cv_${studentId}_${Date.now()}.pdf`;
@@ -711,6 +721,8 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
 Eres un extractor de CV.
 
 REGLAS:
+- SÓLO extrae datos que estén explícitamente escritos en el CV.
+- SI NO ES UN CV, NO EXTRAIGAS NADA.
 - NO inventes datos.
 - NO repitas información.
 - NO mezcles formación y experiencia.

@@ -702,6 +702,10 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
       upsert: true,
     });
 
+console.log("FILE:", file);
+console.log("BUFFER EXISTS:", !!file.buffer);
+console.log("SIZE:", file.size);
+
     // 2. Extraer texto del PDF
     const pdfParse = (await import("pdf-parse")).default;
     const pdfResult = await pdfParse(file.buffer);
@@ -871,6 +875,7 @@ FORMATO:
   }
 });
 
+/* ================= UBICACIONES ================= */
 
 app.get("/ubicaciones", async (req, res) => {
 

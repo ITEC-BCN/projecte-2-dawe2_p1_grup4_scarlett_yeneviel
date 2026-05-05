@@ -1,5 +1,4 @@
 import { ref, watch } from "vue";
-import { URL_BACK } from "../../../config";
 
 export function useStudents(urlRef) {
     const students = ref(null);
@@ -37,28 +36,37 @@ export function useStudents(urlRef) {
     };
 
     //Ver cv
-    const verCV=async(nombreArchivo)=>{
+    const verCV=async(idEstudiante)=>{
 
-        if (!nombreArchivo) {
-            alert('No se proporcionó el nombre del archivo');
+        if (!idEstudiante) {
+            alert('No se proporcionó el id del estudiante');
             return;
         }
         try {
             // Llamada a tu API de Node
             const token = localStorage.getItem('token');
-            const response = await fetch(`${URL_BACK}/get-cv/${nombreArchivo}`,{
+            const response = await fetch(`${import.meta.env.VITE_URL_BACK}/get-cv/${idEstudiante}`,{
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            credentials: 'include'
             });
+
             const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al obtener la URL');
+            }
+
             const urlPublica = data.url;
 
-            // Abrir en pestaña nueva
-            window.open(urlPublica, '_blank', 'noopener,noreferrer');
+            if (urlPublica) {
+                // Abrir en pestaña nueva
+                window.open(urlPublica, '_blank', 'noopener,noreferrer');
+            } else {
+                alert('El estudiante no tiene un CV registrado.');
+            }
+            
         } catch (error) {
             console.error('Error al obtener el CV de la API:', error);
             alert('No se pudo abrir el archivo');

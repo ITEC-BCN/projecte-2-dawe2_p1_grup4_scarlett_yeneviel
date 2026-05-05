@@ -218,7 +218,7 @@ const verDetallePerfil = (id) => {
             <button
               class="btn-view"
               :disabled="!item.usuario_estudiante?.documento || item.usuario_estudiante.documento.length === 0 || !item.usuario_estudiante.documento[0]?.ruta_archivo"
-              @click="(item.usuario_estudiante && item.usuario_estudiante.documento && item.usuario_estudiante.documento[0] && item.usuario_estudiante.documento[0].ruta_archivo) && verCV(item.usuario_estudiante.documento[0].ruta_archivo)"
+              @click="verCV(item.usuario_estudiante.id)"
             >
               Ver CV
             </button>

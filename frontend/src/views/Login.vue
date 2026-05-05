@@ -2,8 +2,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { URL_BACK } from '../../../config'
-
 const router = useRouter()
 
 const email = ref('')

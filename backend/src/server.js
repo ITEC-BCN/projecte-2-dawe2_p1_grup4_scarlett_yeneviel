@@ -20,6 +20,7 @@ import {
   obtenerEstudiantes,
   obtenerEstudiantePorId,
   actualizarEstudiante,
+  getUserState,
   crearAdmin,
   obtenerAdmins,
   obtenerAdminPorId,
@@ -35,7 +36,8 @@ import {
   obtenerSkills,
   subirAvatarStorage,
   guardarFotoPerfil,
-  cargarCiudades
+  cargarCiudades,
+  getCVUrl
 } from "./supabaseClient.js";
 import requireAuth from "./middleware/requireAuth.js";
 
@@ -288,6 +290,23 @@ app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
     res.status(200).json({
       message: "Solicitud actualizada exitosamente",
       data: resultado,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/estudiante/estado/:idEstudiante", async (req, res) => {
+  try {
+    const id_estudiante = req.params.idEstudiante;
+    if (!id_estudiante) {
+      return res.status(400).json({ error: "Falta el id del estudiante en la URL" });
+    }
+
+    const resultado = await getUserState(id_estudiante);
+    res.status(200).json({
+      message: "Estado obtenido exitosamente",
+      estado: resultado
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -876,6 +895,28 @@ FORMATO:
 });
 
 /* ================= UBICACIONES ================= */
+
+//MOSTRAR CV (URL pública de Supabase Storage)
+app.get('/get-cv/:idEstudiante', async (req, res) => {
+  try {
+    const { idEstudiante } = req.params;
+
+    if (!idEstudiante) {
+      return res.status(400).json({ error: "ID de estudiante requerido" });
+    }
+    const url =await getCVUrl(idEstudiante);
+
+    if (!url) {
+      return res.status(404).json({ error: "No se encontró el CV para este estudiante" });
+    }
+
+    res.json({ url });
+
+  } catch (err) {
+    console.error("Error obteniendo CV:", err);
+    res.status(500).json({ error: err.message || "Error interno del servidor" });
+   }
+});
 
 app.get("/ubicaciones", async (req, res) => {
 

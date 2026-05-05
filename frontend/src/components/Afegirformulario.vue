@@ -121,288 +121,294 @@ const volver = () => router.back();
 
 </script>
 
-
 <template>
-  <div class="form-wrapper">
-    <button @click="volver" class="btn-volver">
-      ← Volver 
-    </button>
-    <div class="form-container">
-      <h1 class="title">Nueva Oferta</h1>
+  <div class="form-page">
+    <nav class="top-nav">
+      <button @click="volver" class="btn-back">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Volver al listado
+      </button>
+    </nav>
 
-      <form @submit.prevent="submitFormulario" class="form">
-        <div class="input-group">
-          <label>Empresa</label>
-          <input v-model="form.nombre_empresa" placeholder="Nombre de la empresa" required
-            @blur="touched.nombre_empresa = true" />
-          <p v-if="touched.nombre_empresa && erroresValidacion.nombre_empresa" class="error">
-            {{ erroresValidacion.nombre_empresa }}
-          </p>
+    <main class="form-card">
+      <header class="form-header">
+        <h1>Nueva Oferta de Empleo</h1>
+        <p>Completa los campos para publicar una nueva oportunidad en la plataforma.</p>
+      </header>
+
+      <form @submit.prevent="submitFormulario" class="modern-form">
+        
+        <section class="form-section">
+          <h2 class="section-title">Información General</h2>
+          <div class="grid-row">
+            <div class="field-group full-width">
+              <label for="empresa">Nombre de la Empresa</label>
+              <input 
+                id="empresa" v-model="form.nombre_empresa" 
+                type="text" placeholder="Ej. Tech Solutions S.L."
+                :class="{ 'input-error': touched.nombre_empresa && erroresValidacion.nombre_empresa }"
+                @blur="touched.nombre_empresa = true" 
+              />
+              <span v-if="touched.nombre_empresa && erroresValidacion.nombre_empresa" class="error-text">{{ erroresValidacion.nombre_empresa }}</span>
+            </div>
+
+            <div class="field-group ">
+              <label for="puesto">Título del Puesto</label>
+              <input 
+                id="puesto" v-model="form.tipo_puesto" 
+                placeholder="Ej. Frontend Developer"
+                :class="{ 'input-error': touched.tipo_puesto && erroresValidacion.tipo_puesto }"
+                @blur="touched.tipo_puesto = true" 
+              />
+              <span v-if="touched.tipo_puesto && erroresValidacion.tipo_puesto" class="error-text">{{ erroresValidacion.tipo_puesto }}</span>
+            </div>
+
+            <div class="field-group fecha-field">
+              <label for="fecha">Fecha de Expiración</label>
+              <input 
+                id="fecha" type="date" v-model="form.fecha_expiracion"
+                @blur="touched.fecha_expiracion = true"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2 class="section-title">Condiciones y Ubicación</h2>
+          <div class="grid-row three-cols">
+            <div class="field-group">
+              <label>Jornada</label>
+              <select v-model="form.jornada">
+                <option value="" disabled>Seleccionar...</option>
+                <option value="completa">Completa</option>
+                <option value="parcial">Parcial</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Modalidad</label>
+              <select v-model="form.modalidad">
+                <option value="" disabled>Seleccionar...</option>
+                <option value="Presencial">Presencial</option>
+                <option value="Remoto">Remoto</option>
+                <option value="Híbrido">Híbrido</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Ubicación</label>
+              <select v-model="form.id_ubicacion">
+                <option value="0" disabled>Ciudad...</option>
+                <option v-for="c in ubicaciones" :key="c.id" :value="c.id">{{ c.ciudad }}</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2 class="section-title">Detalles de la Oferta</h2>
+          <div class="field-group">
+            <label>Descripción del puesto</label>
+            <textarea v-model="form.descripcion" rows="4" placeholder="¿Qué buscamos?"></textarea>
+          </div>
+          
+          <div class="field-group">
+            <label>Requisitos</label>
+            <textarea v-model="form.requisitos" rows="3" placeholder="Tecnologías, experiencia..."></textarea>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <p v-if="serverError" class="server-error-msg">{{ serverError }}</p>
+          <button type="submit" class="btn-submit" :disabled="loading || Object.keys(erroresValidacion).length > 0">
+            <span v-if="!loading">Publicar Oferta</span>
+            <span v-else class="loader"></span>
+          </button>
         </div>
-
-        <div class="input-group">
-          <label>Tipo de puesto</label>
-          <input v-model="form.tipo_puesto" placeholder="Ej. Desarrollador Web" @blur="touched.tipo_puesto = true" />
-          <p v-if="touched.tipo_puesto && erroresValidacion.tipo_puesto" class="error">
-            {{ erroresValidacion.tipo_puesto }}
-          </p>
-        </div>
-
-        <div class="input-group">
-          <label>Fecha de expiración</label>
-          <input v-model="form.fecha_expiracion" type="date" @blur="touched.fecha_expiracion = true" />
-          <p v-if="touched.fecha_expiracion && erroresValidacion.fecha_expiracion" class="error">
-            {{ erroresValidacion.fecha_expiracion }}
-          </p>
-        </div>
-
-        <div class="input-group">
-          <label>Tipo de jornada</label>
-          <select v-model="form.jornada" @blur="touched.jornada = true">
-            <option value="" disabled>Seleciona un tipo de jornada</option>
-            <option value="completa">Jornada Completa</option>
-            <option value="Jornada parcial">Jornada Parcial</option>
-          </select>
-            <p v-if="touched.jornada && erroresValidacion.jornada" class="error">
-              {{ erroresValidacion.jornada }}
-            </p>
-        </div>
-
-        <div class="input-group">
-          <label>Modalidad</label>
-          <select v-model="form.modalidad" @blur="touched.modalidad = true">
-            <option value="" disabled>Seleciona una modalidad</option>
-            <option value="Presencial">Presencial</option>
-            <option value="Remoto">Remoto</option>
-            <option value="Híbrido">Híbrido</option>
-          </select>
-            <p v-if="touched.modalidad && erroresValidacion.modalidad" class="error">
-              {{ erroresValidacion.modalidad }}
-            </p>
-        </div>
-
-        <div class="input-group">
-          <label>Modelo de practicas</label>
-          <select v-model="form.modelo_practicas" @blur="touched.modelo_practicas = true">
-            <option value="" disabled>Seleciona un modelo de prácticas</option>
-            <option value="INTENSIVAS">Intensivas</option>
-            <option value="GENERAL">General</option>
-          </select>
-            <p v-if="touched.modelo_practicas && erroresValidacion.modelo_practicas" class="error">
-              {{ erroresValidacion.modelo_practicas }}
-            </p>
-        </div>
-
-        <div class="input-group">
-          <label>Descripción general</label>
-          <textarea v-model="form.descripcion" placeholder="Describe el puesto"
-            @blur="touched.descripcion = true"></textarea>
-          <p v-if="touched.descripcion && erroresValidacion.descripcion" class="error">
-            {{ erroresValidacion.descripcion }}
-          </p>
-        </div>
-
-        <div class="input-group">
-          <label>Funciones del puesto</label>
-          <textarea v-model="form.funciones" placeholder="Responsabilidades" @blur="touched.funciones = true"></textarea>
-          <p v-if="touched.funciones && erroresValidacion.funciones" class="error">
-            {{ erroresValidacion.funciones }}
-          </p>
-        </div>
-
-        <div class="input-group">
-        <label>Ubicación</label>
-        <select v-model="form.id_ubicacion" @blur="touched.id_ubicacion = true">
-          <option value="" disabled>Selecciona una ciudad</option>
-          <option v-for="c in ubicaciones" :key="c.id" :value="c.id">
-            {{ c.ciudad }} ({{ c.comunidad }})
-          </option>
-        </select>
-          <p v-if="touched.id_ubicacion && erroresValidacion.id_ubicacion" class="error">
-            {{ erroresValidacion.id_ubicacion }}
-          </p>
-        </div>
-        <div class="input-group">
-          <label>Requisitos / conocimientos</label>
-          <textarea v-model="form.requisitos" placeholder="Habilidades y conocimientos necesarios"
-            @blur="touched.requisitos = true"></textarea>
-          <p v-if="touched.requisitos && erroresValidacion.requisitos" class="error">
-            {{ erroresValidacion.requisitos }}
-          </p>
-        </div>
-
-        <div class="input-group">
-          <label>Beneficios</label>
-          <textarea v-model="form.beneficios" placeholder="Beneficios que ofrece la empresa"
-            @blur="touched.beneficios = true"></textarea>
-          <p v-if="touched.beneficios && erroresValidacion.beneficios" class="error">
-            {{ erroresValidacion.beneficios }}
-          </p>
-        </div>
-
-        <button type="submit" class="btn" :disabled="loading || Object.keys(erroresValidacion).length > 0">
-          {{ loading ? "Guardando..." : "Crear oferta" }}
-        </button>
-
-        <p v-if="serverError" class="error">{{ serverError }}</p>
       </form>
-    </div>
+    </main>
   </div>
 </template>
 
-
 <style scoped>
-/* Botón Volver */
-.btn-volver {
+:simple-vars {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg-page: #f8fafc;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --error: #ef4444;
+  --border: #e2e8f0;
+}
+
+.form-page {
+  background-color: var(--bg-page);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  color: var(--text-main);
+}
+
+.top-nav {
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background: none;
   border: none;
-  color: black;
+  color: var(--text-muted);
+  font-weight: 500;
   cursor: pointer;
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-  transition: color 0.3s;
+  transition: color 0.2s;
 }
 
-.btn-volver:hover {
-  color: #000;
-  text-decoration: underline;
+.btn-back:hover { color: var(--primary); }
+
+.form-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 2.5rem;
 }
 
-/* Wrapper centrado */
-.form-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  background: #f3f4f6;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+.form-header {
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
 }
 
-/* Contenedor del formulario */
-.form-container {
-  background: #fff;
-  padding: 40px 30px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  max-width: 700px;
-  width: 100%;
+.form-header h1 {
+  font-size: 1.875rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
-/* Título */
-.title {
-  font-size: 2rem;
+.form-header p {
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 25px;
-  text-align: center;
+  margin-bottom: 1.25rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Formulario */
-.form {
+.grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.three-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.field-group {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0.5rem;
 }
 
-/* Grupo input + label */
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.field-group  label {
+  margin: 0.5rem;
 }
 
-/* Labels */
-.input-group label {
+.fecha-field { margin-left: 2rem;}
+.full-width { grid-column: span 2; }
+
+label {
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #4b5563;
-  font-size: 0.9rem;
 }
 
-/* Inputs y textarea */
-input,
-textarea {
-  padding: 12px 15px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 14px;
-  outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
+input, select, textarea {
   width: 100%;
-  font-family: inherit;
-}
-
-/* Focus en inputs */
-input:focus,
-textarea:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
-
-/* Estilo específico para el Select (Ubicación) */
-select {
-  width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #fcfcfc;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background-color: #fff;
   font-size: 1rem;
-  appearance: none; /* Elimina la flecha por defecto en algunos navegadores */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1em;
-  cursor: pointer;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
-border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-}
-/* Textarea más grande */
-textarea {
-  min-height: 100px;
-  resize: vertical;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
-/* Botón */
-.btn {
-  background: #6366f1;
+.input-error { border-color: var(--error); }
+
+.error-text {
+  color: var(--error);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.form-actions {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-submit {
+  width: 100%;
+  max-width: 300px;
+  padding: 1rem;
+  background-color: var(--primary);
   color: white;
-  font-weight: 600;
-  padding: 14px;
   border: none;
-  border-radius: 10px;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s ease;
+  transition: transform 0.1s, background-color 0.2s;
 }
 
-.btn:hover:not(:disabled) {
-  background: #4f46e5;
-  transform: translateY(-2px);
+.btn-submit:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
-.btn:disabled {
-  background: #a5b4fc;
+.btn-submit:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Mensaje de error */
-.error {
-  color: #dc2626;
-  font-weight: 500;
-  font-size: 0.9rem;
-  margin-top: 5px;
+/* Loader simple */
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  display: inline-block;
 }
 
-/* Responsive */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Media Queries para Responsividad */
 @media (max-width: 768px) {
-  .form-container {
-    padding: 30px 20px;
+  .grid-row, .three-cols {
+    grid-template-columns: 1fr;
   }
+  .full-width { grid-column: auto; }
+  .form-card { padding: 1.5rem; }
 }
 </style>

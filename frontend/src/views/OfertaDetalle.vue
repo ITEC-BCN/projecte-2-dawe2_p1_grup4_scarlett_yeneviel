@@ -44,7 +44,7 @@ const verificarEstado= async (idEstudiante, estado) => {
     try {
 
       if(estado=="postulacion"){
-        const listaPostulados = await postulaciones(`${URL_BACK}/postulaciones/${route.params.id}`)
+        const listaPostulados = await postulaciones(`${import.meta.env.VITE_URL_BACK}/postulaciones/${route.params.id}`)
         yaPostulado.value = listaPostulados.some(p => parseInt(p.id_usuario_estudiante) == parseInt(idEstudiante))
       }else if(estado=="guardado"){
         const listaOfertasGuardadas = await OfertasGuardadasUser(idEstudiante);
@@ -67,9 +67,12 @@ const modalInformativoEstado = () => {
 
 // Llamamos a la función cuando el componente se carga
 onMounted(() => {
+
+  if(idEstudiante){
   verificarEstado(idEstudiante, "postulacion");
   verificarEstado(idEstudiante, "guardado");
   actualizarEstado();
+  }
 });
 
 const postularOferta = async () => {
@@ -88,7 +91,7 @@ const postularOferta = async () => {
   if(idEstudiante){
     try {
 
-      const res = await estudiantePostula(bodyPostulacion.value, `${URL_BACK}/estudiante/postular`)
+      const res = await estudiantePostula(bodyPostulacion.value, `${import.meta.env.VITE_URL_BACK}/estudiante/postular`)
       if (res.error) {
         console.error("Error al hacer la incripción: ", res.error)
         alert("Error al hacer la incripción")

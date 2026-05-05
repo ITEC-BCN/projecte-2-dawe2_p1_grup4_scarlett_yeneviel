@@ -1,10 +1,10 @@
 <script setup>
-import { ref, reactive, watch,computed } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 
-const userRole = ref('estudiante') 
+const userRole = ref('estudiante')
 
 const route = useRoute();
 const router = useRouter();
@@ -15,23 +15,23 @@ const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
 const { students, loadingStudents, isCreating, createStudent } =
   useStudents(url);
 
-  const ofertasIncritas = ref([]);
-  const ofertasGuardadas = ref([]);
-  const documentos = ref([]);
-  const user=reactive({
-    name:"",
-    role:localStorage.getItem('role')
-  })
+const ofertasIncritas = ref([]);
+const ofertasGuardadas = ref([]);
+const documentos = ref([]);
+const user = reactive({
+  name: "",
+  role: localStorage.getItem('role')
+})
 
-  watch(students, (newStudents) => {
-    if (newStudents) {
-      user.name = newStudents.nombre || "Usuario";
-      user.role = newStudents.rol || "estudiante";
-      ofertasIncritas.value = newStudents.postulaciones || [];
-      ofertasGuardadas.value = newStudents.oferta_guardada || [];
-      documentos.value = newStudents.enlaces || [];
-    }
-  }, { immediate: true });
+watch(students, (newStudents) => {
+  if (newStudents) {
+    user.name = newStudents.nombre || "Usuario";
+    user.role = newStudents.rol || "estudiante";
+    ofertasIncritas.value = newStudents.postulaciones || [];
+    ofertasGuardadas.value = newStudents.oferta_guardada || [];
+    documentos.value = newStudents.enlaces || [];
+  }
+}, { immediate: true });
 // Datos de estadísticas
 const stats = computed(() => {
   if (user.role === 'estudiante') {
@@ -90,7 +90,7 @@ const statClick = (stat) => {
 <template>
   <div class="dashboard-simple">
     <main class="content">
-      
+
       <header class="main-header">
         <div class="header-text">
           <h1>Hola, <span class="resaltar">{{ user.name }}</span></h1>
@@ -109,7 +109,7 @@ const statClick = (stat) => {
       </section>
 
       <div class="main-grid">
-        
+
         <section class="panel list-panel">
           <div class="panel-header">
             <h3 v-if="currentView === 'postulaciones'">Candidaturas <strong class="resaltar">Recientes</strong></h3>
@@ -126,17 +126,20 @@ const statClick = (stat) => {
                   <strong>{{ (item.oferta || item).tipo_puesto }}</strong>
                   <span>{{ (item.oferta || item).nombre_empresa }}</span>
                 </div>
-                <span v-if="currentView === 'postulaciones'" class="pill" :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' :item.estado==='Descartado' ? 'status-4' : 'status-3'">{{ item.estado }}</span>
+                <span v-if="currentView === 'postulaciones'" class="pill"
+                  :class="item.estado === 'En proceso' ? 'status-1' : item.estado === 'CV Leído' ? 'status-2' : item.estado === 'Descartado' ? 'status-4' : 'status-3'">{{
+                    item.estado }}</span>
               </div>
-             <div class="pagination" v-if="displayedList.length > pageSize">
+              <div class="pagination" v-if="displayedList.length > pageSize">
                 <!--<button class="page-btn" :disabled="currentPage === 1" @click="prevPage">Anterior</button>-->
-               <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }" @click="goToPage(p)">{{ p }}</button>
+                <button v-for="p in totalPages" :key="p" class="page-number" :class="{ active: p === currentPage }"
+                  @click="goToPage(p)">{{ p }}</button>
                 <!--<button class="page-btn" :disabled="currentPage === totalPages" @click="nextPage">Siguiente</button>-->
               </div>
-           </div>
-           </div>
-         </section>
-<!--
+            </div>
+          </div>
+        </section>
+        <!--
         <section class="panel actions-panel">
           <h3>Gestión <strong class="resaltar">Rápida</strong></h3>
           <div class="actions-grid">
@@ -175,16 +178,18 @@ const statClick = (stat) => {
 /* BASE */
 .dashboard-simple {
   background-color: #fcfcfc;
-  min-height: auto; 
+  min-height: auto;
   color: #333;
 }
 
-.resaltar { color: #10b981; }
+.resaltar {
+  color: #10b981;
+}
 
 .content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem 1rem 1.5rem; 
+  padding: 3rem 1.5rem 1rem 1.5rem;
 }
 
 /* HEADER */
@@ -192,18 +197,27 @@ const statClick = (stat) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
 }
 
-.main-header h1 { font-size: 2.2rem; margin: 0; }
-.main-header p { color: #666; margin-top: 0.3rem; }
+.main-header h1 {
+  font-size: 2.2rem;
+  margin: 0;
+  color: #0f172a;
+}
+
+.main-header p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
 
 /* TÍTULOS H3 ESTILO PERSONALIZADO */
 h3 {
   font-size: 1.5rem;
   margin: 0;
   color: #333;
-  font-weight: 400; /* Normal para que el strong resalte */
+  font-weight: 400;
+  /* Normal para que el strong resalte */
 }
 
 h3 .resaltar {
@@ -219,20 +233,44 @@ h3 .resaltar {
 }
 
 .stat-box {
-  background: white;
-  flex: 1;
-  max-width: 200px;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #eee;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 1.4rem;
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: all 0.2s ease;
 }
 
-.stat-icon { font-size: 1.8rem; }
-.stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: #333; }
-.stat-label { color: #999; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-box:hover {
+  transform: translateY(-3px);
+  border-color: #10b981;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.12);
+}
+
+.stat-box.active {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.stat-label {
+  color: #999;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
 /* GRID */
 .main-grid {
@@ -244,11 +282,11 @@ h3 .resaltar {
 }
 
 .panel {
-  background: white;
-  border-radius: 15px;
-  padding: 2rem;
-  border: 1px solid #eee;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .panel-header {
@@ -258,20 +296,49 @@ h3 .resaltar {
   margin-bottom: 1.5rem;
 }
 
-.ver-mas { color: #10b981; font-size: 0.85rem; text-decoration: none; font-weight: 700; }
+.ver-mas {
+  color: #10b981;
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 700;
+}
 
 /* LISTA */
 .item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 0;
-  border-bottom: 1px solid #f8f8f8;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.2s;
 }
-.item-row:last-child { border-bottom: none; }
 
-.item-info strong { display: block; font-size: 1rem; color: #444; }
-.item-info span { font-size: 0.85rem; color: #999; }
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-row:hover {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding-left: 8px;
+}
+
+.item-info strong {
+  display: block;
+  font-size: 1rem;
+  color: #444;
+}
+
+.item-info span {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 /* PILLS */
 .pill {
@@ -280,10 +347,26 @@ h3 .resaltar {
   border-radius: 20px;
   font-weight: 700;
 }
-.status-1 { background: #f0fdf4; color: #10b981; }
-.status-2 { background: #eff6ff; color: #3b82f6; }
-.status-3 { background: #faf5ff; color: #a855f7; }
-.status-4 { background: #faf5ff; color: #f00; }
+
+.status-1 {
+  background: #f0fdf4;
+  color: #10b981;
+}
+
+.status-2 {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.status-3 {
+  background: #faf5ff;
+  color: #a855f7;
+}
+
+.status-4 {
+  background: #faf5ff;
+  color: #f00;
+}
 
 /* ACCIONES */
 .actions-grid {
@@ -317,8 +400,19 @@ h3 .resaltar {
   border: 1px dashed #ddd;
 }
 
-.resaltar-ia { color: #10b981; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; }
-.ia-box p { font-size: 0.88rem; color: #666; margin: 8px 0 0; line-height: 1.4; }
+.resaltar-ia {
+  color: #10b981;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.ia-box p {
+  font-size: 0.88rem;
+  color: #666;
+  margin: 8px 0 0;
+  line-height: 1.4;
+}
 
 /* PAGINACIÓN */
 .pagination {
@@ -328,7 +422,9 @@ h3 .resaltar {
   align-items: center;
   margin-top: 1rem;
 }
-.page-btn, .page-number {
+
+.page-btn,
+.page-number {
   border: 1px solid #eee;
   background: white;
   padding: 0.45rem 0.65rem;
@@ -337,25 +433,43 @@ h3 .resaltar {
   font-weight: 700;
   color: #4C1D95;
 }
+
 .page-btn[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .page-number.active {
   background: #10b981;
   color: white;
   border-color: #10b981;
 }
 
-.empty-list { color: #666; padding: 1rem 0; }
+.empty-list {
+  color: #666;
+  padding: 1rem 0;
+}
 
 /* estadística clicable */
-.stat-box.clickable { cursor: pointer; }
-.stat-box.clickable:hover { box-shadow: 0 6px 18px rgba(16,185,129,0.08); transform: translateY(-2px); }
+.stat-box.clickable {
+  cursor: pointer;
+}
+
+.stat-box.clickable:hover {
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.08);
+  transform: translateY(-2px);
+}
 
 /* RESPONSIVO */
 @media (max-width: 900px) {
-  .main-grid { grid-template-columns: 1fr; }
-  .main-header { flex-direction: column; text-align: center; gap: 1rem; }
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
 }
 </style>

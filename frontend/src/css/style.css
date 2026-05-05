@@ -2,16 +2,22 @@
 :root {
   --accent-green: #10b981;
   --accent-purple: #8b5cf6;
-  --primary-hover: #1e0a4c;
+  --primary-hover: #3b146f;
   --accent: #10b981;
-  --primary: #4C1D95;
+  --primary: #4d1b95;
   --text: #0f172a;
   --text-secondary: #334155;
   --muted: #6b7280;
   --bg: #ffffff;
-  --focus: #000000;/* contraste máximo */
+  --focus: #7c3aed;
+  ;
+  /* contraste máximo */
   --border: #cbd5e1;
   --bg-soft: #f1f5f9;
+  --bg-main: #ffffff;
+  --bg-soft: #f4f6f8;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
 }
 
 

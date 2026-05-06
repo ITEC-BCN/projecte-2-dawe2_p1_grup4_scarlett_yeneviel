@@ -197,83 +197,121 @@ const funGuardarOferta = async() => {
 
       <article v-else-if="oferta" class="oferta-card-new">
 
-        <header class="header-detalle-new">
-          <div class="header-meta">
-            <span class="badge-new">
-              {{ oferta.tipo_puesto }}
-            </span>
-            <span v-if="oferta.contenido_extra" class="badge-new">
-              {{ oferta.contenido_extra }}
-            </span>
-          </div>
+  <!-- HEADER tipo TechTalent -->
+  <header class="header-top">
+    <div class="empresa-info">
+      <div class="logo-box">🏢</div>
 
-          <h1 class="empresa-new">
-            {{ oferta.tipo_puesto }}
-          </h1>
-          <h2>
-         {{ oferta.nombre_empresa }}
-        </h2>
-        </header>
-        
-        <div class="contenido-grid-new">
+      <div>
+        <h1 class="titulo-puesto">{{ oferta.tipo_puesto }}</h1>
+        <p class="empresa-nombre">{{ oferta.nombre_empresa }}</p>
 
-          <main class="info-principal-new">
-            <section class="seccion-detalle-new">
-              <p>{{ oferta.descripcion }}</p>
-            </section>
-            <div class="detalle-meta">
-               <p>{{ oferta.jornada }}</p>
-               <p>-</p>
-               <p>{{ oferta.modalidad }}</p>
-            </div>
-            <section class="seccion-detalle-new">
-              <h3>Tus responsabilidades</h3>
-              <p>{{ oferta.funciones }}</p>
-            </section>
-
-            <section class="seccion-detalle-new">
-              <h3>Requisitos</h3>
-              <p>{{ oferta.requisitos }}</p>
-            </section>
-
-            <section class="seccion-detalle-new">
-              <h3>Nuestra oferta</h3>
-              <p>{{ oferta.beneficios }}</p>
-            </section>
-
-            <section class="seccion-detalle-new">
-              <h3>Contenido adicional</h3>
-              <p>{{ oferta.contenido_extra }}</p>
-            </section>
-
-          </main>
-
-          <aside class="sidebar-new">
-            <div class="info-box-new">
-
-              <div class="info-item-new">
-                <strong>Publicado el</strong>
-                <span>{{ oferta.fecha_publicacion }}</span>
-              </div>
-
-              <div class="info-item-new">
-                <strong>Oferta expira el</strong>
-                <span>{{ oferta.fecha_expiracion }}</span>
-              </div>
-
-              <button @click="postularOferta" :disabled="yaPostulado || estadoActual === 'pendiente' || estadoActual === 'inactivo'" class="btn-postular">
-                {{ yaPostulado ? 'Ya estás inscrito' : 'Inscribirme' }}
-              </button>
-
-             <button @click="funGuardarOferta" :disabled="ofertaYaGuardada || estadoActual === 'pendiente' || estadoActual === 'inactivo'" class="btn-guardar-oferta">
-                {{ ofertaYaGuardada ? 'Oferta guardada' : '🤍 Guardar oferta' }}
-             </button>
-
-            </div>
-          </aside>
-
+        <div class="tags">
+          <span class="tag">C#</span>
+          <span class="tag">.NET</span>
+          <span class="tag">Azure</span>
+          <span class="tag">SQL</span>
         </div>
-      </article>
+      </div>
+    </div>
+
+    <div class="acciones-header">
+      <button class="btn-postular-main"
+        @click="postularOferta"
+        :disabled="yaPostulado || estadoActual === 'pendiente' || estadoActual === 'inactivo'">
+        Postularme
+      </button>
+    </div>
+  </header>
+
+  <!-- GRID -->
+  <div class="contenido-grid-new">
+
+    <!-- IZQUIERDA -->
+    <main class="info-principal-new">
+
+      <section class="bloque">
+        <h3>Descripción</h3>
+        <p>{{ oferta.descripcion }}</p>
+      </section>
+
+      <section class="bloque">
+        <h3>Funciones</h3>
+        <p>{{ oferta.funciones }}</p>
+      </section>
+
+      <section class="bloque">
+        <h3>Requisitos</h3>
+        <p>{{ oferta.requisitos }}</p>
+      </section>
+
+      <section class="bloque beneficios">
+        <h3>Beneficios</h3>
+        <div class="beneficios-grid">
+          <div>Contrato indefinido</div>
+          <div>Plan de carrera</div>
+          <div>Certificaciones</div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- SIDEBAR DERECHA -->
+    <aside class="sidebar-new">
+      <div class="info-box-new">
+
+        <h4>Detalles de la oferta</h4>
+
+        <div class="info-item-new">
+          <span>Publicado</span>
+          <strong>{{ oferta.fecha_publicacion }}</strong>
+        </div>
+
+        <div class="info-item-new">
+          <span>Expira</span>
+          <strong class="expira">{{ oferta.fecha_expiracion }}</strong>
+        </div>
+
+        <div class="info-item-new">
+          <span>Ubicación</span>
+          <strong>Barcelona</strong>
+        </div>
+
+        <div class="info-item-new">
+          <span>Modalidad</span>
+          <strong>{{ oferta.modalidad }}</strong>
+        </div>
+
+        <div class="info-item-new">
+          <span>Jornada</span>
+          <strong>{{ oferta.jornada }}</strong>
+        </div>
+
+        <div class="estado-box">
+          <span>Estado</span>
+          <strong class="activa">ACTIVA</strong>
+        </div>
+
+        <button
+          @click="funGuardarOferta"
+          :disabled="ofertaYaGuardada"
+          class="btn-guardar-oferta">
+          🤍 Guardar oferta
+        </button>
+
+      </div>
+
+      <!-- MAPA FAKE -->
+      <div class="mapa-box">
+        <div class="mapa"></div>
+        <p>Oficinas en Barcelona</p>
+      </div>
+
+    </aside>
+
+  </div>
+
+</article>
 
     </div>
   </div>
@@ -492,6 +530,134 @@ button:disabled {
 
 .state-msg.error {
   color: #DC2626;
+}
+
+/* HEADER tipo tarjeta */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.empresa-info {
+  display: flex;
+  gap: 15px;
+}
+
+.logo-box {
+  width: 55px;
+  height: 55px;
+  background: #e5e7eb;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.titulo-puesto {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.empresa-nombre {
+  color: #2563eb;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+}
+
+.tag {
+  background: #e5e7eb;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+/* BOTÓN PRINCIPAL */
+.btn-postular-main {
+  background: #2563eb;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+/* BLOQUES SUAVES */
+.bloque {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.bloque h3 {
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+/* BENEFICIOS */
+.beneficios-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.beneficios-grid div {
+  background: #e0e7ff;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* SIDEBAR */
+.info-box-new h4 {
+  margin-bottom: 15px;
+}
+
+.info-item-new {
+  margin-bottom: 15px;
+}
+
+.info-item-new span {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.info-item-new strong {
+  font-size: 1rem;
+}
+
+.expira {
+  color: #dc2626;
+}
+
+.estado-box {
+  margin-top: 10px;
+}
+
+.activa {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+/* MAPA */
+.mapa-box {
+  margin-top: 20px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mapa {
+  height: 150px;
+  background: linear-gradient(135deg, #c7d2fe, #a7f3d0);
 }
 
 /* Responsive */

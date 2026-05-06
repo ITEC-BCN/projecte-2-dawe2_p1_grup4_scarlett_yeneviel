@@ -16,7 +16,6 @@ const limitarTexto = (texto, max = 120) => {
         ? texto.slice(0, max) + "..."
         : texto;
 };
-
 </script>
 
 <template>
@@ -25,122 +24,167 @@ const limitarTexto = (texto, max = 120) => {
         :style="{ animationDelay: `${props.index * 0.1}s` }"
         @click="verDetalle"
     >
-        <div class="card-content">
-            <span class="tag">{{ oferta.modelo_practicas }}</span>
-            <h2 class="titulo-puesto">{{ oferta.tipo_puesto }}</h2>
-            <p class="nombre-empresa">{{ oferta.nombre_empresa }}</p>
-            <p class="descripcion-card">
-  {{ limitarTexto(oferta.descripcion, 120) }}
-</p>
+        <!-- HEADER -->
+        <div class="card-header">
+            <div class="empresa-box">
+
+                <div>
+                    <h2 class="titulo-puesto">{{ oferta.tipo_puesto }}</h2>
+                    <p class="nombre-empresa">{{ oferta.nombre_empresa }}</p>
+                </div>
+            </div>
+
+            <span class="tag">
+                {{ oferta.modelo_practicas }}
+            </span>
         </div>
 
+        <!-- DESCRIPCIÓN -->
+        <p class="descripcion-card">
+            {{ limitarTexto(oferta.descripcion, 120) }}
+        </p>
+
+        <!-- SKILLS -->
+        <div v-if="oferta.skills?.length" class="skills">
+            <span v-for="skill in oferta.skills" :key="skill">
+                {{ skill }}
+            </span>
+        </div>
+
+        <!-- INFO EXTRA -->
+        <div class="info">
+            <span>📍 {{ oferta.ubicacion.ciudad }}</span>
+            <span>🏢 {{ oferta.modalidad }}</span>
+        </div>
+
+        <!-- FOOTER -->
         <div class="footer-card">
-            <button class="btn-detalle">Ver detalle</button>
+            <button class="btn-detalle">
+                Ver detalle
+            </button>
         </div>
     </article>
 </template>
 
 <style scoped>
-/* Contenedor principal con Flexbox para mantener el botón siempre abajo */
 .card {
-  background-color: #ffffff;
+  background: #ffffff;
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  border: 1px solid #334155;;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e2e8f0;
+  transition: all 0.25s ease;
   animation: fadeInUp 0.5s ease-out both;
+  cursor: pointer;
 }
 
-.container-ofertas {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  padding: 20px;
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.08);
 }
 
-/* Animación */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* HEADER */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
 }
 
-/* Hover solo para dispositivos que tienen puntero (evita bugs en móvil) */
-@media (hover: hover) {
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  }
+.empresa-box {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-.tag {
-  background-color: #dcfce7; /* Verde más vivo */
-  color: #166534;            /* Texto mucho más oscuro para contraste */
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 9999px;     /* Estilo píldora, más moderno */
-  margin-bottom: 16px;
-  align-self: flex-start;
+.logo {
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f1f5f9;
 }
 
 .titulo-puesto {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: #0f172a;           /* Contraste máximo */
-  margin: 0 0 8px 0;
-  line-height: 1.2;
+  color: #0f172a;
 }
 
 .nombre-empresa {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #4f46e5;           /* Usamos el color primario para la marca */
-  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: #4f46e5;
+  font-weight: 600;
 }
 
+/* TAG */
+.tag {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* DESCRIPCIÓN */
 .descripcion-card {
   font-size: 0.9rem;
-  color: #334155;           /* Gris más oscuro para lectura */
-  line-height: 1.6;
-  margin-bottom: 24px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 12px 0;
 }
 
-.footer-card {
-  margin-top: auto; /* Empuja el footer al final si el card crece */
+/* SKILLS */
+.skills {
   display: flex;
-  justify-content: flex-end; /* Botón a la derecha */
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.skills span {
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+/* INFO */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+/* FOOTER */
+.footer-card {
+  margin-top: auto;
 }
 
 .btn-detalle {
-  background-color: #4f46e5;
-  color: #ffffff;           /* Blanco puro sobre fondo oscuro */
+  width: 100%;
+  background: #4d1b95;
+  color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px;
   border-radius: 10px;
   font-weight: 700;
-  font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-  transition: all 0.2s;
+  transition: 0.2s;
 }
 
 .btn-detalle:hover {
-  background-color: #4338ca;
-  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
-  transform: translateY(-1px);
+  background: #3b1475;
 }
 
-/* --- Ajustes para Pantallas Grandes --- */
-@media (min-width: 768px) {
-  .btn-detalle {
-    width: auto; /* En tablet/desktop el botón recupera su tamaño natural */
-  }
-  
-  .titulo-puesto {
-    font-size: 1.3rem;
-  }
+/* ANIMACIÓN */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

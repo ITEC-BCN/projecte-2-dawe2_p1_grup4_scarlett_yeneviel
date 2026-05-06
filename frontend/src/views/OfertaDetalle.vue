@@ -289,7 +289,7 @@ const funGuardarOferta = async() => {
 }
 
 .detalle-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: auto;
 }
 
@@ -314,6 +314,7 @@ const funGuardarOferta = async() => {
   gap: 10px;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .empresa-new {
@@ -335,9 +336,9 @@ const funGuardarOferta = async() => {
 /* Layout principal */
 .contenido-grid-new {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 320px;
   gap: 40px;
-  align-items: start; /* Súper importante para el sidebar pegajoso */
+  align-items: start;
 }
 
 /* Información Principal */
@@ -347,19 +348,27 @@ const funGuardarOferta = async() => {
   gap: 25px;
 }
 
+.seccion-detalle-new {
+  background: #ffffff;
+  border: 2px solid #111827;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 10px;
+}
+
 .seccion-detalle-new h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 12px;
-  text-align: left;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 10px;
+  border-left: 4px solid #4C1D95;
+  padding-left: 10px;
 }
 
 .seccion-detalle-new p {
-  color: #4b5563;
-  line-height: 1.8;
-  white-space: pre-line; /* Respetamos los saltos de línea de la BD */
-  text-align: start;
+  color: #1f2937;
+  line-height: 1.7;
+  font-size: 0.95rem;
 }
 
 /* Sidebar Pegajoso */
@@ -369,10 +378,10 @@ const funGuardarOferta = async() => {
 }
 
 .info-box-new {
-  background: #f9fafb;
-  border-radius: 14px;
-  padding: 25px;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border: 2px solid #111827;
+  border-radius: 12px;
+  padding: 20px;
 }
 
 .info-item-new {
@@ -384,23 +393,31 @@ const funGuardarOferta = async() => {
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #6b7280;
+  color: #374151;
   margin-bottom: 5px;
 }
 
 .info-item-new span {
-  color: #111827;
+  color: #000000;
   font-weight: 600;
   font-size: 1.1rem;
 }
 
-.detalle-meta{
+.detalle-meta {
   display: flex;
-  gap: 20px;
-  color: #2E7D32;
-  font-size: 0.9rem;
-  font-weight: bold;
+  gap: 10px;
+  flex-wrap: wrap;
 }
+
+.detalle-meta p {
+  background: #111827;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 /* Botones */
 .btn-postular {
   width: 100%;
@@ -408,7 +425,7 @@ const funGuardarOferta = async() => {
   padding: 15px;
   border-radius: 10px;
   border: none;
-  background: #4C1D95; /* Morado */
+  background: var(--primary);
   color: white;
   font-weight: 700;
   font-size: 16px;
@@ -417,7 +434,7 @@ const funGuardarOferta = async() => {
 }
 
 .btn-postular:hover {
-  background: #3b1675;
+  background: var(--primary-hover);
   transform: translateY(-2px);
 }
 
@@ -426,11 +443,11 @@ const funGuardarOferta = async() => {
   margin-top: 10px;
   padding: 12px;
   border-radius: 10px;
-  border: 2px solid #4C1D95; /* Borde Morado */
+  border: 2px solid #111827;
   background: transparent;
-  color: #4C1D95; /* Texto Morado */
+  color: #111827;
   font-weight: 700;
-   font-size: 16px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -440,17 +457,17 @@ const funGuardarOferta = async() => {
 }
 
 .btn-guardar-oferta:hover {
-  background: #f3f4f6;
+  background: #111827;
+  color: white;
   transform: translateY(-1px);
 }
 
- button:disabled {
+button:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
   transform: none;
   border: none;
 }
-
 
 .btn-back {
   background: none;
@@ -475,11 +492,84 @@ const funGuardarOferta = async() => {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .contenido-grid-new {
+    grid-template-columns: 1fr 280px;
+    gap: 30px;
+  }
+  .oferta-card-new {
+    padding: 30px;
+  }
+  .empresa-new {
+    font-size: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
-  .oferta-card-new { padding: 25px; }
-  .contenido-grid-new { grid-template-columns: 1fr; gap: 30px; }
-  .empresa-new { font-size: 1.8rem; }
-  .header-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .sidebar-new { position: static; }
+  .detalle-page {
+    padding: 30px 15px;
+  }
+  .oferta-card-new {
+    padding: 25px;
+  }
+  .contenido-grid-new {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .empresa-new {
+    font-size: 1.8rem;
+  }
+  .header-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .sidebar-new {
+    position: static;
+  }
+  .info-box-new {
+    padding: 15px;
+  }
+  .btn-postular, .btn-guardar-oferta {
+    font-size: 14px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-container {
+    max-width: 100%;
+  }
+  .oferta-card-new {
+    padding: 20px;
+    border-radius: 12px;
+  }
+  .empresa-new {
+    font-size: 1.5rem;
+  }
+  .seccion-detalle-new {
+    padding: 15px;
+  }
+  .seccion-detalle-new h3 {
+    font-size: 1.1rem;
+  }
+  .seccion-detalle-new p {
+    font-size: 0.9rem;
+  }
+  .info-item-new span {
+    font-size: 1rem;
+  }
+  .detalle-meta p {
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+  .btn-postular, .btn-guardar-oferta {
+    font-size: 13px;
+    padding: 10px;
+  }
+  .state-msg {
+    padding: 20px;
+    font-size: 1rem;
+  }
 }
 </style>

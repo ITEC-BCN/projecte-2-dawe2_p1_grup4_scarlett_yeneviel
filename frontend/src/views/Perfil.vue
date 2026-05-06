@@ -662,7 +662,7 @@ const uploadCV = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
-    const response = await fetch(`${URL_BACK}/api/upload-cv`, {
+    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/api/upload-cv`, {
       method: "POST",
       body: formData,
     });

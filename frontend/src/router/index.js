@@ -165,7 +165,7 @@ router.beforeEach(async (to, from, next) => {
 
         //VERSION CON ENDPOINT
         // Llamamos a tu endpoint para obtener el estado actual del estudiante
-        const response = await fetch(`${URL_BACK}/estudiante/estado/${userId}`, {
+        const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiante/estado/${userId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

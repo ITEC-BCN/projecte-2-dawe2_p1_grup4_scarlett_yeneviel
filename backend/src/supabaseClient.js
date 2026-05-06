@@ -290,6 +290,7 @@ export const getUserState = async (id) => {
   return data.estado;
 };
 
+
 //Modificar Usuario
 // ==========================================
 // 3. ACTUALIZAR ESTUDIANTE (Perfil, Skills y Enlaces)
@@ -598,16 +599,38 @@ export const cargarCiudades = async () => {
 
 /**
  * Obtiene la URL pública de un archivo en el storage
- * @param {string} nombreArchivo - El nombre o path del archivo
- * @returns {string|null} - La URL o null si hay error
+ * @param {string} idEstudiante - El ID del estudiante
+ * @returns {Promise<string|null>} - La URL o null si hay error
  */
-export const getCVUrl = (nombreArchivo) => {
-  if (!nombreArchivo) return null;
+export const getCVUrl = async (idEstudiante) => {
+  if (!idEstudiante) return null;
 
-  const { data } = supabase
-    .storage
-    .from('cvs')
-    .getPublicUrl(nombreArchivo);
+  try {
 
-  return data?.publicUrl || null;
+    const { data: documento, error } = await supabase
+      .from('documento')
+      .select('ruta_archivo')
+      .eq('id_estudiante', idEstudiante)
+      .eq('tipo', 'cv')
+      .single();
+
+    if (error || !documento) {
+      console.error("No se encontró el CV para el estudiante ID:", idEstudiante, error);
+      return null;
+    }
+
+
+    // 3. Obtener la URL pública del storage
+    // Nota: getPublicUrl suele ser sincrónico en algunas versiones de la SDK, 
+    const { data } =  supabase
+      .storage
+      .from('cvs')
+      .getPublicUrl(documento.ruta_archivo);
+
+    return data?.publicUrl || null;
+
+  } catch (err) {
+    console.error("Error inesperado:", err);
+    return null;
+  }
 }

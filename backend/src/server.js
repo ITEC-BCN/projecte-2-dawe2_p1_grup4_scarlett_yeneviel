@@ -20,6 +20,7 @@ import {
   obtenerEstudiantes,
   obtenerEstudiantePorId,
   actualizarEstudiante,
+  getUserState,
   crearAdmin,
   obtenerAdmins,
   obtenerAdminPorId,
@@ -35,7 +36,8 @@ import {
   obtenerSkills,
   subirAvatarStorage,
   guardarFotoPerfil,
-  cargarCiudades
+  cargarCiudades,
+  getCVUrl
 } from "./supabaseClient.js";
 import requireAuth from "./middleware/requireAuth.js";
 
@@ -288,6 +290,23 @@ app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
     res.status(200).json({
       message: "Solicitud actualizada exitosamente",
       data: resultado,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/estudiante/estado/:idEstudiante", async (req, res) => {
+  try {
+    const id_estudiante = req.params.idEstudiante;
+    if (!id_estudiante) {
+      return res.status(400).json({ error: "Falta el id del estudiante en la URL" });
+    }
+
+    const resultado = await getUserState(id_estudiante);
+    res.status(200).json({
+      message: "Estado obtenido exitosamente",
+      estado: resultado
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -674,7 +693,6 @@ app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
 
 
 // POST: subir CV y extraer datos
-// POST: subir CV y extraer datos
 app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
   try {
     if (!req.file || !req.body.studentId) {
@@ -684,6 +702,17 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
     const studentId = req.body.studentId;
     const file = req.file;
 
+     // Validar archivo
+    if (!file) {
+      return res.status(400).json({ error: 'No se subió ningún archivo' });
+    }
+    if (file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'Solo se permiten archivos PDF' });
+    }
+    if (!file.buffer || file.buffer.length === 0) {
+      return res.status(400).json({ error: 'El archivo PDF está vacío o corrupto' });
+    }
+
     // 1. Subida a Storage
     const fileName = `cv_${studentId}_${Date.now()}.pdf`;
 
@@ -691,6 +720,10 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
       contentType: "application/pdf",
       upsert: true,
     });
+
+console.log("FILE:", file);
+console.log("BUFFER EXISTS:", !!file.buffer);
+console.log("SIZE:", file.size);
 
     // 2. Extraer texto del PDF
     const pdfParse = (await import("pdf-parse")).default;
@@ -711,6 +744,8 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
 Eres un extractor de CV.
 
 REGLAS:
+- SÓLO extrae datos que estén explícitamente escritos en el CV.
+- SI NO ES UN CV, NO EXTRAIGAS NADA.
 - NO inventes datos.
 - NO repitas información.
 - NO mezcles formación y experiencia.
@@ -859,6 +894,29 @@ FORMATO:
   }
 });
 
+/* ================= UBICACIONES ================= */
+
+//MOSTRAR CV (URL pública de Supabase Storage)
+app.get('/get-cv/:idEstudiante', async (req, res) => {
+  try {
+    const { idEstudiante } = req.params;
+
+    if (!idEstudiante) {
+      return res.status(400).json({ error: "ID de estudiante requerido" });
+    }
+    const url =await getCVUrl(idEstudiante);
+
+    if (!url) {
+      return res.status(404).json({ error: "No se encontró el CV para este estudiante" });
+    }
+
+    res.json({ url });
+
+  } catch (err) {
+    console.error("Error obteniendo CV:", err);
+    res.status(500).json({ error: err.message || "Error interno del servidor" });
+   }
+});
 
 app.get("/ubicaciones", async (req, res) => {
 

@@ -85,12 +85,6 @@ const studentCVs = computed(() => {
   return user.documento.filter(doc => doc.tipo.toLowerCase() === 'cv');
 });
 
-// Obtenemos el último CV subido (el más reciente)
-const lastCV = computed(() => {
-  return studentCVs.value.length > 0 
-    ? studentCVs.value[studentCVs.value.length - 1] 
-    : null;
-});
 
 watch(
   () => students.value,
@@ -152,8 +146,8 @@ watch(
         <div class="contact-item">
           <button
             class="btn-view"
-            :disabled="!lastCV"
-            @click="lastCV && verCV(lastCV.ruta_archivo)"
+            :disabled="!studentCVs.value"
+            @click="verCV(studentId)"
           >
             Ver CV
           </button>

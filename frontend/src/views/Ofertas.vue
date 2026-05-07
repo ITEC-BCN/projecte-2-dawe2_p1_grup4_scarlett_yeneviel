@@ -68,8 +68,6 @@ const ofertasFiltradas = computed(() => {
 
     return data.value.filter((oferta) => {
         // Preparar datos de la oferta
-        const empresa = (oferta.nombre_empresa || '').toLowerCase();
-        const puesto = (oferta.tipo_puesto || '').toLowerCase();
         const ciudadOferta = (oferta.ubicacion?.ciudad || '').toLowerCase();
         const modalidadOferta = (oferta.modalidad || '').toLowerCase();
         const modeloOferta = (oferta.modelo_practicas || '').toLowerCase();
@@ -79,8 +77,21 @@ const ofertasFiltradas = computed(() => {
             (os.skill?.nombre || '').toLowerCase()
         ) || [];
 
-        // Filtro búsqueda global (Empresa o Puesto)
-        const matchSearch = !q || empresa.includes(q) || puesto.includes(q);
+        // Filtro búsqueda global, Texto global
+        const textoBusqueda = `
+    ${oferta.nombre_empresa || ''}
+    ${oferta.tipo_puesto || ''}
+    ${oferta.descripcion || ''}
+    ${oferta.funciones || ''}
+    ${oferta.requisitos || ''}
+    ${oferta.beneficios || ''}
+    ${oferta.modalidad || ''}
+    ${oferta.modelo_practicas || ''}
+    ${oferta.jornada || ''}
+`.toLowerCase();
+
+        const matchSearch =
+            !q || textoBusqueda.includes(q);
 
         // Filtro ciudad
         const matchCity = !city || ciudadOferta === city;
@@ -763,13 +774,13 @@ button:focus {
     }
 
     .grid-ofertas>* {
-         background: #ffffff;
+        background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 14px;
         padding: 18px;
         display: flex;
         flex-direction: column;
-        gap: 12px; 
+        gap: 12px;
         transition: all 0.2s ease;
     }
 

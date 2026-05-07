@@ -29,32 +29,40 @@ const limitarTexto = (texto, max = 120) => {
             <div class="empresa-box">
 
                 <div>
-                    <h2 class="titulo-puesto">{{ oferta.tipo_puesto }}</h2>
-                    <p class="nombre-empresa">{{ oferta.nombre_empresa }}</p>
+                    <h2 class="titulo-puesto" v-if="oferta.tipo_puesto">{{ oferta.tipo_puesto }}</h2>
+                    <h2 class="titulo-puesto" v-else>Puesto no especificado</h2>
+                    <p class="nombre-empresa" v-if="oferta.nombre_empresa">{{ oferta.nombre_empresa }}</p>
+                    <p class="nombre-empresa" v-else>Empresa no especificada</p>
+
                 </div>
             </div>
 
-            <span class="tag">
+            <span class="tag" v-if="oferta.modelo_practicas">
                 {{ oferta.modelo_practicas }}
             </span>
+            <p v-else>No modelo de prácticas especificado</p>
         </div>
 
         <!-- DESCRIPCIÓN -->
-        <p class="descripcion-card">
+        <p class="descripcion-card" v-if="oferta.descripcion">
             {{ limitarTexto(oferta.descripcion, 120) }}
         </p>
+        <p v-else>Descripción no disponible</p>
 
         <!-- SKILLS -->
-        <div v-if="oferta.skills?.length" class="skills">
-            <span v-for="skill in oferta.skills" :key="skill">
-                {{ skill }}
+        <div v-if="oferta.oferta_skill?.length" class="skills">
+            <span v-for="skill in oferta.oferta_skill" :key="skill">
+                {{ skill.skill?.nombre }}
             </span>
         </div>
+        <p v-else>Skills no disponibles</p>
 
         <!-- INFO EXTRA -->
         <div class="info">
-            <span>📍 {{ oferta.ubicacion.ciudad }}</span>
-            <span>🏢 {{ oferta.modalidad }}</span>
+            <span v-if="oferta.ubicacion?.ciudad">📍 {{ oferta.ubicacion.ciudad }}</span>
+            <p v-else>Ubicación no disponible</p>
+            <span v-if="oferta.modalidad">🏢 {{ oferta.modalidad }}</span>
+            <p v-else>Modalidad no disponible</p>
         </div>
 
         <!-- FOOTER -->

@@ -269,9 +269,7 @@ const funGuardarOferta = async () => {
             <section class="bloque beneficios">
               <h3>Beneficios</h3>
               <div class="beneficios-grid">
-                <div>Contrato indefinido</div>
-                <div>Plan de carrera</div>
-                <div>Certificaciones</div>
+                <div>{{oferta.beneficios}}</div>
               </div>
             </section>
 
@@ -287,7 +285,7 @@ const funGuardarOferta = async () => {
                   <MapPinIcon :size="20" />
                 </div>
                 <div class="text-group">
-                  <span>Ubicación</span>
+                  <span class="label-title">Ubicación</span>
                   <strong>{{ oferta.ubicacion.ciudad }}</strong>
                 </div>
               </div>
@@ -297,7 +295,7 @@ const funGuardarOferta = async () => {
                   <BriefcaseIcon :size="20" />
                 </div>
                 <div class="text-group">
-                  <span>Modalidad</span>
+                  <span class="label-title">Modalidad</span>
                   <strong>{{ oferta.modalidad }}</strong>
                 </div>
               </div>
@@ -307,7 +305,7 @@ const funGuardarOferta = async () => {
                   <ClockIcon :size="20" />
                 </div>
                 <div class="text-group">
-                  <span>Jornada</span>
+                  <span class="label-title">Jornada</span>
                   <strong>{{ oferta.jornada }}</strong>
                 </div>
               </div>
@@ -317,8 +315,8 @@ const funGuardarOferta = async () => {
                   <CalendarIcon :size="20" />
                 </div>
                 <div class="text-group">
-                  <span>Publicado</span>
-                  <strong>{{ oferta.fecha_publicacion }}</strong>
+                  <span class="label-title" >Publicado</span>
+                  <strong id="publicado">{{ oferta.fecha_publicacion }}</strong>
                 </div>
               </div>
 
@@ -327,11 +325,10 @@ const funGuardarOferta = async () => {
                   <CalendarIcon :size="20" />
                 </div>
                 <div class="text-group">
-                  <span>Expira</span>
-                  <strong class="expira">{{ oferta.fecha_expiracion }}</strong>
+                  <span class="label-title">Expira</span>
+                  <strong class="expira" id="expiracion">{{ oferta.fecha_expiracion }}</strong>
                 </div>
               </div>
-
             </div>
           </aside>
 
@@ -355,17 +352,24 @@ const funGuardarOferta = async () => {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+#expiracion{
+color:var(--danger);
+}
+
+#publicado{
+color:var(--primary)
+}
+
 .icon-wrapper {
+  flex-shrink: 0;
+  /* Evita que el círculo se aplaste */
+  width: 36px;
+  /* Un poco más grande para mejor visibilidad */
+  height: 36px;
   border-radius: 50%;
-  /* Usa porcentaje para asegurar que sea circular */
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  /* El alto debe ser igual al ancho */
-  box-sizing: content-box;
-  /* Opcional: para que el borde no reste espacio al interior */
 }
 
 .corporativo {
@@ -383,8 +387,9 @@ const funGuardarOferta = async () => {
   font-weight: 800;
   color: #111827;
   margin-bottom: 20px;
-  border-left: 4px solid var(--accent);
+  border-bottom: 4px solid var(--accent);
   padding-left: 10px;
+  border-radius: 4px;
 }
 
 .detalle-container {
@@ -433,22 +438,32 @@ const funGuardarOferta = async () => {
 
 .info-box-new {
   background: #ffffff;
-  border: 1px solid #111827;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
   padding: 20px;
 }
 
+/* Alineación de los items del sidebar */
 .info-item-new {
-  margin-bottom: 18px;
+  display: flex;
+  /* Alinea icono y texto en la misma fila */
+  align-items: center;
+  /* Centra verticalmente el icono con el texto */
+  gap: 12px;
+  /* Espacio entre icono y texto */
+  margin-bottom: 20px;
 }
 
 .info-item-new strong {
-  display: block;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #374151;
-  margin-bottom: 5px;
+  display: inline-block;
+  /* Cambiado de block para evitar conflictos */
+  font-size: 1rem;
+  color: #111827;
+  /* Color casi negro para resaltar el dato */
+  font-weight: 700;
+  text-transform: none;
+  /* Quitamos el uppercase si quieres que se lea natural */
+  margin-top: 2px;
 }
 
 .info-item-new span {
@@ -472,12 +487,22 @@ const funGuardarOferta = async () => {
   font-weight: 600;
 }
 
+/* El título (Ubicación, Modalidad, etc.) */
+.label-title {
+  font-size: 0.85rem;
+  color: #6b7280;
+  /* Color gris suave */
+  font-weight: 500;
+  line-height: 1;
+}
+
 /* Contenedor de acciones para alinear botones */
 .acciones-header {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .btn-guardar-oferta {
   display: flex;
   align-items: center;
@@ -491,7 +516,8 @@ const funGuardarOferta = async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  white-space: nowrap; /* Evita que el texto se rompa en dos líneas */
+  white-space: nowrap;
+  /* Evita que el texto se rompa en dos líneas */
 }
 
 .btn-guardar-oferta:hover:not(:disabled) {
@@ -508,25 +534,29 @@ const funGuardarOferta = async () => {
 /* --- MEDIA QUERIES (Móvil) --- */
 @media (max-width: 768px) {
   .header-top {
-    flex-direction: column; /* Apila info de empresa y botones */
+    flex-direction: column;
+    /* Apila info de empresa y botones */
     align-items: flex-start !important;
     gap: 16px;
   }
 
   .acciones-header {
-    width: 100%; /* Contenedor al ancho completo */
+    width: 100%;
+    /* Contenedor al ancho completo */
     justify-content: space-between;
   }
 
   .btn-postular-main {
-    flex: 1; /* El botón de postular crece todo lo posible */
+    flex: 1;
+    /* El botón de postular crece todo lo posible */
     order: 1;
     text-align: center;
   }
 
   .btn-guardar-oferta {
     order: 2;
-    padding: 12px; /* Reducimos padding para que sea casi cuadrado */
+    padding: 12px;
+    /* Reducimos padding para que sea casi cuadrado */
     min-width: 48px;
     height: 48px;
     justify-content: center;
@@ -549,7 +579,7 @@ const funGuardarOferta = async () => {
 
 /* Ajuste del botón postular para que coincida en altura */
 .btn-postular-main {
-  background: #2563eb;
+  background: var(--accent);
   color: white;
   padding: 12px 24px;
   border-radius: 10px;
@@ -596,6 +626,7 @@ const funGuardarOferta = async () => {
 .empresa-info {
   display: flex;
   gap: 15px;
+  align-items: center;
 }
 
 .logo-box {
@@ -612,12 +643,21 @@ const funGuardarOferta = async () => {
 .titulo-puesto {
   font-size: 1.8rem;
   font-weight: 800;
+  margin: 0; /* Quita todos los márgenes */
+  line-height: 1.2; /* Ajusta la altura de línea para que no ocupe de más */
+}
+
+.text-group {
+  display: flex;
+  flex-direction: column;
+  /* Título arriba, Valor abajo */
 }
 
 .empresa-nombre {
   color: #2563eb;
   font-weight: 600;
-  margin-bottom: 5px;
+  margin-top: 5px;     /* Espacio mínimo con el título */
+  margin-bottom: 12px; /* Espacio moderado antes de las etiquetas */
 }
 
 .tags {
@@ -626,10 +666,11 @@ const funGuardarOferta = async () => {
 }
 
 .tag {
-  background: #e5e7eb;
+  background: var(--focus);
   padding: 5px 10px;
   border-radius: 999px;
   font-size: 0.8rem;
+  color: #ffffff;
 }
 
 
@@ -648,16 +689,18 @@ const funGuardarOferta = async () => {
 }
 
 /* BENEFICIOS */
+
+
 .beneficios-grid {
   display: flex;
   gap: 10px;
 }
 
 .beneficios-grid div {
-  background: #e0e7ff;
   padding: 10px;
   border-radius: 8px;
   font-size: 0.9rem;
+  font-style: italic;
 }
 
 /* SIDEBAR */

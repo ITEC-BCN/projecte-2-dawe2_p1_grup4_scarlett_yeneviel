@@ -512,7 +512,7 @@ export const obtenerEstudiantePorEmail = async (email) => {
     .from('usuario_estudiante')
     .select('*')
     .eq('email', email)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
   return data;
@@ -524,7 +524,7 @@ export const obtenerAdminPorEmail = async (email) => {
     .from('usuario_admi')
     .select('*')
     .eq('email', email)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
   return data;

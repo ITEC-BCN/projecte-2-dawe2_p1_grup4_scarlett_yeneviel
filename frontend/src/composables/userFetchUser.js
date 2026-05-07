@@ -93,7 +93,7 @@ export function useFetchUser(url) {
 
             const resultado = await res.json();
             if (!res.ok) {
-                throw new Error(error.value);
+                throw new Error(resultado.error || "Error en el servidor");
             }
             return resultado // Devolvemos el resultado para que quien llame lo pueda usar
             

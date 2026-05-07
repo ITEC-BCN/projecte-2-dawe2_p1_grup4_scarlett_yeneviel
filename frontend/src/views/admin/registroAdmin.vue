@@ -1,6 +1,4 @@
 <script setup>
-import { useFetchUser } from '../composables/userFetchUser';
-import { URL_BACK } from '../../../config';
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import {
@@ -11,11 +9,10 @@ import {
   validarContraseña,
   validarContraseñasCoinciden,
   validarFormulario
-} from '../js/validations';
+} from '../../js/validations';
 
-const urlNewStudent = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes`)
+const urlNewAdmin = ref(`${import.meta.env.VITE_URL_BACK}/admin/registro`)
 const router = useRouter()
-const { NewStudent } = useFetchUser(import.meta.env.VITE_URL_BACK)
 
 const errorGeneral = ref(null)
 const successMessage = ref(null)
@@ -69,6 +66,24 @@ const validarCampo = (campo, valor) => {
   }
 }
 
+    const apiResquestNewAdmin = async (body, url) => {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const resultado = await res.json();
+            if (!res.ok) {
+                throw new Error(resultado.error || "Error en el servidor");
+            }
+            return resultado // Devolvemos el resultado para que quien llame lo pueda usar
+            
+        } catch (err) {
+            throw new Error(err.message || "Error de conexión con el servidor");
+        }
+    };
 const InsertNewStudent = async () => {
   try {
     // Validar todo el formulario
@@ -84,19 +99,17 @@ const InsertNewStudent = async () => {
     errorGeneral.value = null;
     cargando.value = true;
 
-    const data = await NewStudent(form, urlNewStudent.value);
+    const data = await apiResquestNewAdmin(form, urlNewAdmin.value);
 
     // --- LÓGICA DE GUARDADO CORREGIDA ---
-    const userId = data.user?.id;
-    const userToken = data.token;
 
-    localStorage.setItem('token', userToken);
-    localStorage.setItem('role', 'estudiante');
-    localStorage.setItem('studentId', userId);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('role', data.user.role);
+    localStorage.setItem('userId', data.user?.id);
 
     successMessage.value = '¡Registro exitoso! Redirigiendo...';
     setTimeout(() => {
-      router.push(`/perfil`);
+      router.push(`/admin/panel`);
     }, 1500);
 
   } catch (error) {
@@ -111,7 +124,7 @@ const InsertNewStudent = async () => {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1>Registro</h1>
+      <h1>Registro | Administración</h1>
 
       <!-- Mensaje de error general -->
       <div v-if="errorGeneral" class="error-message General">

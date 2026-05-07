@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { URL_BACK } from '../../../config.js';
-import{obtenerIdDesdeToken} from '../js/obtenerId.js';
+import { obtenerIdDesdeToken } from '../js/obtenerId.js';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +20,12 @@ const router = createRouter({
       path: "/admin/login",
       name: "loginAdmin",
       component: () => import('@/views/admin/LoginAdmin.vue'),
+      props: true
+    },
+    {
+      path: "/admin/registro",
+      name: "registroAdmin",
+      component: () => import('@/views/admin/registroAdmin.vue'),
       props: true
     },
     {
@@ -59,7 +65,7 @@ const router = createRouter({
       name: "dashboard",
       component: () => import('@/views/Dasboard.vue'),
       props: true,
-      meta: { requiresAuth: true}
+      meta: { requiresAuth: true }
     },
     {
       path: "/oferta/actualizar/:id",

@@ -40,6 +40,7 @@ import {
   getCVUrl
 } from "./supabaseClient.js";
 import requireAuth from "./middleware/requireAuth.js";
+import e from "express";
 
 /* ================= INIT ================= */
 dotenv.config();
@@ -200,6 +201,13 @@ app.get("/estudiantes/:id/ofertas-recomendadas", async (req, res) => {
 // POST: Registrar un nuevo estudiante
 app.post("/estudiantes", async (req, res) => {
   try {
+    console.log(req.body)
+    const existeEmail = await obtenerEstudiantePorEmail(req.body.email);
+
+    if (existeEmail) {
+      return res.status(400).json({ error: "El email ya está en uso" });
+    }
+
     const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
     req.body.password_hash = newPassword_hash;
     const nuevoEstudiante = await crearEstudiante(req.body);
@@ -399,6 +407,12 @@ app.post("/upload-avatar", upload.single("file"), async (req, res) => {
 // POST: Registrar un nuevo administrador
 app.post("/admin/registro", async (req, res) => {
   try {
+
+    const existingAdmin = await obtenerAdminPorEmail(req.body.email);
+    if (existingAdmin) {
+      return res.status(400).json({ error: "El email ya está en uso" });
+    }
+
     const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
     req.body.password_hash = newPassword_hash;
     const nuevo = await crearAdmin(req.body);
@@ -407,7 +421,7 @@ app.post("/admin/registro", async (req, res) => {
       data: nuevo[0],
     });
   } catch (err) {
-    res.status(400).json({ error: err.message || String(err) });
+    res.status(400).json({ error: 'Error en el servidor'|| String(err) });
   }
 });
 
@@ -502,7 +516,7 @@ app.post("/login", async (req, res) => {
     console.error(err);
     res
       .status(500)
-      .json({ error: err.message || "Error interno del servidor" });
+      .json({ error: "Hubo un problema en el servidor. Inténtalo más tarde" });
   }
 });
 
@@ -702,7 +716,7 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
     const studentId = req.body.studentId;
     const file = req.file;
 
-     // Validar archivo
+    // Validar archivo
     if (!file) {
       return res.status(400).json({ error: 'No se subió ningún archivo' });
     }
@@ -721,9 +735,9 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
       upsert: true,
     });
 
-console.log("FILE:", file);
-console.log("BUFFER EXISTS:", !!file.buffer);
-console.log("SIZE:", file.size);
+    console.log("FILE:", file);
+    console.log("BUFFER EXISTS:", !!file.buffer);
+    console.log("SIZE:", file.size);
 
     // 2. Extraer texto del PDF
     const pdfParse = (await import("pdf-parse")).default;
@@ -797,21 +811,21 @@ FORMATO:
     const idiomas = datosExtraidos.idiomas?.idiomas || [];
     const formacion = datosExtraidos.formacion?.formacion || [];
     const experiencia = datosExtraidos.experiencia?.experiencia || [];
-  /*   const habilidades = Array.isArray(datosExtraidos.habilidades)
-      ? datosExtraidos.habilidades
-      : []; */
+    /*   const habilidades = Array.isArray(datosExtraidos.habilidades)
+        ? datosExtraidos.habilidades
+        : []; */
     const hardSkills = datosExtraidos.habilidades_hard
       ? datosExtraidos.habilidades_hard
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     const softSkills = datosExtraidos.habilidades_soft
       ? datosExtraidos.habilidades_soft
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     /* Unimos en una constante habilidades las softSkill y las hardSkill
@@ -904,7 +918,7 @@ app.get('/get-cv/:idEstudiante', async (req, res) => {
     if (!idEstudiante) {
       return res.status(400).json({ error: "ID de estudiante requerido" });
     }
-    const url =await getCVUrl(idEstudiante);
+    const url = await getCVUrl(idEstudiante);
 
     if (!url) {
       return res.status(404).json({ error: "No se encontró el CV para este estudiante" });
@@ -915,7 +929,7 @@ app.get('/get-cv/:idEstudiante', async (req, res) => {
   } catch (err) {
     console.error("Error obteniendo CV:", err);
     res.status(500).json({ error: err.message || "Error interno del servidor" });
-   }
+  }
 });
 
 app.get("/ubicaciones", async (req, res) => {

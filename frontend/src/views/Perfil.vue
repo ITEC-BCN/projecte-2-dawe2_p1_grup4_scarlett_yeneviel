@@ -65,6 +65,7 @@ const validationErrors = reactive({
   location: "",
   about: "",
   educationYear: {},
+  experienceYear: {},
 });
 
 const MAX_PHONE_DIGITS = 9;
@@ -123,30 +124,108 @@ function validateLocation(value) {
 }
 
 function validateEducationYear(yearValue, index) {
-  const trimmedValue = String(yearValue || "").trim();
+  const trimmedValue = String(yearValue || "")
+    .trim()
+    .toLowerCase();
   const currentYear = new Date().getFullYear();
 
   if (!trimmedValue) {
     validationErrors.educationYear[index] = "";
     return true;
   }
+  // Permite:
+  // 2020
+  // 2020/2024
+  // 2020-2024
+  // 2020/actual
+  // 2020-actual
+  const regex = /^(\d{4})(?:\s*[-/]\s*(\d{4}|actual))?$/;
+  const match = trimmedValue.match(regex);
 
-  const isValidNumber = /^\d+$/.test(trimmedValue);
+  if (!match) {
+    validationErrors.educationYear[index] =
+      "Formato inválido. Usa: 2020, 2020/2024 o 2020/actual.";
+    return false;
+  }
+  const startYear = Number(match[1]);
+  const endValue = match[2];
 
-  if (!isValidNumber) {
-    validationErrors.educationYear[index] = "El año debe ser un número válido.";
+  // Validar año inicial
+  if (startYear > currentYear) {
+    validationErrors.educationYear[index] =
+      `El año inicial no puede ser superior a ${currentYear}.`;
     return false;
   }
 
-  const year = Number(trimmedValue);
+  // Si existe año final y no es "actual"
+  if (endValue && endValue !== "actual") {
+    const endYear = Number(endValue);
 
-  if (year > currentYear) {
-    validationErrors.educationYear[index] =
-      `El año no puede ser superior a ${currentYear}.`;
-    return false;
+    if (endYear > currentYear) {
+      validationErrors.educationYear[index] =
+        `El año final no puede ser superior a ${currentYear}.`;
+      return false;
+    }
+
+    if (endYear < startYear) {
+      validationErrors.educationYear[index] =
+        "El año final no puede ser menor al inicial.";
+      return false;
+    }
   }
 
   validationErrors.educationYear[index] = "";
+  return true;
+}
+
+function validateExperienceYear(yearValue, index) {
+  const trimmedValue = String(yearValue || "")
+    .trim()
+    .toLowerCase();
+
+  const currentYear = new Date().getFullYear();
+
+  if (!trimmedValue) {
+    validationErrors.experienceYear[index] = "";
+    return true;
+  }
+
+  const regex = /^(\d{4})(?:\s*[-/]\s*(\d{4}|actual))?$/;
+
+  const match = trimmedValue.match(regex);
+
+  if (!match) {
+    validationErrors.experienceYear[index] =
+      "Formato inválido. Usa: 2020, 2020/2024 o 2020/actual.";
+    return false;
+  }
+
+  const startYear = Number(match[1]);
+  const endValue = match[2];
+
+  if (startYear > currentYear) {
+    validationErrors.experienceYear[index] =
+      `El año inicial no puede ser superior a ${currentYear}.`;
+    return false;
+  }
+
+  if (endValue && endValue !== "actual") {
+    const endYear = Number(endValue);
+
+    if (endYear > currentYear) {
+      validationErrors.experienceYear[index] =
+        `El año final no puede ser superior a ${currentYear}.`;
+      return false;
+    }
+
+    if (endYear < startYear) {
+      validationErrors.experienceYear[index] =
+        "El año final no puede ser menor al inicial.";
+      return false;
+    }
+  }
+
+  validationErrors.experienceYear[index] = "";
   return true;
 }
 
@@ -332,12 +411,23 @@ function toggleEdit() {
 const experience = ref([]);
 const newExp = reactive({ centro: "", anio: "", puesto: "" });
 function addExperience() {
-  if (newExp.centro && newExp.puesto) {
+  const isValidYear = validateExperienceYear(
+    newExp.anio,
+    "new"
+  );
+
+  if (
+    newExp.centro &&
+    newExp.puesto &&
+    isValidYear
+  ) {
     experience.value.push({ ...newExp });
+
     newExp.centro = "";
     newExp.anio = "";
     newExp.puesto = "";
   }
+
   hasUnsavedChanges.value = true;
 }
 
@@ -441,6 +531,7 @@ async function saveProfile() {
     telefono: contact.phone,
     location: contact.location,
     estudios: { formacion: academicBackground.value },
+    experiencia: { experiencia: experience.value },
     idiomas: {
       idiomas: languages.value.map((l) => ({
         id: l.id,
@@ -476,6 +567,7 @@ async function saveProfile() {
           telefono: contact.phone,
           location: contact.location,
           estudios: { formacion: academicBackground.value },
+          experiencia: { experiencia: experience.value },
           idiomas: { idiomas: languages.value },
           enlaces: documents.value,
         };
@@ -662,10 +754,13 @@ const uploadCV = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/api/upload-cv`, {
-      method: "POST",
-      body: formData,
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_URL_BACK}/api/upload-cv`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
     const data = await response.json();
     if (response.ok) {
       cvUrl.value = data.documento_cv;
@@ -862,7 +957,15 @@ const uploadCV = async (event) => {
 
           <!-- SI EXISTE CV -->
           <div v-if="cvUrl" class="cv-actions">
-            <a :href="'https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/' +  cvUrl" target="_blank" class="btn-primary" style="text-decoration: none;">
+            <a
+              :href="
+                'https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/' +
+                cvUrl
+              "
+              target="_blank"
+              class="btn-primary"
+              style="text-decoration: none"
+            >
               <i class="fa-solid fa-eye"></i> Ver CV
             </a>
           </div>
@@ -1058,9 +1161,17 @@ const uploadCV = async (event) => {
           >
             <input
               v-model="exp.anio"
+              @input="validateExperienceYear(exp.anio, index)"
               placeholder="Periodo"
               class="input input-sm"
             />
+            <div
+              v-if="validationErrors.experienceYear[index]"
+              class="error-message error-small"
+            >
+              {{ validationErrors.experienceYear[index] }}
+            </div>
+
             <input v-model="exp.puesto" placeholder="Puesto" class="input" />
             <input v-model="exp.centro" placeholder="Empresa" class="input" />
             <button @click="removeExperience(index)" class="btn-icon-danger">
@@ -1073,9 +1184,17 @@ const uploadCV = async (event) => {
             <div class="edit-row">
               <input
                 v-model="newExp.anio"
+                @input="validateExperienceYear(newExp.anio, 'new')"
                 placeholder="Periodo"
                 class="input input-sm"
               />
+              <div
+                v-if="validationErrors.experienceYear['new']"
+                class="error-message error-small"
+              >
+                {{ validationErrors.experienceYear["new"] }}
+              </div>
+
               <input
                 v-model="newExp.puesto"
                 placeholder="Puesto"

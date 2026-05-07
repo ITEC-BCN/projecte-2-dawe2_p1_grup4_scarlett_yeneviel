@@ -49,7 +49,7 @@ const handleLoginAdmin = async(e) => {
       <div v-if="error" class="error-message">{{ error }}</div>
 
       <!-- Formulario conectado al backend -->
-      <form class="login-form" @submit="handleLoginAdmin" novalidate>
+      <form class="login-form" @submit="handleLoginAdmin" >
         <label for="email">Correo electrónico</label>
         <input 
           id="email" 

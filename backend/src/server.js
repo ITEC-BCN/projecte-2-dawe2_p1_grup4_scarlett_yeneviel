@@ -502,7 +502,7 @@ app.post("/login", async (req, res) => {
     console.error(err);
     res
       .status(500)
-      .json({ error: err.message || "Error interno del servidor" });
+      .json({ error: "Hubo un problema en el servidor. Inténtalo más tarde" });
   }
 });
 

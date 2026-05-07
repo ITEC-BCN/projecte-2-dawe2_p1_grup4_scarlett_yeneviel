@@ -433,6 +433,15 @@ Publicar la web con vercel
 - Validación de errores al subir CV
 - Agregación de más filtros de busqueda
 
+## Dia 33 - 07/05/2026
+**Asistencia:** Scarlett Toala, Yeneviel Roberts y Silvia Serra
+**Temas tratados**
+
+- Registro: comprobar si el email ya esta en uso
+- Mejora del mensajes de errores para el usuario.
+- Mejora del detalle de la oferta
+- Recuperar contraseña
+
 
 
 

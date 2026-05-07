@@ -60,11 +60,30 @@ export const obtenerOfertas = async () => {
 export const obtenerOfertaPorId = async (id) => {
   const { data, error } = await supabase
     .from('oferta')
-    .select('*')
+    .select(`
+      *,
+      oferta_skill (
+        id_skill,
+        skill (
+          nombre
+        )
+      ),
+      ubicacion (
+        ciudad,
+        comunidad
+      )
+    `)
     .eq('id', id)
-    .single(); // .single() asegura que devuelva un objeto {}, no un array []
+    .single();
 
   if (error) throw error;
+
+  // Opcional: Mapear las skills para que queden en un array simple de strings
+  // Esto transforma el objeto complejo en algo como ["C#", ".NET", "Azure"]
+  if (data && data.oferta_skill) {
+    data.skills_nombres = data.oferta_skill.map(os => os.skill?.nombre).filter(Boolean);
+  }
+
   return data;
 };
 

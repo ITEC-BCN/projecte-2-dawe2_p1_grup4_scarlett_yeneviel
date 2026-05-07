@@ -43,7 +43,7 @@ const handleLoginAdmin = async(e) => {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1>Iniciar sesión - Administración</h1>
+      <h1>Iniciar sesión | Administración</h1>
 
       <!-- Mostrar errores -->
       <div v-if="error" class="error-message">{{ error }}</div>
@@ -84,7 +84,7 @@ const handleLoginAdmin = async(e) => {
         </button>
       </form>
 
-      <p class="signup">¿No tienes cuenta? <router-link to="/registro">Regístrate</router-link></p>
+      <p class="signup">¿Sin cuenta de Administración? <router-link to="/admin/registro">Regístrate</router-link></p>
     </div>
   </div>
 </template>

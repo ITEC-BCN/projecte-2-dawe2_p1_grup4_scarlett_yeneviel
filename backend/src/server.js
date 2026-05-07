@@ -40,6 +40,7 @@ import {
   getCVUrl
 } from "./supabaseClient.js";
 import requireAuth from "./middleware/requireAuth.js";
+import e from "express";
 
 /* ================= INIT ================= */
 dotenv.config();
@@ -201,9 +202,7 @@ app.get("/estudiantes/:id/ofertas-recomendadas", async (req, res) => {
 app.post("/estudiantes", async (req, res) => {
   try {
     console.log(req.body)
-    const existeEmail = await obtenerEstudiantePorEmail(email);
-
-    console.log("Resultado de búsqueda:", existeEmail);
+    const existeEmail = await obtenerEstudiantePorEmail(req.body.email);
 
     if (existeEmail) {
       return res.status(400).json({ error: "El email ya está en uso" });
@@ -408,6 +407,12 @@ app.post("/upload-avatar", upload.single("file"), async (req, res) => {
 // POST: Registrar un nuevo administrador
 app.post("/admin/registro", async (req, res) => {
   try {
+
+    const existingAdmin = await obtenerAdminPorEmail(req.body.email);
+    if (existingAdmin) {
+      return res.status(400).json({ error: "El email ya está en uso" });
+    }
+
     const newPassword_hash = bcrypt.hashSync(req.body.password_hash, 12);
     req.body.password_hash = newPassword_hash;
     const nuevo = await crearAdmin(req.body);
@@ -416,7 +421,7 @@ app.post("/admin/registro", async (req, res) => {
       data: nuevo[0],
     });
   } catch (err) {
-    res.status(400).json({ error: err.message || String(err) });
+    res.status(400).json({ error: 'Error en el servidor'|| String(err) });
   }
 });
 

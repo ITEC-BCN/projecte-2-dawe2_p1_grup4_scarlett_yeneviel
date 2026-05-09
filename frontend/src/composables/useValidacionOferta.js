@@ -63,6 +63,10 @@ export function useValidacionOferta() {
             errores.descripcion = "Debe tener al menos una frase";
         }
 
+        if(!datos.selectedSkills || datos.selectedSkills.length === 0){
+            errores.selectedSkills = "Debe seleccionar al menos una habilidad";
+        }
+
         erroresValidacion.value = errores;
         return Object.keys(errores).length === 0;
     };

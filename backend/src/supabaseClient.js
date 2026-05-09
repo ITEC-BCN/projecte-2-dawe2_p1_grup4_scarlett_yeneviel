@@ -26,10 +26,19 @@ export const crearOferta = async (nuevaOferta) => {
       requisitos: nuevaOferta.requisitos,
       beneficios: nuevaOferta.beneficios,
       id_ubicacion: nuevaOferta.id_ubicacion,
-      estado: 'activa' // Si no viene, por defecto 'activa'
+      modalidad: nuevaOferta.modalidad,
+      jornada: nuevaOferta.jornada,
+      modelo_practicas: nuevaOferta.modelo_practicas,
+      estado: 'ACTIVA' // Si no viene, por defecto 'activa'
     }])
     .select(); // .select() devuelve el objeto creado
 
+    const {dataSkills, errorSkills} = await supabase
+    .from('oferta_skill')
+    .insert(nuevaOferta.selectedSkills.map(id_skill => ({
+      id_oferta: data[0].id,
+      id_skill: id_skill
+    })))
   if (error) throw error;
   return data;
 };

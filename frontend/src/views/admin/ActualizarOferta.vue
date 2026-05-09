@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import { useValidacionOferta } from '../../composables/useValidacionOferta';
@@ -15,6 +15,10 @@ const form = ref({});
 const loading = ref(false);
 const serverError = ref(null);
 
+const skills=ref([]);
+const selectedSkills = ref([]);//Array para multiselect
+const skillToAdd = ref('');
+
 const touched = ref({
   nombre_empresa: false,
   tipo_puesto: false,
@@ -27,6 +31,7 @@ const touched = ref({
   jornada: false,
   modelo_practicas: false,
   modalidad: false,
+  selectedSkills: false
 });
 
 const ubicaciones = ref([]);
@@ -41,14 +46,70 @@ const cargarCiudades = async () => {
   }
 };
 
+const skillsDisponibles = computed(() => {
+    if (!skills.value) return [];
+    const set = []
+    skills.value.forEach(s => {
+      if (s.nombre) set.push({
+        id: s.id,
+        nombre: s.nombre
+      }); 
+    });
+    return [...set].sort();
+});
+
+const skillsDisponiblesFiltradas = computed(() => {
+    return skillsDisponibles.value.filter(skill =>
+        !selectedSkills.value.includes(skill)
+    );
+});
+
+const addSkill = () => {
+    if (!skillToAdd.value) return;
+
+    if (!selectedSkills.value.includes(skillToAdd.value)) {
+        selectedSkills.value.push(skillToAdd.value);
+    }
+
+    skillToAdd.value = "";
+};
+
+const removeSkill = (skill) => {
+    selectedSkills.value = selectedSkills.value.filter(s => s !== skill);
+};
+
+const cargarSkills=async()=>{
+  try {
+
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/skills`);
+    if (!res.ok) {
+      throw new Error("Error al cargar skills");
+    }
+    return skills.value = await res.json();
+
+  } catch (err) {
+    console.error("Error cargando skills:", err);
+    return [];
+  }
+}
+
+
 onMounted(() => {
   cargarCiudades();
+cargarSkills()
 });
 
 // Sincronizar datos de la API al formulario
 watch(ofertaOriginal, (newData) => {
   if (newData) {
     form.value = { ...newData };
+
+    if (newData.oferta_skill) {
+      selectedSkills.value = newData.oferta_skill.map(item => ({
+        id: item.skill.id || item.id_skill,
+        nombre: item.skill.nombre
+      }));
+    }
   }
 }, { immediate: true });
 
@@ -58,15 +119,17 @@ watch(form, (val) => {
 }, { deep: true });
 
 const submitFormulario = async () => {
-  if (!validarFormulario(form.value)) {
+  const payload= {...form.value, selectedSkills: selectedSkills.value.map(skill => skill.id)};
+  
+  if (!validarFormulario(payload)) {
     Object.keys(touched.value).forEach(key => touched.value[key] = true);
     return;
   }
 
   const datosCambiados = {};
-  for (const key in form.value) {
-    if (form.value[key] !== ofertaOriginal.value[key]) {
-      datosCambiados[key] = form.value[key];
+  for (const key in payload) {
+    if (payload[key] !== ofertaOriginal.value[key]) {
+      datosCambiados[key] = payload[key];
     }
   }
 
@@ -158,7 +221,7 @@ const volver = () => router.back();
             <div class="grid-row three-cols">
               <div class="field-group">
                 <label>Jornada</label>
-                <select v-model="form.jornada" @blur="touched.jornada = true">
+                <select v-model="form.jornada" @blur="touched.jornada = true" :class="{'input-error': touched.jornada && erroresValidacion.jornada}">
                   <option value="" disabled>Seleccionar...</option>
                   <option value="Completa">Jornada Completa</option>
                   <option value="Jornada parcial">Jornada Parcial</option>
@@ -168,7 +231,7 @@ const volver = () => router.back();
 
               <div class="field-group">
                 <label>Modalidad</label>
-                <select v-model="form.modalidad" @blur="touched.modalidad = true">
+                <select v-model="form.modalidad" @blur="touched.modalidad = true" :class="{'input-error': touched.modalidad && erroresValidacion.modalidad}">
                   <option value="" disabled>Seleccionar...</option>
                   <option value="Presencial">Presencial</option>
                   <option value="Remoto">Remoto</option>
@@ -179,7 +242,7 @@ const volver = () => router.back();
 
               <div class="field-group">
                 <label>Ubicación</label>
-                <select v-model="form.id_ubicacion" @blur="touched.id_ubicacion = true">
+                <select v-model="form.id_ubicacion" @blur="touched.id_ubicacion = true" :class="{'input-error': touched.id_ubicacion && erroresValidacion.id_ubicacion}">
                   <option value="0" disabled>Ciudad...</option>
                   <option v-for="c in ubicaciones" :key="c.id" :value="c.id">{{ c.ciudad }}</option>
                 </select>
@@ -190,7 +253,7 @@ const volver = () => router.back();
             <div class="grid-row" style="margin-top: 1.5rem;">
                <div class="field-group">
                 <label>Modelo de Prácticas</label>
-                <select v-model="form.modelo_practicas" @blur="touched.modelo_practicas = true">
+                <select v-model="form.modelo_practicas" @blur="touched.modelo_practicas = true" :class="{'input-error': touched.modelo_practicas && erroresValidacion.modelo_practicas}">
                   <option value="" disabled>Seleccionar...</option>
                   <option value="INTENSIVAS">Intensivas</option>
                   <option value="GENERAL">General</option>
@@ -204,25 +267,42 @@ const volver = () => router.back();
             <h2 class="section-title">Detalles de la Oferta</h2>
             <div class="field-group">
               <label>Descripción del puesto</label>
-              <textarea v-model="form.descripcion" rows="4" @blur="touched.descripcion = true"></textarea>
+              <textarea v-model="form.descripcion" rows="4" @blur="touched.descripcion = true" :class="{'input-error': touched.descripcion && erroresValidacion.descripcion}"></textarea>
               <span v-if="touched.descripcion && erroresValidacion.descripcion" class="error-text">{{ erroresValidacion.descripcion }}</span>
             </div>
             
             <div class="field-group">
+              <label>Skills</label>
+              <select v-model="skillToAdd" @change="addSkill" @blur="touched.selectedSkills=true" :class="{'input-error':touched.selectedSkills && erroresValidacion.selectedSkills}">
+                <option value="0" disabled>Skills...</option>
+                <option v-for="skill in skillsDisponiblesFiltradas" :key="skill.id" :value="skill">{{ skill.nombre}}</option>
+              </select>
+
+              <div v-if="selectedSkills.length > 0" class="skills-selected">
+              <transition-group name="list">
+                  <span v-for="skill in selectedSkills" :key="skill.id" class="chip">
+                      {{ skill.nombre }}
+                      <button @click="removeSkill(skill)" class="btn-remove-skill">✕</button>
+                  </span>
+              </transition-group>
+              </div>
+            </div>
+
+            <div class="field-group">
               <label>Funciones</label>
-              <textarea v-model="form.funciones" rows="3" @blur="touched.funciones = true"></textarea>
+              <textarea v-model="form.funciones" rows="3" @blur="touched.funciones = true" :class="{'input-error': touched.funciones && erroresValidacion.funciones}"></textarea>
               <span v-if="touched.funciones && erroresValidacion.funciones" class="error-text">{{ erroresValidacion.funciones }}</span>
             </div>
 
             <div class="field-group">
               <label>Requisitos</label>
-              <textarea v-model="form.requisitos" rows="3" @blur="touched.requisitos = true"></textarea>
+              <textarea v-model="form.requisitos" rows="3" @blur="touched.requisitos = true" :class="{'input-error': touched.requisitos && erroresValidacion.requisitos}"></textarea>
               <span v-if="touched.requisitos && erroresValidacion.requisitos" class="error-text">{{ erroresValidacion.requisitos }}</span>
             </div>
 
             <div class="field-group">
               <label>Beneficios</label>
-              <textarea v-model="form.beneficios" rows="3" @blur="touched.beneficios = true"></textarea>
+              <textarea v-model="form.beneficios" rows="3" @blur="touched.beneficios = true" :class="{'input-error': touched.beneficios && erroresValidacion.beneficios}"></textarea>
               <span v-if="touched.beneficios && erroresValidacion.beneficios" class="error-text">{{ erroresValidacion.beneficios }}</span>
             </div>
           </section>
@@ -365,13 +445,74 @@ input:focus, select:focus, textarea:focus {
 
 .error-text {
   color: var(--error);
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
 .server-error-msg {
   color: var(--error);
   font-weight: 600;
+}
+
+.skills-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #e2e8f0;
+    /* Evita saltos de layout */
+}
+
+
+.chip {
+    background: #4d1b95;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    /* Más redondeado queda más moderno */
+    font-size: 13px;
+    display: inline-flex;
+    /* Cambiado de display: flex */
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chip:hover {
+    background: var(--primary-hover);
+    color: #ffffff;
+    /* mantener contraste */
+}
+
+.chip button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-remove-skill {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.btn-remove-skill:hover {
+    background: #ef4444;
+    /* Rojo al pasar el ratón */
+    transform: scale(1.1);
 }
 
 .form-actions {

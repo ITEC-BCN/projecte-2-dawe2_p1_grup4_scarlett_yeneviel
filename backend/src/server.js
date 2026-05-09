@@ -109,6 +109,7 @@ app.post("/ofertas", async (req, res) => {
       modalidad: req.body.modalidad,
       jornada: req.body.jornada,
       modelo_practicas: req.body.modelo_practicas,
+      selectedSkills: req.body.selectedSkills,
     });
     res.status(201).json(nuevaOferta);
   } catch (err) {

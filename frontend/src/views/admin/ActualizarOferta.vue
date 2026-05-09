@@ -59,28 +59,38 @@ const skillsDisponibles = computed(() => {
 });
 
 const skillsDisponiblesFiltradas = computed(() => {
-  return skillsDisponibles.value.filter(skill =>
-    !selectedSkills.value.includes(skill)
+  // Obtenemos un Set de IDs seleccionados para una búsqueda rápida
+  const idsSeleccionados = new Set(selectedSkills.value.map(s => s.id));
+  
+  return skillsDisponibles.value.filter(skill => 
+    !idsSeleccionados.has(skill.id)
   );
 });
 
 const addSkill = () => {
-  if (!skillToAdd.value) return;
+  if (!skillToAdd.value || skillToAdd.value === "0") return;
 
-  // Verificamos si ya existe en el array de form
   const existe = form.value.oferta_skill.some(s => s.id === skillToAdd.value.id);
 
   if (!existe) {
-    form.value.oferta_skill.push(skillToAdd.value);
-    selectedSkills.value = [...form.value.oferta_skill]; // Sincronizamos la ref local
+    // Añadimos al formulario
+    form.value.oferta_skill.push({
+      id: skillToAdd.value.id,
+      nombre: skillToAdd.value.nombre
+    });
+    
+    // Actualizamos la referencia visual
+    selectedSkills.value = [...form.value.oferta_skill];
   }
 
-  skillToAdd.value = "";
+  skillToAdd.value = "0"; // Reset al valor por defecto del select
 };
 
 const removeSkill = (skill) => {
+  // Filtramos por ID
   form.value.oferta_skill = form.value.oferta_skill.filter(s => s.id !== skill.id);
-  selectedSkills.value = [...form.value.oferta_skill]; // Sincronizamos la ref local
+  // Sincronizamos la visual
+  selectedSkills.value = [...form.value.oferta_skill];
 };
 
 const cargarSkills = async () => {
@@ -107,7 +117,7 @@ onMounted(() => {
 // Sincronizar datos de la API al formulario
 // --- Reemplaza el watch de ofertaOriginal por esto ---
 watch(ofertaOriginal, (newData) => {
-  if (newData) {
+  if (newData && Object.keys(newData).length > 0) {
     // Mapeo de skills: backend -> [{id, nombre}]
     let skillsMapeadas = [];
     if (Array.isArray(newData.oferta_skill)) {
@@ -131,7 +141,7 @@ watch(ofertaOriginal, (newData) => {
       modalidad: newData.modalidad || '',
       oferta_skill: skillsMapeadas
     };
-    selectedSkills.value = skillsMapeadas;
+    selectedSkills.value =[...skillsMapeadas];
   }
 }, { immediate: true });
 
@@ -178,6 +188,22 @@ const submitFormulario = async () => {
     return;
   }
 
+  // --- LÓGICA DE DETECCIÓN DE CAMBIOS EN SKILLS ---
+
+  // Obtenemos los IDs originales (del watch inicial o de ofertaOriginal)
+  const idsOriginales = ofertaOriginal.value.oferta_skill.map(s => s.id_skill);
+
+  // Obtenemos los IDs actuales del formulario
+  const idsActuales = form.value.oferta_skill.map(s => s.id);
+
+  // Skills a añadir: están en actuales pero no en originales
+  const skillsAñadir = idsActuales.filter(id => !idsOriginales.includes(id));
+
+  // Skills a eliminar: están en originales pero no en actuales
+  const skillsEliminar = idsOriginales.filter(id => !idsActuales.includes(id));
+
+  // --- FIN LÓGICA ---
+
   const skillsMapped = form.value.oferta_skill.map(item => ({
     id_skill: item.id,
     skill: {
@@ -185,13 +211,21 @@ const submitFormulario = async () => {
     }
   }));
 
-  const newForm={...form.value, oferta_skill: skillsMapped}
+  const newForm = { ...form.value, oferta_skill: skillsMapped }
   // 2. Calcular cambios (PUT parcial)
   const datosCambiados = {};
   for (const key in newForm) {
     if (!deepEqual(newForm[key], ofertaOriginal.value[key])) {
       datosCambiados[key] = newForm[key];
     }
+  }
+
+  // Si hay cambios en skills, los añadimos al objeto de envío
+  if (skillsAñadir.length > 0 || skillsEliminar.length > 0) {
+    datosCambiados.oferta_skill = {
+      insertar: skillsAñadir,
+      eliminar: skillsEliminar
+    };
   }
 
   if (Object.keys(datosCambiados).length === 0) return alert("No has realizado ningún cambio.");
@@ -357,7 +391,7 @@ const volver = () => router.back();
                 <transition-group name="list">
                   <span v-for="skill in selectedSkills" :key="skill.id" class="chip">
                     {{ skill.nombre }}
-                    <button @click="removeSkill(skill)" class="btn-remove-skill">✕</button>
+                    <button @click="removeSkill(skill)" class="btn-remove-skill" type="button">✕</button>
                   </span>
                 </transition-group>
               </div>

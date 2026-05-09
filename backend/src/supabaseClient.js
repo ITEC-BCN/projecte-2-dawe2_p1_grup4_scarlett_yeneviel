@@ -33,7 +33,7 @@ export const crearOferta = async (nuevaOferta) => {
     }])
     .select(); // .select() devuelve el objeto creado
 
-    const {dataSkills, errorSkills} = await supabase
+  const { dataSkills, errorSkills } = await supabase
     .from('oferta_skill')
     .insert(nuevaOferta.selectedSkills.map(id_skill => ({
       id_oferta: data[0].id,
@@ -96,16 +96,53 @@ export const obtenerOfertaPorId = async (id) => {
   return data;
 };
 
-// 3. ACTUALIZAR una oferta (UPDATE)
 export const actualizarOferta = async (id, nuevosDatos) => {
-  const { data, error } = await supabase
-    .from('oferta')
-    .update(nuevosDatos)
-    .eq('id', id) // Filtra por el ID de la oferta
-    .select();
+  const { oferta_skill, ...camposParaUpdate } = nuevosDatos;
 
-  if (error) throw error;
-  return data;
+  // 1. Manejo de Skills (Relación Many-to-Many)
+  if (oferta_skill) {
+    // INSERTAR SKILLS
+    if (oferta_skill.insertar && oferta_skill.insertar.length > 0) {
+      // Usamos .map() porque .insert() necesita un array de objetos
+      const skillsToInsert = oferta_skill.insertar.map(idSkill => ({
+        id_oferta: id,
+        id_skill: idSkill
+      }));
+
+      const { error: errorInsert } = await supabase
+        .from('oferta_skill')
+        .insert(skillsToInsert);
+
+      if (errorInsert) throw errorInsert;
+    }
+
+    // ELIMINAR SKILLS
+    if (oferta_skill.eliminar && oferta_skill.eliminar.length > 0) {
+      const { error: errorDelete } = await supabase
+        .from('oferta_skill')
+        .delete()
+        .eq('id_oferta', id)
+        .in('id_skill', oferta_skill.eliminar); // .in acepta el array directamente
+
+      if (errorDelete) throw errorDelete;
+    }
+  }
+
+  // 2. Actualizar la tabla principal 'oferta'
+  // Solo ejecutamos el update si hay campos para actualizar
+  if (Object.keys(camposParaUpdate).length > 0) {
+    const { data, error } = await supabase
+      .from('oferta')
+      .update(camposParaUpdate)
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Si solo cambiaron skills, devolvemos un mensaje de éxito genérico o el registro actual
+  return [{ id }]; 
 };
 
 // 4. ELIMINAR una oferta (DELETE)
@@ -183,7 +220,7 @@ export const obtenerOfertasRecomendadas = async (estudianteId) => {
 // ================== USUARIOS =======================
 
 export const crearEstudiante = async (nuevoEstudiante) => {
-  
+
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .insert([{
@@ -434,9 +471,9 @@ export const subirAvatarStorage = async (fileName, fileBuffer, mimeType) => {
     });
 
   if (error) {
-  console.error("ERROR SUBIENDO:", error);
-  throw error;
-}
+    console.error("ERROR SUBIENDO:", error);
+    throw error;
+  }
 
   // 2. Si se subió bien, pedimos la URL pública
   const { data: urlData } = supabase.storage
@@ -595,15 +632,15 @@ export const obtenerSkills = async () => {
 
   if (error) throw error;
   return data;
-}; 
+};
 
 
-export const updatedRequestRegistration= async(id_estudiante,estado) => {
+export const updatedRequestRegistration = async (id_estudiante, estado) => {
 
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .update({ estado: estado })
-    .eq('id', id_estudiante)  
+    .eq('id', id_estudiante)
 
   if (error) {
     console.error("Error al actualizar el estado de la solicitud:", error.message);
@@ -650,7 +687,7 @@ export const getCVUrl = async (idEstudiante) => {
 
     // 3. Obtener la URL pública del storage
     // Nota: getPublicUrl suele ser sincrónico en algunas versiones de la SDK, 
-    const { data } =  supabase
+    const { data } = supabase
       .storage
       .from('cvs')
       .getPublicUrl(documento.ruta_archivo);

@@ -562,9 +562,7 @@ const verDetallePerfil = (id) => {
   font-size: 1.8rem;
   font-weight: 800;
   margin: 0;
-  /* Quita todos los márgenes */
   line-height: 1.2;
-  /* Ajusta la altura de línea para que no ocupe de más */
 }
 
 .text-group {
@@ -577,9 +575,7 @@ const verDetallePerfil = (id) => {
   color: #2563eb;
   font-weight: 600;
   margin-top: 5px;
-  /* Espacio mínimo con el título */
   margin-bottom: 12px;
-  /* Espacio moderado antes de las etiquetas */
 }
 
 .tags {
@@ -982,6 +978,38 @@ const verDetallePerfil = (id) => {
 
 /* --- RESPONSIVE 480px (Smartphones pequeños) --- */
 @media (max-width: 480px) {
+
+   .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .empresa-info {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .titulo-puesto {
+    font-size: 1.3rem;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .empresa-nombre {
+    font-size: 0.95rem;
+  }
+
+  .tags {
+    flex-wrap: wrap;
+  }
+
+  .logo-box {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
     .detalle-container {
     max-width: 100%;
   }
@@ -1024,6 +1052,7 @@ const verDetallePerfil = (id) => {
     padding: 10px 0;
     font-size: 1rem;
   }
+  /**Postulaciones */
   .postulaciones-header-container {
     flex-direction: column;
     align-items: flex-start;
@@ -1051,11 +1080,7 @@ const verDetallePerfil = (id) => {
     margin-bottom: 5px;
     font-size: 0.85rem;
   }
-  .empresa-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
+
 }
 
 /* --- UTILIDADES DE DISEÑO --- */

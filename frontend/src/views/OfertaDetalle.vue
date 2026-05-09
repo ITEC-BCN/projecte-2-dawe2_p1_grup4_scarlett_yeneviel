@@ -3,7 +3,6 @@ import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetchOfertas';
 import { useFetchUser } from '../composables/userFetchUser';
-import { URL_BACK } from '../../../config';
 import ModalInformativo from '../components/ModalInformativo.vue';
 // Importar la librería para enviar un e-mail cuando el estudiante se postula a una oferta
 import emailjs from "@emailjs/browser";

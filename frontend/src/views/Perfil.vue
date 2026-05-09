@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { URL_BACK } from "../../../config";
 import { useStudents } from "../composables/useStudents";
 import {
   availableLanguagesList,
@@ -18,7 +17,7 @@ import {
 const route = useRoute();
 const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
-const url = ref(`${URL_BACK}/estudiantes/${studentId}`);
+const url = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes/${studentId}`);
 const role = localStorage.getItem("role");
 
 const { students, loadingStudents, refreshStudents } = useStudents(url);

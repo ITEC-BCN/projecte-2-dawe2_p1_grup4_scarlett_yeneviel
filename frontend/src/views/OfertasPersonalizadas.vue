@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import CardOferta from '../components/cardOferta.vue'; 
-import { URL_BACK } from '../../../config';
 
 const router = useRouter();
 
@@ -23,7 +22,7 @@ const cargarOfertasPersonalizadas = async () => {
 
   try {
     // 2. Llamamos a tu endpoint del backend
-    const respuesta = await fetch(`${URL_BACK}/estudiantes/${userId}/ofertas-recomendadas`);
+    const respuesta = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiantes/${userId}/ofertas-recomendadas`);
     
     if (!respuesta.ok) {
       throw new Error("Aún no tienes skills registradas o hubo un error al buscar el match.");

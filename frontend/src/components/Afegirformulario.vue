@@ -370,6 +370,7 @@ const volver = () => router.back();
 
 .btn-back:hover { color: var(--primary); }
 
+
 .form-card {
   max-width: 900px;
   margin: 0 auto;
@@ -397,6 +398,7 @@ const volver = () => router.back();
 }
 
 .form-section {
+  margin-left:0;
   margin-bottom: 2rem;
 }
 
@@ -423,6 +425,7 @@ const volver = () => router.back();
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-right: 1.5rem;
 }
 
 .field-group  label {
@@ -576,4 +579,7 @@ input:focus, select:focus, textarea:focus {
   .full-width { grid-column: auto; }
   .form-card { padding: 1.5rem; }
 }
+
+
+
 </style>

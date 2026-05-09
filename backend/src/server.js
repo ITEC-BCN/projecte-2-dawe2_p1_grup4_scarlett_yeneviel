@@ -736,9 +736,9 @@ app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
       upsert: true,
     });
 
-    console.log("FILE:", file);
-    console.log("BUFFER EXISTS:", !!file.buffer);
-    console.log("SIZE:", file.size);
+    //console.log("FILE:", file);
+    //console.log("BUFFER EXISTS:", !!file.buffer);
+    //console.log("SIZE:", file.size);
 
     // 2. Extraer texto del PDF
     const pdfParse = (await import("pdf-parse")).default;
@@ -893,6 +893,16 @@ FORMATO:
         .from("estudiante_skill")
         .insert(nuevasRelaciones);
     }
+
+    //Guardar ruta del stora en la tabla de documento
+    await supabase
+      .from("documento")
+      .update({
+        ruta_archivo: supabasePDF.data.path,
+      })
+      .eq("id_estudiante", studentId)
+      .eq("tipo", "cv");
+
 
     // -------------------------
     // RESPONSE

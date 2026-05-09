@@ -350,17 +350,15 @@ const verDetallePerfil = (id) => {
 /* Página base*/
 
 .detalle-page {
-  background: #F3F4F6;
+   background: #F3F4F6;
   min-height: 100vh;
-  padding: 50px 10px;
+  padding: 50px 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  box-sizing: border-box;
 }
 
 .detalle-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: auto;
-  width: 100%;
 }
 
 #expiracion {
@@ -405,14 +403,11 @@ const verDetallePerfil = (id) => {
 
 /* Card principal rediseñada */
 .oferta-card-new {
-  background: #FFFFFF;
+background: #FFFFFF;
   border-radius: 16px;
   padding: 40px;
   border: 1px solid #E5E7EB;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 700px;
 }
 
 /* Header */
@@ -589,6 +584,8 @@ const verDetallePerfil = (id) => {
   border-radius: 999px;
   font-size: 0.8rem;
   color: #ffffff;
+  justify-content: center;
+  align-content: center;
 }
 
 /* BLOQUES SUAVES */
@@ -851,9 +848,20 @@ const verDetallePerfil = (id) => {
   text-transform: uppercase;
 }
 
-.status-pill.pendiente { background: #fef3c7; color: #92400e; }
-.status-pill.aceptado { background: #dcfce7; color: #166534; }
-.status-pill.rechazada { background: #fee2e2; color: #991b1b; }
+.status-pill.pendiente {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.aceptado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.rechazada {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 
 /* Botones de Acción Estilizados */
@@ -873,9 +881,21 @@ const verDetallePerfil = (id) => {
   transition: all 0.2s;
 }
 
-.btn-icon-text.primary { background: #4f46e5; color: white; }
-.btn-icon-text.secondary { background: white; border-color: #d1d5db; color: #374151; }
-.btn-icon-text.accent { background: #0ea5e9; color: white; }
+.btn-icon-text.primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.btn-icon-text.secondary {
+  background: white;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.btn-icon-text.accent {
+  background: #0ea5e9;
+  color: white;
+}
 
 .btn-icon-text:hover:not(:disabled) {
   opacity: 0.9;
@@ -886,29 +906,34 @@ const verDetallePerfil = (id) => {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 /* --- RESPONSIVE 1024px (Tablets / Laptops pequeñas) --- */
 @media (max-width: 1024px) {
   .detalle-container {
     max-width: 98%;
     padding: 0 5px;
   }
+
   .contenido-grid-new {
     grid-template-columns: 1fr 220px;
     gap: 18px;
   }
+
   .oferta-card-new {
     padding: 18px;
     max-width: 98vw;
     margin-left: 1vw;
     margin-right: 1vw;
   }
+
   .postulaciones-section {
     max-width: 99vw;
     margin-left: 0.5vw;
     margin-right: 0.5vw;
     padding: 8px;
   }
-  .postulaciones-table td, 
+
+  .postulaciones-table td,
   .postulaciones-table thead th {
     padding: 10px 8px;
     font-size: 0.9rem;
@@ -917,7 +942,7 @@ const verDetallePerfil = (id) => {
 
 /* --- RESPONSIVE 768px (Móviles / Tablets vertical) --- */
 @media (max-width: 768px) {
-   .detalle-page {
+  .detalle-page {
     padding: 30px 15px;
   }
 
@@ -938,29 +963,34 @@ const verDetallePerfil = (id) => {
   .info-box-new {
     padding: 15px;
   }
+
   /* Tabla a Card */
   .postulaciones-table thead {
     display: none;
   }
-  .postulaciones-table, 
-  .postulaciones-table tbody, 
-  .postulaciones-table tr, 
+
+  .postulaciones-table,
+  .postulaciones-table tbody,
+  .postulaciones-table tr,
   .postulaciones-table td {
     display: block;
     width: 100%;
     box-sizing: border-box;
   }
+
   .postulaciones-table tr {
     padding: 16px 0;
     border-bottom: 8px solid #f3f4f6;
     position: relative;
     margin-bottom: 10px;
   }
+
   .postulaciones-table td {
     padding: 8px 0;
     border: none;
     font-size: 1rem;
   }
+
   .candidato-actions-inline {
     justify-content: flex-start;
     margin-top: 15px;
@@ -969,6 +999,7 @@ const verDetallePerfil = (id) => {
     gap: 10px;
     flex-wrap: wrap;
   }
+
   .fecha-cell::before {
     content: "Postulado el: ";
     font-weight: 600;
@@ -979,7 +1010,7 @@ const verDetallePerfil = (id) => {
 /* --- RESPONSIVE 480px (Smartphones pequeños) --- */
 @media (max-width: 480px) {
 
-   .header-top {
+  .header-top {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
@@ -1010,7 +1041,8 @@ const verDetallePerfil = (id) => {
     font-size: 20px;
     flex-shrink: 0;
   }
-    .detalle-container {
+
+  .detalle-container {
     max-width: 100%;
   }
 
@@ -1045,13 +1077,16 @@ const verDetallePerfil = (id) => {
     padding: 20px;
     font-size: 1rem;
   }
-  .btn-update, .btn-delete {
+
+  .btn-update,
+  .btn-delete {
     width: 100%;
     margin-right: 0;
     text-align: center;
     padding: 10px 0;
     font-size: 1rem;
   }
+
   /**Postulaciones */
   .postulaciones-header-container {
     flex-direction: column;
@@ -1059,22 +1094,26 @@ const verDetallePerfil = (id) => {
     gap: 10px;
     padding: 12px 8px;
   }
+
   .candidato-actions-inline {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
     gap: 6px;
   }
+
   .btn-icon-text {
     width: 100%;
     text-align: center;
     padding: 10px;
     font-size: 1rem;
   }
+
   .candidato-avatar-mini {
     width: 38px;
     height: 38px;
   }
+
   .status-pill {
     display: inline-block;
     margin-bottom: 5px;
@@ -1091,9 +1130,21 @@ const verDetallePerfil = (id) => {
   font-weight: 700;
   text-transform: uppercase;
 }
-.status-pill.pendiente { background: #fef3c7; color: #92400e; }
-.status-pill.aceptado { background: #dcfce7; color: #166534; }
-.status-pill.rechazada { background: #fee2e2; color: #991b1b; }
+
+.status-pill.pendiente {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.aceptado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.rechazada {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .btn-icon-text {
   padding: 8px 14px;
@@ -1104,7 +1155,20 @@ const verDetallePerfil = (id) => {
   transition: 0.2s;
   border: 1px solid transparent;
 }
-.btn-icon-text.primary { background: #4f46e5; color: white; }
-.btn-icon-text.secondary { background: white; border: 1px solid #d1d5db; color: #374151; }
-.btn-icon-text.accent { background: #0ea5e9; color: white; }
+
+.btn-icon-text.primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.btn-icon-text.secondary {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.btn-icon-text.accent {
+  background: #0ea5e9;
+  color: white;
+}
 </style>

@@ -1,12 +1,11 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useValidacionOferta } from '../composables/useValidacionOferta';
 
 const router = useRouter();
 const { erroresValidacion, validarFormulario } = useValidacionOferta();
 
-// CAMPOS del formulario FALTAN MÁS LAS FK (id_ubicación, id_tipo_jornada, contenido_extra )
 // Agrupamos los refs en un objeto para facilitar la validación
 const form = ref({
   nombre_empresa: "",
@@ -38,6 +37,11 @@ const touched = ref({
 });
 
 const ubicaciones = ref([]);
+const skills=ref([]);
+const selectedSkills = ref([]);//Array para multiselect
+const skillToAdd = ref('');
+
+
 
 const cargarCiudades = async () => {
   try {
@@ -52,18 +56,72 @@ const cargarCiudades = async () => {
   }
 };
 
+const cargarSkills=async()=>{
+  try {
+
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/skills`);
+    if (!res.ok) {
+      throw new Error("Error al cargar skills");
+    }
+    return skills.value = await res.json();
+
+  } catch (err) {
+    console.error("Error cargando skills:", err);
+    return [];
+  }
+}
+
+
+
+const skillsDisponibles = computed(() => {
+    if (!skills.value) return [];
+    const set = []
+    skills.value.forEach(s => {
+      if (s.nombre) set.push({
+        id: s.id,
+        nombre: s.nombre
+      }); 
+    });
+    return [...set].sort();
+});
+
+const skillsDisponiblesFiltradas = computed(() => {
+    return skillsDisponibles.value.filter(skill =>
+        !selectedSkills.value.includes(skill)
+    );
+});
+
+const addSkill = () => {
+    if (!skillToAdd.value) return;
+
+    if (!selectedSkills.value.includes(skillToAdd.value)) {
+        selectedSkills.value.push(skillToAdd.value);
+    }
+
+    skillToAdd.value = "";
+};
+
+const removeSkill = (skill) => {
+    selectedSkills.value = selectedSkills.value.filter(s => s !== skill);
+};
+
 onMounted(() => {
   cargarCiudades();
+  cargarSkills();
 });
 
 // ESTADO
 const loading = ref(false);
 const serverError = ref(null);
 
-// Validar cada vez que cambie cualquier campo del objeto form
-watch(form, () => {
-  validarFormulario(form.value);
-}, { deep: true });
+// Validar cada vez que cambie cualquier campo
+watch(
+  () => form.value, 
+  (nuevoValor) => {
+    validarFormulario(nuevoValor);
+  }, 
+  { deep: true, immediate: true }
+);
 
 // Enviar formulario
 const submitFormulario = async () => {
@@ -91,6 +149,7 @@ const submitFormulario = async () => {
         jornada: form.value.jornada,
         modelo_practicas: form.value.modelo_practicas,
         modalidad:form.value.modalidad,
+        selectedSkills: selectedSkills.value.map(skill => skill.id)
       }),
     });
 
@@ -118,7 +177,6 @@ const submitFormulario = async () => {
 };
 
 const volver = () => router.back();
-
 </script>
 
 <template>
@@ -166,9 +224,10 @@ const volver = () => router.back();
             <div class="field-group fecha-field">
               <label for="fecha">Fecha de Expiración</label>
               <input 
-                id="fecha" type="date" v-model="form.fecha_expiracion"
+                id="fecha" type="date" v-model="form.fecha_expiracion" :class="{'input-error': touched.fecha_expiracion && erroresValidacion.fecha_expiracion}"
                 @blur="touched.fecha_expiracion = true"
               />
+                <span v-if="touched.fecha_expiracion && erroresValidacion.fecha_expiracion" class="error-text">{{ erroresValidacion.fecha_expiracion }}</span>
             </div>
           </div>
         </section>
@@ -177,45 +236,89 @@ const volver = () => router.back();
           <h2 class="section-title">Condiciones y Ubicación</h2>
           <div class="grid-row three-cols">
             <div class="field-group">
-              <label>Jornada</label>
-              <select v-model="form.jornada">
-                <option value="" disabled>Seleccionar...</option>
-                <option value="completa">Completa</option>
-                <option value="parcial">Parcial</option>
-              </select>
+                <label>Jornada</label>
+                <select v-model="form.jornada" @blur="touched.jornada = true">
+                  <option value="" disabled>Seleccionar...</option>
+                  <option value="Completa">Jornada Completa</option>
+                  <option value="Jornada parcial">Jornada Parcial</option>
+                </select>
+                <span v-if="touched.jornada && erroresValidacion.jornada" class="error-text">{{ erroresValidacion.jornada }}</span>
             </div>
 
-            <div class="field-group">
-              <label>Modalidad</label>
-              <select v-model="form.modalidad">
-                <option value="" disabled>Seleccionar...</option>
-                <option value="Presencial">Presencial</option>
-                <option value="Remoto">Remoto</option>
-                <option value="Híbrido">Híbrido</option>
-              </select>
-            </div>
+             <div class="field-group">
+                <label>Modalidad</label>
+                <select v-model="form.modalidad" @blur="touched.modalidad = true">
+                  <option value="" disabled>Seleccionar...</option>
+                  <option value="Presencial">Presencial</option>
+                  <option value="Remoto">Remoto</option>
+                  <option value="Híbrido">Híbrido</option>
+                </select>
+                <span v-if="touched.modalidad && erroresValidacion.modalidad" class="error-text">{{ erroresValidacion.modalidad }}</span>
+              </div>
 
-            <div class="field-group">
-              <label>Ubicación</label>
-              <select v-model="form.id_ubicacion">
-                <option value="0" disabled>Ciudad...</option>
-                <option v-for="c in ubicaciones" :key="c.id" :value="c.id">{{ c.ciudad }}</option>
-              </select>
-            </div>
+              <div class="field-group">
+                <label>Ubicación</label>
+                <select v-model="form.id_ubicacion" @blur="touched.id_ubicacion = true">
+                  <option value="0" disabled>Ciudad...</option>
+                  <option v-for="c in ubicaciones" :key="c.id" :value="c.id">{{ c.ciudad }}</option>
+                </select>
+                <span v-if="touched.id_ubicacion && erroresValidacion.id_ubicacion" class="error-text">{{ erroresValidacion.id_ubicacion }}</span>
+              </div>
+
+                             <div class="field-group">
+                <label>Modelo de Prácticas</label>
+                <select v-model="form.modelo_practicas" @blur="touched.modelo_practicas = true">
+                  <option value="" disabled>Seleccionar...</option>
+                  <option value="INTENSIVAS">Intensivas</option>
+                  <option value="GENERAL">General</option>
+                </select>
+                <span v-if="touched.modelo_practicas && erroresValidacion.modelo_practicas" class="error-text">{{ erroresValidacion.modelo_practicas }}</span>
+              </div>
           </div>
         </section>
 
         <section class="form-section">
           <h2 class="section-title">Detalles de la Oferta</h2>
-          <div class="field-group">
-            <label>Descripción del puesto</label>
-            <textarea v-model="form.descripcion" rows="4" placeholder="¿Qué buscamos?"></textarea>
-          </div>
+           <div class="field-group">
+              <label>Descripción del puesto</label>
+              <textarea v-model="form.descripcion" rows="4" @blur="touched.descripcion = true"></textarea>
+              <span v-if="touched.descripcion && erroresValidacion.descripcion" class="error-text">{{ erroresValidacion.descripcion }}</span>
+            </div>
           
           <div class="field-group">
-            <label>Requisitos</label>
-            <textarea v-model="form.requisitos" rows="3" placeholder="Tecnologías, experiencia..."></textarea>
+            <label>Skills</label>
+            <select v-model="skillToAdd" @change="addSkill">
+              <option value="0" disabled>Skills...</option>
+              <option v-for="skill in skillsDisponiblesFiltradas" :key="skill" :value="skill">{{ skill.nombre}}</option>
+            </select>
           </div>
+
+          <div v-if="selectedSkills.length > 0" class="skills-selected">
+              <transition-group name="list">
+                  <span v-for="skill in selectedSkills" :key="skill.id" class="chip">
+                      {{ skill.nombre }}
+                      <button @click="removeSkill(skill)" class="btn-remove-skill">✕</button>
+                  </span>
+              </transition-group>
+          </div>
+
+                      <div class="field-group">
+              <label>Funciones</label>
+              <textarea v-model="form.funciones" rows="3" @blur="touched.funciones = true"></textarea>
+              <span v-if="touched.funciones && erroresValidacion.funciones" class="error-text">{{ erroresValidacion.funciones }}</span>
+            </div>
+
+            <div class="field-group">
+              <label>Requisitos</label>
+              <textarea v-model="form.requisitos" rows="3" @blur="touched.requisitos = true"></textarea>
+              <span v-if="touched.requisitos && erroresValidacion.requisitos" class="error-text">{{ erroresValidacion.requisitos }}</span>
+            </div>
+
+                        <div class="field-group">
+              <label>Beneficios</label>
+              <textarea v-model="form.beneficios" rows="3" @blur="touched.beneficios = true"></textarea>
+              <span v-if="touched.beneficios && erroresValidacion.beneficios" class="error-text">{{ erroresValidacion.beneficios }}</span>
+            </div>
         </section>
 
         <div class="form-actions">
@@ -231,7 +334,8 @@ const volver = () => router.back();
 </template>
 
 <style scoped>
-:simple-vars {
+/* Variables de diseño */
+.form-page {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --bg-page: #f8fafc;
@@ -239,13 +343,12 @@ const volver = () => router.back();
   --text-muted: #64748b;
   --error: #ef4444;
   --border: #e2e8f0;
-}
-
-.form-page {
+  
   background-color: var(--bg-page);
   min-height: 100vh;
   padding: 2rem 1rem;
   color: var(--text-main);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .top-nav {
@@ -350,13 +453,75 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
+.skills-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #e2e8f0;
+    /* Evita saltos de layout */
+}
+
+
+.chip {
+    background: #4d1b95;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    /* Más redondeado queda más moderno */
+    font-size: 13px;
+    display: inline-flex;
+    /* Cambiado de display: flex */
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chip:hover {
+    background: var(--primary-hover);
+    color: #ffffff;
+    /* mantener contraste */
+}
+
+.chip button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-remove-skill {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.btn-remove-skill:hover {
+    background: #ef4444;
+    /* Rojo al pasar el ratón */
+    transform: scale(1.1);
+}
+
 .input-error { border-color: var(--error); }
 
 .error-text {
   color: var(--error);
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 500;
 }
+
 
 .form-actions {
   margin-top: 3rem;

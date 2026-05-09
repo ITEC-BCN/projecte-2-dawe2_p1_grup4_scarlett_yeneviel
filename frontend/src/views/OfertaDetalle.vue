@@ -87,12 +87,8 @@ onMounted(() => {
 const postularOferta = async () => {
 
 
-  if (estadoActual.value !== 'aprobado' && idEstudiante) {
+  if (estadoActual.value !== 'aprobado' && estadoActual.value !== 'rechazado' && idEstudiante) {
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden postular a ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
-    modalInformativoEstado();
-    return;
-  } else if (estadoActual.value === 'inactivo') {
-    mensajePersonalizado.value = `Tu cuenta está inactiva. Por favor, contacta con soporte para más información.`;
     modalInformativoEstado();
     return;
   }
@@ -268,7 +264,7 @@ const funGuardarOferta = async () => {
             <section class="bloque beneficios">
               <h3>Beneficios</h3>
               <div class="beneficios-grid">
-                <div>{{oferta.beneficios}}</div>
+                <div>{{ oferta.beneficios }}</div>
               </div>
             </section>
 
@@ -314,7 +310,7 @@ const funGuardarOferta = async () => {
                   <CalendarIcon :size="20" />
                 </div>
                 <div class="text-group">
-                  <span class="label-title" >Publicado</span>
+                  <span class="label-title">Publicado</span>
                   <strong id="publicado">{{ oferta.fecha_publicacion }}</strong>
                 </div>
               </div>
@@ -351,12 +347,12 @@ const funGuardarOferta = async () => {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-#expiracion{
-color:var(--danger);
+#expiracion {
+  color: var(--danger);
 }
 
-#publicado{
-color:var(--primary)
+#publicado {
+  color: var(--primary)
 }
 
 .icon-wrapper {
@@ -642,8 +638,10 @@ color:var(--primary)
 .titulo-puesto {
   font-size: 1.8rem;
   font-weight: 800;
-  margin: 0; /* Quita todos los márgenes */
-  line-height: 1.2; /* Ajusta la altura de línea para que no ocupe de más */
+  margin: 0;
+  /* Quita todos los márgenes */
+  line-height: 1.2;
+  /* Ajusta la altura de línea para que no ocupe de más */
 }
 
 .text-group {
@@ -655,8 +653,10 @@ color:var(--primary)
 .empresa-nombre {
   color: #2563eb;
   font-weight: 600;
-  margin-top: 5px;     /* Espacio mínimo con el título */
-  margin-bottom: 12px; /* Espacio moderado antes de las etiquetas */
+  margin-top: 5px;
+  /* Espacio mínimo con el título */
+  margin-bottom: 12px;
+  /* Espacio moderado antes de las etiquetas */
 }
 
 .tags {

@@ -488,6 +488,11 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Email o contraseña incorrectos" });
     }
 
+    //Comprobar estado de la cuentaRechazada
+     if (estudiante.estado=="rechazado") {
+      return res.status(403).json({ error: "Cuenta rechazada. Si es un error contacta con soporte" });
+    }
+
     // 3. GENERAR EL TOKEN JWT
     // Guardamos el ID y el email dentro del token
     const token = jwt.sign(

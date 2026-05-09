@@ -32,7 +32,7 @@ const selectedSoftSkillId = ref("");
 // Cargar todas las skills al montar el componente
 onMounted(async () => {
   try {
-    const res = await fetch(`${URL_BACK}/skills`);
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/skills`);
     const data = await res.json();
     allDbSkills.value = data;
   } catch (error) {
@@ -260,7 +260,7 @@ const uploadAvatar = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
-    const response = await fetch(`${URL_BACK}/upload-avatar`, {
+    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/upload-avatar`, {
       method: "POST",
       body: formData,
     });

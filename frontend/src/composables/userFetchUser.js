@@ -38,7 +38,7 @@ export function useFetchUser(url) {
     const OfertasGuardadasUser = async (id_estudiante) => {
 
         try {
-            const res = await fetch(`${URL_BACK}/estudiante/ofertas-guardadas/${id_estudiante}`);
+            const res = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiante/ofertas-guardadas/${id_estudiante}`);
 
             // Guardamos los datos para que los componentes los usen
             const resultado= await res.json()
@@ -105,7 +105,7 @@ export function useFetchUser(url) {
 
     const guardarOferta = async (id_estudiante, id_oferta) => {
         try {
-            const res = await fetch(`${URL_BACK}/guardar-oferta`, {
+            const res = await fetch(`${import.meta.env.VITE_URL_BACK}/guardar-oferta`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_estudiante, id_oferta })
@@ -126,7 +126,7 @@ export function useFetchUser(url) {
     const actualizarEstado = async (idEstudiante, nuevoEstado) => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`${URL_BACK}/actualizar-estado/${idEstudiante}`, {
+            const res = await fetch(`${import.meta.env.VITE_URL_BACK}/actualizar-estado/${idEstudiante}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -151,7 +151,7 @@ export function useFetchUser(url) {
         try {
             const userId = obtenerIdDesdeToken();
             const token = localStorage.getItem('token');
-            const response = await fetch(`${URL_BACK}/estudiante/estado/${userId}`, {
+            const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiante/estado/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();

@@ -51,7 +51,7 @@ const router = createRouter({
       name: "perfil",
       component: () => import('@/views/Perfil.vue'),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, IsRejected:true }
     },
     {
       path: "/perfilDetalle/:id",
@@ -65,7 +65,7 @@ const router = createRouter({
       name: "dashboard",
       component: () => import('@/views/Dasboard.vue'),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true,IsRejected:true }
     },
     {
       path: "/oferta/actualizar/:id",
@@ -142,7 +142,7 @@ const router = createRouter({
       name: "ofertasRecomendadas",
       component: () => import('@/views/OfertasPersonalizadas.vue'),
       props: true,
-      meta: { requiresAdmin: false }
+      meta: { requiresAdmin: false,IsRejected:true }
     },
     {
       path: '/revision',
@@ -177,12 +177,20 @@ router.beforeEach(async (to, from, next) => {
         const data = await response.json();
         const estado = data.estado;
 
-        const estaPendiente = estado !== 'aprobado';
+        const estaPendiente = estado !== 'aprobado' && estado !== 'rechazado';
+
         const permitePendientes = to.meta.allowPending;
 
         if (estaPendiente && !permitePendientes && to.name !== 'espera') {
           return next({ name: 'espera' });
         }
+
+        const rechazada=to.meta.IsRejected;
+        const cuentaRechazada= estado==='rechazado';
+        if (cuentaRechazada && rechazada && to.name !== 'espera') {
+          return next({ name: 'espera' });
+        }
+
 
       } catch (error) {
         console.error("Error verificando estado:", error);

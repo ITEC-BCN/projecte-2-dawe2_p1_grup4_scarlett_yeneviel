@@ -17,6 +17,12 @@ const router = createRouter({
       props: true
     },
     {
+      path: "/restore-password/:token",
+      name: "restorePassword",
+      component: () => import('@/views/RestaurarContraseña.vue'),
+      props: true
+    },
+    {
       path: "/admin/login",
       name: "loginAdmin",
       component: () => import('@/views/admin/LoginAdmin.vue'),

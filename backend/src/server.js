@@ -41,6 +41,8 @@ import {
 } from "./supabaseClient.js";
 import requireAuth from "./middleware/requireAuth.js";
 import e from "express";
+import { sendEmail } from "./email.js";
+import { generarTokenRestauracion } from "./utils/authentication.js";
 
 /* ================= INIT ================= */
 dotenv.config();
@@ -959,6 +961,40 @@ app.get("/ubicaciones", async (req, res) => {
   }
 
 })
+
+app.post("/restore-password", async (req, res) => {
+  try {
+
+    /* Recuperamos del body el email */
+    const { email } = req.body;
+
+    /* Comprobamos si el email existe */
+      const estudiante = await obtenerEstudiantePorEmail(email);
+
+    if (!estudiante) {
+      return res.status(404).json({ error: "Email no encontrado" });
+    }
+
+    /* Generamos un token de restauración de contraseña */
+    const token = await generarTokenRestauracion(email);
+
+    /* Generamos la url del formulario para cambiar la contraseña */
+    const urlRestauracion = `http://localhost:5173/restore-password/${token}`;
+
+    /* Enviamos el email */
+    const response = await sendEmail(email, "Prueba de envío de email", `Este es un email de prueba para verificar la funcionalidad de envío desde el backend. Puedes restaurar tu contraseña usando el siguiente enlace: ${urlRestauracion}`);
+    
+    if (response.code == 500) {
+      console.error("Error enviando email:", response.error);
+      return res.status(500).json({ error: "Error enviando email" });
+    } 
+
+    res.json({ message: "Email de restauración enviado correctamente" });
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Error interno del servidor" });
+  } 
+});
 /* ================= SERVER, LÍNEA SIEMPRE AL FINAL ================= */
 
 app.listen(3000, () => {

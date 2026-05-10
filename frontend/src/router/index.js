@@ -17,7 +17,13 @@ const router = createRouter({
       props: true
     },
     {
-      path: "/restore-password/:token",
+      path: "/update-password/:token",
+      name: "updatePassword",
+      component: () => import('@/views/ActualizarContraseña.vue'),
+      props: true
+    },
+    {
+      path: "/restore-password",
       name: "restorePassword",
       component: () => import('@/views/RestaurarContraseña.vue'),
       props: true

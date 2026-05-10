@@ -1,62 +1,61 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import MensajeModal from "@/components/ModalRestaurarPass.vue";
 
-const router = useRouter()
+const router = useRouter();
+// 1. Cambiamos a modalRef para que coincida con el <template>
+const modalRef = ref(null);
+const mensajeExito = ref("");
 
-const password = ref('')
-const confirmPassword = ref('')
-const loading = ref(false)
-const error = ref('')
-const showPassword = ref(false)
-const showConfirmPassword = ref(false)
+const password = ref("");
+const confirmPassword = ref("");
+const loading = ref(false);
+const error = ref("");
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
-const handleLogin = async () => {
-  error.value = ''
-
-  // Validación básica: comprobar que las contraseñas coinciden
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Las contraseñas no coinciden.'
-    return
-  }
-
-  // Validación de longitud (opcional, ajusta según tus reglas)
-  if (password.value.length < 6) {
-    error.value = 'La contraseña debe tener al menos 6 caracteres.'
-    return
-  }
-
-  loading.value = true
+// 2. Cambiamos el nombre a handleRestorePassword para que coincida con el formulario
+const handleRestorePassword = async () => {
+  error.value = "";
+  loading.value = true;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/restorePassword`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${import.meta.env.VITE_URL_BACK}/restore-password`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.value,
+        }),
       },
-      body: JSON.stringify({
-        password: password.value
-        // token: route.query.token || route.params.token
-      })
-    })
+    );
 
-    const data = await response.json()
+    const data = await response.json();
 
     if (!response.ok) {
-      error.value = data.error || 'Error al restablecer la contraseña'
-      return
+      error.value = data.error || "Error al restablecer la contraseña";
+      return;
     }
 
-   // Al recuperar contraseña se redirige al login para que el usuario inicie sesión
-    router.push({ name: 'login' })
-
+    mensajeExito.value =
+      "Enviado un correo con instrucciones para restablecer la contraseña.";
+    // Usamos modalRef en lugar de mensajeModal
+    modalRef.value.openModal();
   } catch (err) {
-    error.value = 'Error de conexión con el servidor'
-    console.error(err)
+    error.value = "Error de conexión con el servidor";
+    console.error(err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
+
+const onModalCerrado = () => {
+  router.push({ name: "login" });
+};
 </script>
 
 <template>
@@ -65,72 +64,28 @@ const handleLogin = async () => {
       <h1>Recuperar Contraseña</h1>
       <div v-if="error" class="error-message">{{ error }}</div>
 
-      <form class="login-form" @submit.prevent="handlePasswordReset">
-        <label for="password">Nueva Contraseña</label>
-        <div class="password-input-wrapper">
-          <input 
-            id="password" 
-            v-model="password"
-            :type="showPassword ? 'text' : 'password'" 
-            placeholder="••••••••" 
-            required 
-            :disabled="loading"
-          />
-           <button
-            type="button"
-            class="toggle-password"
-            @click="showPassword = !showPassword"
-            :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          >
-            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-              <path d="M1 1l22 22" />
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8 1.31-2.51 3.34-4.62 5.76-6.02" />
-              <path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5" />
-              <path d="M14.47 14.47A3.5 3.5 0 0 1 12 8.5" />
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </button>
-        </div>
-
-
-        <label for="password">Repetir Contraseña</label>
-        <div class="password-input-wrapper">
-          <input 
-            id="confirmPassword" 
-            v-model="confirmPassword"
-            :type="showConfirmPassword ? 'text' : 'password'" 
-            placeholder="••••••••" 
-            required 
-            :disabled="loading"
-          />
-          <button
-            type="button"
-            class="toggle-password"
-            @click="showConfirmPassword = !showConfirmPassword"
-            :aria-label="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          >
-            <svg v-if="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-              <path d="M1 1l22 22" />
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8 1.31-2.51 3.34-4.62 5.76-6.02" />
-              <path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5" />
-              <path d="M14.47 14.47A3.5 3.5 0 0 1 12 8.5" />
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </button>
-        </div>
+      <form class="login-form" @submit.prevent="handleRestorePassword">
+        <label for="email">Correo Electrónico</label>
+        <input
+          id="email"
+          v-model="email"
+          type="email"
+          placeholder="tu@email.com"
+          required
+          :disabled="loading"
+        />
 
         <button type="submit" class="btn-submit" :disabled="loading">
-          {{ loading ? 'Enviando...' : 'Cambiar Contraseña' }}
+          {{ loading ? "Enviando..." : "Solicitar Restablecimiento" }}
         </button>
       </form>
-
     </div>
+
+    <MensajeModal
+      ref="modalRef"
+      :mensaje="mensajeExito"
+      @close="onModalCerrado"
+    />
   </div>
 </template>
 
@@ -149,10 +104,11 @@ const handleLogin = async () => {
   background: #fff;
   padding: 28px;
   border-radius: 12px;
-box-shadow: 0 0 0 1px #4b5563, 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 0 0 1px #4b5563,
+    0 6px 16px rgba(0, 0, 0, 0.08);
   text-align: left;
   box-sizing: border-box;
-
 }
 
 .login-card h1 {
@@ -185,7 +141,6 @@ box-shadow: 0 0 0 1px #4b5563, 0 6px 16px rgba(0, 0, 0, 0.08);
   width: 100%;
 }
 
-
 .toggle-password {
   position: absolute;
   top: 50%;
@@ -204,7 +159,6 @@ box-shadow: 0 0 0 1px #4b5563, 0 6px 16px rgba(0, 0, 0, 0.08);
 .toggle-password:hover {
   color: #6d28d9;
 }
-
 
 .form-row {
   display: flex;
@@ -329,4 +283,3 @@ input.input-error:focus {
   }
 }
 </style>
-

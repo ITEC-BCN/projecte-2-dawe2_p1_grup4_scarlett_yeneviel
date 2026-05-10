@@ -26,6 +26,7 @@ import {
   obtenerAdminPorId,
   actualizarAdmin,
   obtenerEstudiantePorEmail,
+  actualizarContrasenyaEstudiante,
   obtenerAdminPorEmail,
   VerPostulacionesAdmin,
   postularOferta,
@@ -962,6 +963,8 @@ app.get("/ubicaciones", async (req, res) => {
 
 })
 
+/* ================= RESTAURAR CONTRASEÑAS ================= */
+
 app.post("/restore-password", async (req, res) => {
   try {
 
@@ -979,7 +982,7 @@ app.post("/restore-password", async (req, res) => {
     const token = await generarTokenRestauracion(email);
 
     /* Generamos la url del formulario para cambiar la contraseña */
-    const urlRestauracion = `http://localhost:5173/restore-password/${token}`;
+    const urlRestauracion = `${process.env.URL_FRONT}/update-password/${token}`;
 
     /* Enviamos el email */
     const response = await sendEmail(email, "Prueba de envío de email", `Este es un email de prueba para verificar la funcionalidad de envío desde el backend. Puedes restaurar tu contraseña usando el siguiente enlace: ${urlRestauracion}`);
@@ -995,6 +998,57 @@ app.post("/restore-password", async (req, res) => {
     res.status(500).json({ error: err.message || "Error interno del servidor" });
   } 
 });
+
+// POST: Actualizar contraseña tras recuperación
+app.post("/update-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ error: "El token y la contraseña son requeridos" });
+    }
+
+    // 1. Verificar el token
+    // IMPORTANTE: Esto depende de cómo hiciste tu función "generarTokenRestauracion(email)"
+    // Si generaste un JWT, puedes usar jwt.verify(). Si guardaste un string en la base de datos, 
+    // tendrás que hacer una consulta como: const estudiante = await obtenerEstudiantePorToken(token);
+    
+    let decoded;
+    try {
+      // Asumiendo que el token enviado por email era un JWT que contenía el email
+      decoded = jwt.verify(token, SECRET_JWT_KEY); 
+    } catch (err) {
+      return res.status(400).json({ error: "El enlace es inválido o ha caducado" });
+    }
+
+    // 2. Comprobar que el estudiante existe
+    const estudiante = await obtenerEstudiantePorEmail(decoded.email);
+
+    if (!estudiante) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // 3. Encriptar la nueva contraseña
+    // Usamos bcrypt igual que asumo haces en tu registro
+    const saltRounds = 10;
+    const nuevoPasswordHash = await bcrypt.hash(password, saltRounds);
+
+    // 4. Actualizar la base de datos
+    // * NECESITARÁS CREAR ESTA FUNCIÓN en tu archivo de base de datos *
+    await actualizarContrasenyaEstudiante(estudiante.id, nuevoPasswordHash);
+
+    // 5. Responder al frontend (sin iniciar sesión automáticamente por seguridad,
+    // que vayan al login como ya programamos en Vue)
+    return res.status(200).json({ message: "Contraseña actualizada correctamente" });
+
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "Hubo un problema en el servidor. Inténtalo más tarde" });
+  }
+});
+
 /* ================= SERVER, LÍNEA SIEMPRE AL FINAL ================= */
 
 app.listen(3000, () => {

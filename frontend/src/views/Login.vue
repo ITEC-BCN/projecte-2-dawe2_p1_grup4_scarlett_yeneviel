@@ -125,7 +125,7 @@ const handleLogin = async (e) => {
             <span>Recordarme</span>
           </label>
 
-          <a href="#" class="forgot">¿Olvidaste la contraseña?</a>
+          <router-link class="forgot" to="/restore-password">¿Olvidaste la contraseña?</router-link>
         </div>
 
         <button type="submit" class="btn-submit" :disabled="loading">

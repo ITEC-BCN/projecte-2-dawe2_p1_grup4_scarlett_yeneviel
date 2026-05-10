@@ -576,6 +576,18 @@ export const obtenerAdminPorEmail = async (email) => {
   return data;
 };
 
+// Actualizar contraseña de un estudiante por su ID
+export const actualizarContrasenyaEstudiante = async (id, nuevoPasswordHash) => {
+  const { data, error } = await supabase
+    .from('usuario_estudiante') // Asegúrate de que el nombre de la tabla es correcto
+    .update({ password_hash: nuevoPasswordHash })
+    .eq('id', id)
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
 
 // =============== FUNCIONALIDADES DEL COORDINADOR DE PRACTICAS ===============
 

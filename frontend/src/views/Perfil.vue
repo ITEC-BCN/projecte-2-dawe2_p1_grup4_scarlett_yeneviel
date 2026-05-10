@@ -548,7 +548,7 @@ async function saveProfile() {
   };
 
   try {
-    const response = await fetch(`${URL_BACK}/estudiantes/${studentId}`, {
+    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiantes/${studentId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

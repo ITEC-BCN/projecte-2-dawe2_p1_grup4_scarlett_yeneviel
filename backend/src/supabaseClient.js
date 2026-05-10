@@ -361,12 +361,12 @@ export const getUserState = async (id) => {
 // 3. ACTUALIZAR ESTUDIANTE (Perfil, Skills y Enlaces)
 // ==========================================
 export const actualizarEstudiante = async (studentId, payload) => {
-  const { about, telefono, location, estudios, idiomas, skills_ids, enlaces } = payload;
+  const { about, telefono, location, estudios, idiomas, skills_ids, enlaces, experiencia } = payload;
 
   // A. Actualizar datos básicos
   const { error: errorEstudiante } = await supabase
     .from('usuario_estudiante')
-    .update({ about, telefono, location, estudios, idiomas })
+    .update({ about, telefono, location, estudios, experiencia, idiomas })
     .eq('id', studentId);
   if (errorEstudiante) throw errorEstudiante;
 

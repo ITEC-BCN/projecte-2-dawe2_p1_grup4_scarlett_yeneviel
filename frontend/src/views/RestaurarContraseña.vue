@@ -4,62 +4,51 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const email = ref('')
 const password = ref('')
-const remember = ref(false)
+const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
-const handleLogin = async (e) => {
-  e.preventDefault()
-  loading.value = true
+const handleLogin = async () => {
   error.value = ''
 
+  // Validación básica: comprobar que las contraseñas coinciden
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Las contraseñas no coinciden.'
+    return
+  }
+
+  // Validación de longitud (opcional, ajusta según tus reglas)
+  if (password.value.length < 6) {
+    error.value = 'La contraseña debe tener al menos 6 caracteres.'
+    return
+  }
+
+  loading.value = true
+
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/login`, {
+    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/restorePassword`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: email.value,
         password: password.value
+        // token: route.query.token || route.params.token
       })
     })
 
     const data = await response.json()
 
     if (!response.ok) {
-      error.value = data.error || 'Error al iniciar sesión'
+      error.value = data.error || 'Error al restablecer la contraseña'
       return
     }
 
-    // --- LÓGICA DE GUARDADO CORREGIDA ---
-    const userId = data.user?.id || data.id
-    const userToken = data.token
-
-    if (userToken) {
-      localStorage.setItem('token', userToken)
-      localStorage.setItem('role','estudiante')
-      // Guardamos la cookie para el middleware del backend
-      document.cookie = `access_token=${userToken}; path=/; SameSite=None; Secure`
-    } else {
-      console.error("EL BACKEND NO ENVIÓ TOKEN")
-    }
-
-    if (userId) {
-      localStorage.setItem('studentId', userId)
-
-      // Para el email, si el backend no lo devuelve, usamos directamente el que escribió en el formulario
-      const userEmail = data.user?.email || data.email || email.value;
-      localStorage.setItem('studentEmail', userEmail);
-    } else {
-      console.error("EL BACKEND NO ENVIÓ ID DE USUARIO")
-    }
-
-    // Redirigir a las ofertas personalizadas con el ID del usuario
-    router.push({ name: 'ofertasRecomendadas', params: { id: userId } })
+   // Al recuperar contraseña se redirige al login para que el usuario inicie sesión
+    router.push({ name: 'login' })
 
   } catch (err) {
     error.value = 'Error de conexión con el servidor'
@@ -73,24 +62,11 @@ const handleLogin = async (e) => {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <h1>Iniciar sesión</h1>
-
-      <!-- Mostrar errores -->
+      <h1>Recuperar Contraseña</h1>
       <div v-if="error" class="error-message">{{ error }}</div>
 
-      <!-- Formulario conectado al backend -->
-      <form class="login-form" @submit="handleLogin">
-        <label for="email">Correo electrónico</label>
-        <input 
-          id="email" 
-          v-model="email"
-          type="email" 
-          placeholder="tu@ejemplo.com" 
-          required 
-          :disabled="loading"
-        />
-
-        <label for="password">Contraseña</label>
+      <form class="login-form" @submit.prevent="handlePasswordReset">
+        <label for="password">Nueva Contraseña</label>
         <div class="password-input-wrapper">
           <input 
             id="password" 
@@ -100,7 +76,7 @@ const handleLogin = async (e) => {
             required 
             :disabled="loading"
           />
-          <button
+           <button
             type="button"
             class="toggle-password"
             @click="showPassword = !showPassword"
@@ -119,21 +95,41 @@ const handleLogin = async (e) => {
           </button>
         </div>
 
-        <div class="form-row">
-          <label class="checkbox">
-            <input v-model="remember" type="checkbox" :disabled="loading" />
-            <span>Recordarme</span>
-          </label>
 
-          <a href="#" class="forgot">¿Olvidaste la contraseña?</a>
+        <label for="password">Repetir Contraseña</label>
+        <div class="password-input-wrapper">
+          <input 
+            id="confirmPassword" 
+            v-model="confirmPassword"
+            :type="showConfirmPassword ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            required 
+            :disabled="loading"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            @click="showConfirmPassword = !showConfirmPassword"
+            :aria-label="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <svg v-if="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <path d="M1 1l22 22" />
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8 1.31-2.51 3.34-4.62 5.76-6.02" />
+              <path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5" />
+              <path d="M14.47 14.47A3.5 3.5 0 0 1 12 8.5" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
         </div>
 
         <button type="submit" class="btn-submit" :disabled="loading">
-          {{ loading ? 'Entrando...' : 'Entrar' }}
+          {{ loading ? 'Enviando...' : 'Cambiar Contraseña' }}
         </button>
       </form>
 
-      <p class="signup">¿No tienes cuenta? <router-link to="/registro">Regístrate</router-link></p>
     </div>
   </div>
 </template>

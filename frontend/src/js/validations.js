@@ -136,3 +136,18 @@ export const validarFormulario = (form, contraseña2) => {
     errores
   };
 };
+
+export const validarFormularioPassword = (form, contraseña2) => {
+  const errores = {};
+
+  const validarContraseñaResult = validarContraseña(form.password_hash);
+  if (!validarContraseñaResult.valido) errores.password_hash = validarContraseñaResult.mensaje;
+
+  const validarCoincidenciaResult = validarContraseñasCoinciden(form.password_hash, contraseña2);
+  if (!validarCoincidenciaResult.valido) errores.password2 = validarCoincidenciaResult.mensaje;
+
+  return {
+    esValido: Object.keys(errores).length === 0,
+    errores
+  };
+};

@@ -1004,7 +1004,7 @@ app.post("/restore-password", async (req, res) => {
     const urlRestauracion = `${process.env.URL_FRONT}/update-password/${token}`;
 
     /* Enviamos el email */
-    const response = await sendEmail(email, "Prueba de envío de email", `Este es un email de prueba para verificar la funcionalidad de envío desde el backend. Puedes restaurar tu contraseña usando el siguiente enlace: ${urlRestauracion}`);
+    const response = await sendEmail(email, "Recuperación de contraseña Internia", `Este e-mail ha sido enviado para restaurar tu contraseña de Internia. Puedes restaurar tu contraseña usando el siguiente enlace: ${urlRestauracion}`);
     
     if (response.code == 500) {
       console.error("Error enviando email:", response.error);

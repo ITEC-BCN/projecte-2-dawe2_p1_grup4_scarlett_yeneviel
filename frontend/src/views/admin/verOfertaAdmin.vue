@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import ModalEliminar from '../../components/Modal.vue';
 import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
+import CvViewer from '../../components/CvViewer.vue';
 import { useStudents } from "../../composables/useStudents";
 import { sendEmail } from '../../js/funEmail';
 import {
@@ -17,7 +18,11 @@ import {
   Heart as Heart
 } from 'lucide-vue-next';
 
-const { verCV } = useStudents('');
+/*Oferta id*/
+defineProps({
+  id: String
+});
+// --- FUNCIÓN PARA CV ---
 
 const route = useRoute();
 const router = useRouter();
@@ -121,6 +126,9 @@ const verDetallePerfil = (id) => {
   router.push({ name: 'PerfilDetalleSolo', params: { id } });
 };
 
+
+
+
 </script>
 
 <template>
@@ -133,11 +141,11 @@ const verDetallePerfil = (id) => {
 
       <!-- Estados -->
       <div v-if="loading" class="state-msg">
-        Buscando los mejores detalles... ✨
+        Buscando los mejores detalles...
       </div>
 
       <div v-else-if="error" class="state-msg error">
-        Vaya, algo salió mal al cargar la oferta 😢
+        Vaya, algo salió mal al cargar la oferta
       </div>
 
       <!-- Card principal -->
@@ -322,11 +330,7 @@ const verDetallePerfil = (id) => {
                       title="Ver Perfil">
                       Perfil
                     </button>
-                    <button class="btn-icon-text accent"
-                      :disabled="!item.usuario_estudiante?.documento?.length || !item.usuario_estudiante.documento[0]?.ruta_archivo"
-                      @click="verCV(item.usuario_estudiante.id)" title="Descargar CV">
-                      CV
-                    </button>
+                    <CvViewer :cv-url="item.usuario_estudiante.documento_cv" />
                   </div>
                 </td>
               </tr>
@@ -350,7 +354,7 @@ const verDetallePerfil = (id) => {
 /* Página base*/
 
 .detalle-page {
-   background: #F3F4F6;
+  background: #F3F4F6;
   min-height: 100vh;
   padding: 50px 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -403,7 +407,7 @@ const verDetallePerfil = (id) => {
 
 /* Card principal rediseñada */
 .oferta-card-new {
-background: #FFFFFF;
+  background: #FFFFFF;
   border-radius: 16px;
   padding: 40px;
   border: 1px solid #E5E7EB;

@@ -1,3 +1,14 @@
+<script setup>
+import { computed } from 'vue';
+
+const startLink = computed(() => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const hasToken = !!token;
+  const hasCookie = typeof document !== 'undefined' && document.cookie.includes('access_token=');
+  return hasToken || hasCookie ? '/ofertas' : '/login';
+});
+</script>
+
 <template>
   <main>
     <section class="hero-text">
@@ -10,7 +21,7 @@
         innovadoras y centros educativos para una formación dual.
       </p>
       <div class="botonera">
-        <router-link to="/login" class="btn-link">
+        <router-link :to="startLink" class="btn-link">
           <button class="btn-primary">Empezar ahora</button>
         </router-link>
         <router-link to="/ofertas" class="btn-link">

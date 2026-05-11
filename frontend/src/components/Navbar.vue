@@ -1,25 +1,25 @@
 <script setup>
+
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { checkAuthStatus, isAuthenticated, userRole } from '@/js/role.js';
 
 const route = useRoute();
 const router = useRouter();
 
-// Variables reactivas
-const isAuthenticated = ref(false);
-const userRole = ref('');
 
 // Variable para controlar el menú en móviles
 const isMenuOpen = ref(false);
 
 // Función que lee el localStorage
-const checkAuthStatus = () => {
+/* const checkAuthStatus = () => {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
   
   isAuthenticated.value = !!token;
   userRole.value = role || '';
 };
+ */
 
 // Alternar el estado del menú hamburguesa
 const toggleMenu = () => {
@@ -36,6 +36,8 @@ watch(() => route.path, () => {
   checkAuthStatus();
   isMenuOpen.value = false; // Cerramos el menú móvil al cambiar de página
 });
+
+console.log(userRole.value);
 
 // Función para cerrar sesión
 const logout = () => {
@@ -84,7 +86,8 @@ const logout = () => {
         </router-link>
 
         <template v-else>
-          <router-link v-if="userRole === 'estudiante'" to="/perfil">
+        
+          <router-link v-if="userRole=== 'estudiante'" to="/perfil">
             Mi Perfil
           </router-link>
 

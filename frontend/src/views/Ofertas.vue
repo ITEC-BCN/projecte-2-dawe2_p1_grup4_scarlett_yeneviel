@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useFetch } from "../composables/useFetchOfertas";
 import CardOferta from "../components/cardOferta.vue";
+import { checkAuthStatus } from '@/js/role.js';
 
 const router = useRouter();
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);
@@ -170,13 +171,20 @@ const clearFilters = () => {
         </div>
 
         <div class="search-panel">
-            <div class="search-main">
+            <div v-if="roleUSer === 'admin'">
+                <span class="icon-search">🔍</span>
+                <input type="text" v-model="searchQuery" placeholder="Busca por empresa, puesto o palabra clave..."
+                    aria-label="Buscar ofertas por empresa o puesto" class="input-main" />
+            </div>
+            <div v-else> 
+                <div class="search-main">
                 <span class="icon-search">🔍</span>
                 <input type="text" v-model="searchQuery" placeholder="Busca por empresa, puesto o palabra clave..."
                     aria-label="Buscar ofertas por empresa o puesto" class="input-main" />
             </div>
 
             <div class="filters-row">
+
                 <div class="filter-group">
                     <label>📍 Ciudad</label>
                     <select v-model="searchUbicacion" class="select-filtro">
@@ -220,6 +228,7 @@ const clearFilters = () => {
                     <button class="btn-clear-filters" @click="clearFilters" title="Limpiar todos los filtros">
                         🧹 Limpiar
                     </button>
+                </div>
                 </div>
             </div>
 

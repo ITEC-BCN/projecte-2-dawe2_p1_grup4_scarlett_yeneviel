@@ -2124,7 +2124,7 @@ const uploadCV = async (event) => {
   color: var(--accent-purple);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   font-size: 1.2rem;
 }
 

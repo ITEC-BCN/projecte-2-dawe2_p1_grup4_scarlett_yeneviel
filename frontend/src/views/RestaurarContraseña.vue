@@ -56,9 +56,12 @@ const handleRestorePassword = async () => {
 const onModalCerrado = () => {
   router.push({ name: "login" });
 };
+
 </script>
 
 <template>
+
+
   <div class="login-page">
     <div class="login-card">
       <h1>Recuperar Contraseña</h1>

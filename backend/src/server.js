@@ -509,7 +509,7 @@ app.post("/login", async (req, res) => {
       httpOnly: true, // Seguridad: No accesible desde JS del frontend
       secure: true, // Obligatorio para SameSite: 'none'
       sameSite: "none", // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
-      maxAge: 1000 * 60 * 60, // 1 hora
+      maxAge: 1000 * 60 * 60 * 2, // 2 horas
     });
 
     // 5. Respuesta al Frontend
@@ -1046,6 +1046,41 @@ app.post("/update-password", async (req, res) => {
     res
       .status(500)
       .json({ error: "Hubo un problema en el servidor. Inténtalo más tarde" });
+  }
+});
+
+
+/*================Función para revisar si el token expiro o no ========================*/
+app.get('/me', requireAuth, async (req, res) => {
+  try {
+    if (req.user.role === 'admin') {
+      const admin = await obtenerAdminPorId(req.user.id);
+      if (!admin) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+      return res.json({
+        user: {
+          ...admin,
+          role: 'admin',
+        },
+      });
+    }
+
+    const usuario = await obtenerEstudiantePorId(req.user.id);
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({
+      user: {
+        ...usuario,
+        role: 'estudiante',
+      },
+    });
+  } catch (err) {
+    console.error("Error en /me:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 

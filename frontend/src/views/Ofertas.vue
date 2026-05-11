@@ -165,9 +165,33 @@ const clearFilters = () => {
     <section v-else class="container-ofertas">
         <div class="ofertas-header">
             <h1 class="main-title">Ofertas de Prácticas</h1>
-            <button v-if="roleUSer === 'admin'" @click="crearOferta" class="btn-admin">
-                <span>+</span> Crear nueva oferta
-            </button>
+            <div v-if="roleUSer === 'admin'" class="admin-actions">
+                <button @click="crearOferta" class="btn-admin">
+                    <span>+</span> Crear nueva oferta
+                </button>
+                <!--Enlace al gestor ofertas-->
+                <button class="btn-primary-nav" @click="router.push({ name: 'PanelOfertasAdmin' })">
+                    <div class="btn-content">
+                        <span class="btn-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
+                                </path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                <path d="M9 12h6"></path>
+                                <path d="M9 16h6"></path>
+                                <path d="M12 8h.01"></path>
+                            </svg>
+                        </span>
+                        <div class="btn-text">
+                            <span class="btn-title">Gestor de Ofertas</span>
+                            <span class="btn-desc">Ver vacantes activas</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
         </div>
 
         <div class="search-panel">
@@ -307,6 +331,12 @@ button:focus {
 
 
 /* Botón Admin */
+
+.admin-actions{
+    display: flex;
+    gap: 12px;
+    flex-direction: row;
+}
 .btn-admin {
     background-color: var(--primary);
     color: #ffffff;
@@ -332,6 +362,31 @@ button:focus {
 .btn-admin:focus {
     outline: 3px solid black;
 }
+
+/* Nuevo Botón Principal de Navegación */
+.btn-primary-nav {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1);
+    display: flex;
+    align-items: center;
+}
+
+.btn-primary-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+    filter: brightness(1.05);
+}
+
+.btn-primary-nav:active {
+    transform: translateY(0);
+}
+
 
 /* === PANEL DE BÚSQUEDA === */
 .search-panel {

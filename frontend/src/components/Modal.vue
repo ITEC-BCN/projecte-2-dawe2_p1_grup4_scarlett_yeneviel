@@ -1,97 +1,145 @@
 <template>
-  <!-- Modal de confirmación -->
-  <div v-if="isModalOpen" class="modal-backdrop">
+  <div v-if="isModalOpen" class="modal-backdrop" @click.self="closeModal">
     <div class="modal-content">
-      <p>{{ mensajeConfirmacion }}</p>
-      <div class="modal-buttons" v-if="!mensaje">
-        <button @click="confirmDelete" class="btn-confirm">Sí</button>
-        <button @click="closeModal" class="btn-cancel">No</button>
+
+      <div v-if="!mensaje">
+        <p>{{ textoConfirmacion }}</p>
+        <div class="modal-buttons">
+          <button @click="confirmAction" class="btn-confirm" :disabled="loading">
+            {{ loading ? 'Procesando...' : 'Sí' }}
+          </button>
+          <button @click="closeModal" class="btn-cancel">No</button>
+        </div>
       </div>
+
       <div v-else>
-        <button @click="closeMensaje" class="btn-confirm">Aceptar</button>
+        <p>{{ mensaje }}</p>
+        <button @click="closeModal" class="btn-cancel">Cerrar</button>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from "vue";
+import { ref, defineProps, defineEmits, defineExpose, computed } from "vue";
 import { useRouter } from "vue-router";
-import { URL_BACK } from '../../../config';
 
 const props = defineProps({
   ofertaId: Number,
   estado: String,
-  mensajeConfirmacion: { type: String, default: "¿Estás seguro de eliminar?" }
 });
 
 const emits = defineEmits(["eliminado", "cerrar"]);
-
 const router = useRouter();
 
 const isModalOpen = ref(false);
 const mensaje = ref("");
-
-const openModal = () => isModalOpen.value = true;
-const closeModal = () => {
-  isModalOpen.value = false;
-  emits("cerrar");
-};
-const closeMensaje = () => {
-  mensaje.value = "";
-  closeModal();
-};
-
 const loading = ref(false);
 
-const confirmDelete = async () => {
-  
+const openModal = () => {
+  mensaje.value = ""; // Limpiar mensajes previos al abrir
+  isModalOpen.value = true;
+};
+
+const closeModal = () => {
+  isModalOpen.value = false;
+  mensaje.value = ""; // Limpiamos el mensaje al cerrar
+  emits("cerrar");
+};
+// USAMOS COMPUTED: Así el mensaje cambia automáticamente según el estado de la oferta
+const textoConfirmacion = computed(() => {
+  return props.estado === "INACTIVA"
+    ? "¿Estás seguro de desactivar esta oferta?"
+    : "¿Estás seguro de activar esta oferta?";
+});
+
+const confirmAction = async () => {
   try {
-     loading.value = true;
-    const res = await fetch(`${URL_BACK}/ofertas/${props.ofertaId}`, 
-    { 
-     method: 'PUT',
-     headers: { 'Content-Type':  'application/json' }, 
-     body: JSON.stringify({ estado: props.estado }) 
+    loading.value = true;
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${props.ofertaId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: props.estado })
     });
+
     if (!res.ok) throw new Error('Error desactivando oferta');
 
-    mensaje.value = "Oferta desactivada correctamente";
+    // Definimos un mensaje amigable
+    const accionRealizada = props.estado === 'ACTIVA' ? 'activandose...' : 'desactivandose...';
+    mensaje.value = `Oferta ${accionRealizada}.`;
 
-    emits("eliminado"); // Avisamos al padre que eliminó
+    if (router.currentRoute.value.name === 'verOfertaAdmin' && props.estado === 'INACTIVA') {
+        mensaje.value = `Oferta ${accionRealizada}. Redirigiendo al listado...`;
+      }
 
+    emits("eliminado");
+
+    // 3. Lógica de cierre y redirección universal
     setTimeout(() => {
-      router.push({ name: "ofertas" }); // redirige
-    }, 1500);
+      isModalOpen.value = false;
+
+      // Si el nombre de tu ruta de detalle es 'verOfertaAdmin', redirigimos.
+      // Si estamos en el listado, simplemente se queda ahí con el modal cerrado.
+      if (router.currentRoute.value.name === 'verOfertaAdmin' && props.estado === 'INACTIVA') {
+        router.push({ name: "ofertas" });
+      }
+    }, 2500);
+
   } catch (err) {
     console.error(err);
-    mensaje.value = "Hubo un error al desactivar la oferta";
+    mensaje.value = "Hubo un error al actualizar el estado de la oferta";
+    // En caso de error, no redirigimos para que el usuario vea qué pasó
   } finally {
     loading.value = false;
   }
 };
 
-// Exponer función para abrir modal desde el padre
 defineExpose({ openModal });
 </script>
 
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex; justify-content: center; align-items: center;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
 .modal-content {
-  background: white; padding: 30px; border-radius: 12px;
-  text-align: center; max-width: 400px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 400px;
 }
 
-.modal-buttons { margin-top: 20px; display: flex; justify-content: space-around; }
+.modal-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+}
 
-.btn-confirm { background: #dc2626; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
-.btn-cancel { background: #ccc; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+.btn-confirm {
+  background: #dc2626;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #ccc;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
 </style>

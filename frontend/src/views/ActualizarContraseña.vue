@@ -1,71 +1,99 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import MensajeModal from '@/components/ModalRestaurarPass.vue'
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import MensajeModal from "@/components/ModalRestaurarPass.vue";
+import {
+  validarContraseña,
+  validarContraseñasCoinciden,
+  validarFormularioPassword
+} from '../js/validations';
 
-const router = useRouter()
-// 1. Cambiamos a modalRef para que coincida con el <template>
-const modalRef = ref(null) 
-const mensajeExito = ref('')
+const router = useRouter();
+const modalRef = ref(null);
+const mensajeExito = ref("");
 
-const password = ref('')
-const confirmPassword = ref('')
-const loading = ref(false)
-const error = ref('')
-const showPassword = ref(false)
-const showConfirmPassword = ref(false)
+const form = reactive({
+  password_hash: ''
+})
 
-// 2. Cambiamos el nombre a handlePasswordReset para que coincida con el formulario
+const password2 = ref('');
+const loading = ref(false);
+const error = ref(null);
+const erroresFormulario = reactive({
+  password_hash: '',
+  password2: ''
+});
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+
+// Validar campo en tiempo real
+const validarCampo = (campo, valor) => {
+  switch (campo) {
+    case 'password_hash':
+      erroresFormulario.password_hash = validarContraseña(valor).mensaje;
+      if (password2.value) {
+        const coinc = validarContraseñasCoinciden(valor, password2.value);
+        erroresFormulario.password2 = coinc.mensaje;
+      }
+      break;
+    case 'password2':
+     const coincidencia = validarContraseñasCoinciden(form.password_hash, valor);
+      erroresFormulario.password2 = coincidencia.mensaje;
+      break;
+  }
+}
+
 const handlePasswordReset = async () => {
-  error.value = ''
+  // Validar el formulario usando la función de validación de contraseñas
+  const validacion = validarFormularioPassword(form, password2.value);
 
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Las contraseñas no coinciden.'
-    return
+  if (!validacion.esValido) {
+    Object.assign(erroresFormulario, validacion.errores);
+    error.value = 'Por favor, completa correctamente todos los campos';
+    mensajeExito.value = "";
+    return;
   }
-
-  if (password.value.length < 6) {
-    error.value = 'La contraseña debe tener al menos 6 caracteres.'
-    return
-  }
-
-  loading.value = true
+ error.value = null;
+  loading.value = true;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/update-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${import.meta.env.VITE_URL_BACK}/update-password`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password: form.password_hash,
+          token: router.currentRoute.value.params.token,
+        }),
       },
-      body: JSON.stringify({
-        password: password.value,
-        token: router.currentRoute.value.params.token, // Asegúrate de que el token se envíe correctamente
-      })
-    })
+    );
 
-    const data = await response.json()
+    const data = await response.json();
 
     if (!response.ok) {
-      error.value = data.error || 'Error al restablecer la contraseña'
-      return
+      error.value = data.error || "Error al restablecer la contraseña";
+      loading.value = false;
+      return;
     }
 
-    mensajeExito.value = 'Contraseña restablecida correctamente. Por favor, inicie sesión.'
-    // Usamos modalRef en lugar de mensajeModal
-    modalRef.value.openModal() 
-
+    mensajeExito.value =
+      "Contraseña restablecida correctamente. Por favor, inicie sesión.";
+    modalRef.value.openModal();
   } catch (err) {
-    error.value = 'Error de conexión con el servidor'
-    console.error(err)
-  } finally {
-    loading.value = false
+    error.value = "Error de conexión con el servidor";
+    console.error(err);
+} finally {
+    // Es buena práctica quitar el loading en el bloque finally
+    loading.value = false;
   }
-} 
-
+};
 
 const onModalCerrado = () => {
-  router.push({ name: 'login' })
-}
+  router.push({ name: "login" });
+};
 </script>
 
 <template>
@@ -79,11 +107,15 @@ const onModalCerrado = () => {
         <div class="password-input-wrapper">
           <input
             id="password"
-            v-model="password"
+            name="password"
+            v-model="form.password_hash"
             :type="showPassword ? 'text' : 'password'"
             placeholder="••••••••"
             required
             :disabled="loading"
+            @blur="validarCampo('password_hash', form.password_hash)"
+            @input="validarCampo('password_hash', form.password_hash)"
+            :class="{ 'input-error': erroresFormulario.password_hash }"
           />
           <button
             type="button"
@@ -128,17 +160,28 @@ const onModalCerrado = () => {
               <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
+          <span v-if="erroresFormulario.password_hash" class="campo-error">
+            {{ erroresFormulario.password_hash }}
+          </span>
+          <p class="requisitos-password">
+            <strong>Requisitos:</strong> Mínimo 8 caracteres, mayúscula,
+            minúscula, número y carácter especial
+          </p>
         </div>
 
-        <label for="confirmPassword">Repetir Contraseña</label>
+        <label for="password2">Repetir Contraseña</label>
         <div class="password-input-wrapper">
           <input
-            id="confirmPassword"
-            v-model="confirmPassword"
+            id="password2"
+            name="password2"
+            v-model="password2"
             :type="showConfirmPassword ? 'text' : 'password'"
             placeholder="••••••••"
             required
             :disabled="loading"
+            @blur="validarCampo('password2', password2)"
+            @input="validarCampo('password2', password2)"
+            :class="{ 'input-error': erroresFormulario.password2 }"
           />
           <button
             type="button"
@@ -183,6 +226,9 @@ const onModalCerrado = () => {
               <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
+           <span v-if="erroresFormulario.password2" class="campo-error">
+            {{ erroresFormulario.password2 }}
+          </span>
         </div>
 
         <button type="submit" class="btn-submit" :disabled="loading">
@@ -190,13 +236,12 @@ const onModalCerrado = () => {
         </button>
       </form>
     </div>
-    
-    <MensajeModal 
-      ref="modalRef" 
-      :mensaje="mensajeExito" 
-      @close="onModalCerrado" 
-    />
 
+    <MensajeModal
+      ref="modalRef"
+      :mensaje="mensajeExito"
+      @close="onModalCerrado"
+    />
   </div>
 </template>
 

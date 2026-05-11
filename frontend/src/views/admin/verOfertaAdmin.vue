@@ -1,6 +1,6 @@
 <script setup>
 // /admin/oferta/:id
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import ModalEliminar from '../../components/Modal.vue';
@@ -28,7 +28,7 @@ const route = useRoute();
 const router = useRouter();
 
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas/${route.params.id}`);
-const { data: oferta, error, loading, postulaciones } = useFetch(url);
+const { data: oferta, error, loading, postulaciones, fetchData } = useFetch(url);
 
 const volver = () => router.push({ name: 'ofertas' });
 
@@ -42,12 +42,15 @@ const modalEliminar = ref(null);
 
 const abrirModal = (id) => {
   // Preparamos el modal con el id y lo mostramos para confirmar el borrado
-  modalEliminar.value.ofertaId = id;
   modalEliminar.value.openModal();
 };
 
 const ofertaEliminada = async () => {
-  console.log("La oferta fue desactivada");
+  console.log("El estado de la oferta fue actualizado. Refrescando datos...");
+
+    setTimeout(async () => {
+    await fetchData();
+  }, 2500);
 };
 
 
@@ -126,7 +129,39 @@ const verDetallePerfil = (id) => {
   router.push({ name: 'PerfilDetalleSolo', params: { id } });
 };
 
+// Paginación
+const usersPerPage = 5; // Número de usuarios por página
+const currentPage = ref(1); // Página actual
 
+const paginatedPostulaciones = computed(() => {
+  const start = (currentPage.value - 1) * usersPerPage;
+  const end = start + usersPerPage;
+  return listaPostulaciones.value.slice(start, end);
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(listaPostulaciones.value.length / usersPerPage);
+});
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const goToPage = (p) => {
+  const page = Number(p);
+  if (!Number.isInteger(page)) return;
+  if (page < 1) return;
+  if (page > totalPages.value) return;
+  currentPage.value = page;
+};
 
 
 </script>
@@ -264,12 +299,12 @@ const verDetallePerfil = (id) => {
 
             <div class="acciones-header">
               <button class="btn-update" @click="ActualizarOferta(oferta.id)">Actualizar</button>
-              <button @click="abrirModal(oferta.id)" class="btn-delete">{{ oferta.estado === 'ACTIVA' ? 'Desactivar' :
+              <button @click="abrirModal(oferta.id)" class="btn-update-state" :class="oferta.estado === 'ACTIVA' ? 'desactivar' : 'activar'">{{ oferta.estado === 'ACTIVA' ? 'Desactivar' :
                 'Activar' }}</button>
 
               <!-- Componente del modal -->
               <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id"
-                :estado="oferta.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVAR'" @eliminado="ofertaEliminada" />
+                :estado="oferta.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA'" @eliminado="ofertaEliminada" />
             </div>
           </aside>
         </div>
@@ -300,7 +335,7 @@ const verDetallePerfil = (id) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in listaPostulaciones" :key="item.id">
+              <tr v-for="item in paginatedPostulaciones" :key="item.id">
                 <td>
                   <div class="candidato-cell">
                     <img :src="item.usuario_estudiante.avatar || '/img/avatarGroup.png'"
@@ -336,6 +371,20 @@ const verDetallePerfil = (id) => {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Controles de paginación -->
+        <div class="pagination" v-if="totalPages > 1">
+          <button @click="prevPage" :disabled="currentPage === 1" class="page-btn">
+            Anterior
+          </button>
+          <div class="page-numbers">
+            <button v-for="p in totalPages" :key="p" :class="['page-number', { active: p === currentPage }]"
+              @click="goToPage(p)">{{ p }}</button>
+          </div>
+          <button @click="nextPage" :disabled="currentPage === totalPages" class="page-btn" >
+            Siguiente
+          </button>
         </div>
       </section>
 
@@ -643,12 +692,6 @@ const verDetallePerfil = (id) => {
 }
 
 
-.activa {
-  color: #16a34a;
-  font-weight: 700;
-}
-
-
 /* Botones */
 .btn-apply {
   width: 100%;
@@ -681,7 +724,7 @@ const verDetallePerfil = (id) => {
 
 /* Estilo para el botón de actualizar */
 .btn-update {
-  background: #16a34a;
+  background: #4f46e5;
   /* morado suave */
   color: #fff;
   padding: 10px 18px;
@@ -699,9 +742,7 @@ const verDetallePerfil = (id) => {
 }
 
 /* Estilo para el botón de eliminar */
-.btn-delete {
-  background: #dc2626;
-  /* rojo */
+.btn-update-state{
   color: #fff;
   padding: 10px 16px;
   border-radius: 8px;
@@ -711,8 +752,19 @@ const verDetallePerfil = (id) => {
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.btn-delete:hover {
+.desactivar{
+    background: #dc2626;
+}
+.desactivar:hover {
   background: #b91c1c;
+  transform: translateY(-2px);
+}
+
+.activar{
+  background-color: #16a34a;
+}
+.activar:hover {
+  background: #16a34a;
   transform: translateY(-2px);
 }
 
@@ -1123,7 +1175,6 @@ const verDetallePerfil = (id) => {
     margin-bottom: 5px;
     font-size: 0.85rem;
   }
-
 }
 
 /* --- UTILIDADES DE DISEÑO --- */
@@ -1174,5 +1225,28 @@ const verDetallePerfil = (id) => {
 .btn-icon-text.accent {
   background: #0ea5e9;
   color: white;
+}
+
+/* --- PAGINACIÓN --- */
+.pagination { padding: 1rem; display: flex; justify-content: center; align-items: center; gap: 1.5rem; border-top: 1px solid #f3f4f6; }
+.page-numbers { display: flex; gap: 6px; }
+
+.page-btn, .page-number { 
+  border: 1px solid #e6e6e6; 
+  background: white; 
+  padding: 8px 14px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 700; 
+  color: #4d1b95; 
+  transition: all 0.2s ease;
+}
+.page-btn:hover:not([disabled]) { border-color: #4d1b95; background: #f5f3ff; }
+.page-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+.page-number.active { 
+  background: #10b981; 
+  color: white; 
+  border-color: #10b981; 
 }
 </style>

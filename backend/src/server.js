@@ -16,6 +16,7 @@ import {
   obtenerOfertaPorId,
   actualizarOferta,
   eliminarOferta,
+  desactivarOferta,
   crearEstudiante,
   obtenerEstudiantes,
   obtenerEstudiantePorId,
@@ -174,6 +175,24 @@ app.delete("/ofertas/:id", async (req, res) => {
     const id = req.params.id;
 
     const resultado = await eliminarOferta(id);
+
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
+
+//Desactivar oferta (en lugar de eliminarla físicamente, la marcamos como inactiva)
+
+app.put('/ofertaDesactivar/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    // Leer el nuevo estado desde el body
+    const { estado } = req.body;
+    if (!estado) return res.status(400).json({ error: 'Falta el campo "estado" en el body' });
+
+    const resultado = await desactivarOferta(id, estado);
 
     res.json(resultado);
   } catch (err) {
@@ -985,7 +1004,7 @@ app.post("/restore-password", async (req, res) => {
     const urlRestauracion = `${process.env.URL_FRONT}/update-password/${token}`;
 
     /* Enviamos el email */
-    const response = await sendEmail(email, "Prueba de envío de email", `Este es un email de prueba para verificar la funcionalidad de envío desde el backend. Puedes restaurar tu contraseña usando el siguiente enlace: ${urlRestauracion}`);
+    const response = await sendEmail(email, "Recuperación de contraseña Internia", `Este e-mail ha sido enviado para restaurar tu contraseña de Internia. Puedes restaurar tu contraseña usando el siguiente enlace: ${urlRestauracion}`);
     
     if (response.code == 500) {
       console.error("Error enviando email:", response.error);

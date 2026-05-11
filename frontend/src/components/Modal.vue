@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, defineExpose,computed } from "vue";
+import { ref, defineProps, defineEmits, defineExpose, computed } from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps({
@@ -54,7 +54,6 @@ const textoConfirmacion = computed(() => {
     : "¿Estás seguro de activar esta oferta?";
 });
 
-console.log("Modal props:", props); // Debug: Ver qué props llegan al modal
 const confirmAction = async () => {
   try {
     loading.value = true;
@@ -66,26 +65,26 @@ const confirmAction = async () => {
 
     if (!res.ok) throw new Error('Error desactivando oferta');
 
-    if (props.estado === 'INACTIVA') {
-      // Feedback dinámico según lo que se hizo;
-      const accionRealizada = props.estado === 'ACTIVA' ? 'activada' : 'desactivada';
-    mensaje.value = `Oferta ${accionRealizada} correctamente.`;
+    // Definimos un mensaje amigable
+    const accionRealizada = props.estado === 'ACTIVA' ? 'activandose...' : 'desactivandose...';
+    mensaje.value = `Oferta ${accionRealizada}.`;
 
-      emits("eliminado");
+    if (router.currentRoute.value.name === 'verOfertaAdmin' && props.estado === 'INACTIVA') {
+        mensaje.value = `Oferta ${accionRealizada}. Redirigiendo al listado...`;
+      }
 
-      // Esperamos 3 segundos mostrando el mensaje ANTES de cerrar y redirigir
-      setTimeout(() => {
-        isModalOpen.value = false; // Cerramos manualmente aquí
+    emits("eliminado");
+
+    // 3. Lógica de cierre y redirección universal
+    setTimeout(() => {
+      isModalOpen.value = false;
+
+      // Si el nombre de tu ruta de detalle es 'verOfertaAdmin', redirigimos.
+      // Si estamos en el listado, simplemente se queda ahí con el modal cerrado.
+      if (router.currentRoute.value.name === 'verOfertaAdmin' && props.estado === 'INACTIVA') {
         router.push({ name: "ofertas" });
-      }, 3000);
-
-    } else {
-      mensaje.value = `Oferta ${props.estado}`;
-      setTimeout(() => {
-        isModalOpen.value = false; 
-        window.location.reload(); // Cerramos manualmente aquí
-      }, 3000);
-    }
+      }
+    }, 2500);
 
   } catch (err) {
     console.error(err);

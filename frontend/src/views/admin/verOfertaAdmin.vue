@@ -23,7 +23,7 @@ const route = useRoute();
 const router = useRouter();
 
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas/${route.params.id}`);
-const { data: oferta, error, loading, postulaciones } = useFetch(url);
+const { data: oferta, error, loading, postulaciones, fetchData } = useFetch(url);
 
 const volver = () => router.push({ name: 'ofertas' });
 
@@ -41,7 +41,11 @@ const abrirModal = (id) => {
 };
 
 const ofertaEliminada = async () => {
-  console.log("La oferta fue desactivada");
+  console.log("El estado de la oferta fue actualizado. Refrescando datos...");
+
+    setTimeout(async () => {
+    await fetchData();
+  }, 2500);
 };
 
 

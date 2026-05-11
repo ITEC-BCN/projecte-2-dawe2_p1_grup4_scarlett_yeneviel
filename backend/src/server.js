@@ -16,6 +16,7 @@ import {
   obtenerOfertaPorId,
   actualizarOferta,
   eliminarOferta,
+  desactivarOferta,
   crearEstudiante,
   obtenerEstudiantes,
   obtenerEstudiantePorId,
@@ -174,6 +175,24 @@ app.delete("/ofertas/:id", async (req, res) => {
     const id = req.params.id;
 
     const resultado = await eliminarOferta(id);
+
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: err.message || String(err) });
+  }
+});
+
+
+//Desactivar oferta (en lugar de eliminarla físicamente, la marcamos como inactiva)
+
+app.put('/ofertaDesactivar/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    // Leer el nuevo estado desde el body
+    const { estado } = req.body;
+    if (!estado) return res.status(400).json({ error: 'Falta el campo "estado" en el body' });
+
+    const resultado = await desactivarOferta(id, estado);
 
     res.json(resultado);
   } catch (err) {

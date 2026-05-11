@@ -35,9 +35,13 @@ const crearOferta = () => {
 };
 
 const DesactivarOferta = async (id,estado) => {
-  if (!confirm('Desactivar esta oferta? Esta acción no se puede deshacer.')) return;
+  if(estado === 'INACTIVA') {
+    if (!confirm('¿Desactivar esta oferta? Esta acción no se puede deshacer.')) return;
+  }else{
+    if (!confirm('¿Activar esta oferta?')) return;
+  }
   try {
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertas/${id}`, 
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${id}`, 
     { 
      method: 'PUT',
      headers: { 'Content-Type': 'application/json' }, 

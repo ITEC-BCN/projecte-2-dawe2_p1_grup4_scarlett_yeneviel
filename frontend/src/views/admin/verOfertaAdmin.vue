@@ -48,7 +48,7 @@ const abrirModal = (id) => {
 const ofertaEliminada = async () => {
   console.log("El estado de la oferta fue actualizado. Refrescando datos...");
 
-    setTimeout(async () => {
+  setTimeout(async () => {
     await fetchData();
   }, 2500);
 };
@@ -71,7 +71,6 @@ const modalEstadoCandi = (oferta, estudiante) => {
     email: estudiante.email,
     nombre: estudiante.nombre,
     titulo: oferta.titulo,
-
   };
 
   modalEstadoRef.value?.openModal();
@@ -167,6 +166,7 @@ const goToPage = (p) => {
 </script>
 
 <template>
+
   <div class="detalle-page">
     <div class="detalle-container">
 
@@ -299,7 +299,9 @@ const goToPage = (p) => {
 
             <div class="acciones-header">
               <button class="btn-update" @click="ActualizarOferta(oferta.id)">Actualizar</button>
-              <button @click="abrirModal(oferta.id)" class="btn-update-state" :class="oferta.estado === 'ACTIVA' ? 'desactivar' : 'activar'">{{ oferta.estado === 'ACTIVA' ? 'Desactivar' :
+              <button @click="abrirModal(oferta.id)" class="btn-update-state"
+                :class="oferta.estado === 'ACTIVA' ? 'desactivar' : 'activar'">{{ oferta.estado === 'ACTIVA' ?
+                  'Desactivar' :
                 'Activar' }}</button>
 
               <!-- Componente del modal -->
@@ -365,7 +367,7 @@ const goToPage = (p) => {
                       title="Ver Perfil">
                       Perfil
                     </button>
-                    <CvViewer :cv-url="item.usuario_estudiante.documento_cv" />
+                    <CvViewer :cv-url="item.usuario_estudiante.documento?.[0]?.ruta_archivo" />
                   </div>
                 </td>
               </tr>
@@ -382,7 +384,7 @@ const goToPage = (p) => {
             <button v-for="p in totalPages" :key="p" :class="['page-number', { active: p === currentPage }]"
               @click="goToPage(p)">{{ p }}</button>
           </div>
-          <button @click="nextPage" :disabled="currentPage === totalPages" class="page-btn" >
+          <button @click="nextPage" :disabled="currentPage === totalPages" class="page-btn">
             Siguiente
           </button>
         </div>
@@ -742,7 +744,7 @@ const goToPage = (p) => {
 }
 
 /* Estilo para el botón de eliminar */
-.btn-update-state{
+.btn-update-state {
   color: #fff;
   padding: 10px 16px;
   border-radius: 8px;
@@ -752,17 +754,19 @@ const goToPage = (p) => {
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.desactivar{
-    background: #dc2626;
+.desactivar {
+  background: #dc2626;
 }
+
 .desactivar:hover {
   background: #b91c1c;
   transform: translateY(-2px);
 }
 
-.activar{
+.activar {
   background-color: #16a34a;
 }
+
 .activar:hover {
   background: #16a34a;
   transform: translateY(-2px);
@@ -800,7 +804,6 @@ const goToPage = (p) => {
   overflow: hidden;
   margin-left: auto;
   margin-right: auto;
-  max-width: 900px;
 }
 
 .postulaciones-header-container {
@@ -831,13 +834,14 @@ const goToPage = (p) => {
 /* Tabla Estilo Admin */
 .table-responsive {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: auto; /* Esto permite el scroll si la tabla es muy ancha */
 }
 
 .postulaciones-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
   text-align: left;
+  border-spacing: 0 10px;
 }
 
 .postulaciones-table thead th {
@@ -851,12 +855,15 @@ const goToPage = (p) => {
 }
 
 .postulaciones-table tbody tr {
-  border-bottom: 1px solid #f1f5f9;
-  transition: background 0.2s;
+background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  transition: all 0.2s ease;
 }
 
 .postulaciones-table tbody tr:hover {
-  background: #f1f5f9;
+   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .postulaciones-table td {
@@ -872,11 +879,12 @@ const goToPage = (p) => {
 }
 
 .candidato-avatar-mini {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+ width: 44px;
+  height: 44px;
+  border-radius: 12px; /* más moderno que círculo */
   object-fit: cover;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #eef2ff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .candidato-data {
@@ -885,23 +893,22 @@ const goToPage = (p) => {
 }
 
 .candidato-name {
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 0.95rem;
+   font-weight: 700;
+  color: #111827;
 }
 
 .candidato-email {
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
 /* Status Pills */
 .status-pill {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 700;
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .status-pill.pendiente {
@@ -910,8 +917,8 @@ const goToPage = (p) => {
 }
 
 .status-pill.aceptado {
-  background: #dcfce7;
-  color: #166534;
+   background: #ecfdf5;
+  color: #047857;
 }
 
 .status-pill.rechazada {
@@ -991,7 +998,7 @@ const goToPage = (p) => {
 
   .postulaciones-table td,
   .postulaciones-table thead th {
-    padding: 10px 8px;
+    padding: 10px;
     font-size: 0.9rem;
   }
 }
@@ -1045,21 +1052,29 @@ const goToPage = (p) => {
     padding: 8px 0;
     border: none;
     font-size: 1rem;
+    word-break: break-word;
   }
 
   .candidato-actions-inline {
-    justify-content: flex-start;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #f1f5f9;
+     display: grid;
+    grid-template-columns: 1fr;
     gap: 10px;
-    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .candidato-actions-inline > * {
+    width: 100%;
   }
 
   .fecha-cell::before {
     content: "Postulado el: ";
     font-weight: 600;
     color: #64748b;
+  }
+
+   .btn-icon-text {
+    width: 100%;
+    text-align: center;
   }
 }
 
@@ -1152,10 +1167,10 @@ const goToPage = (p) => {
   }
 
   .candidato-actions-inline {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
+    display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
   }
 
   .btn-icon-text {
@@ -1228,25 +1243,45 @@ const goToPage = (p) => {
 }
 
 /* --- PAGINACIÓN --- */
-.pagination { padding: 1rem; display: flex; justify-content: center; align-items: center; gap: 1.5rem; border-top: 1px solid #f3f4f6; }
-.page-numbers { display: flex; gap: 6px; }
+.pagination {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
 
-.page-btn, .page-number { 
-  border: 1px solid #e6e6e6; 
-  background: white; 
-  padding: 8px 14px; 
-  border-radius: 8px; 
-  cursor: pointer; 
-  font-weight: 700; 
-  color: #4d1b95; 
+.page-numbers {
+  display: flex;
+  gap: 6px;
+}
+
+.page-btn,
+.page-number {
+  border: 1px solid #e6e6e6;
+  background: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #4d1b95;
   transition: all 0.2s ease;
 }
-.page-btn:hover:not([disabled]) { border-color: #4d1b95; background: #f5f3ff; }
-.page-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 
-.page-number.active { 
-  background: #10b981; 
-  color: white; 
-  border-color: #10b981; 
+.page-btn:hover:not([disabled]) {
+  border-color: #4d1b95;
+  background: #f5f3ff;
+}
+
+.page-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-number.active {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
 }
 </style>

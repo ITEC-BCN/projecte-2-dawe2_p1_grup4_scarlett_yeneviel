@@ -1,25 +1,34 @@
 <script setup>
 import { computed } from "vue";
 
-const { cvUrl } = defineProps({
+const props = defineProps({
   cvUrl: {
     type: String,
+    default: "",
   },
 });
 
-const cvFullUrl = computed(() => {
-  if (!cvUrl) return "";
+const hasCv = computed(() => {
+  return props.cvUrl?.trim() !== "";
+});
 
-  return `https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/${cvUrl}`;
+const cvFullUrl = computed(() => {
+  if (!hasCv.value) return "";
+
+  if (props.cvUrl.startsWith("http")) {
+    return props.cvUrl;
+  }
+
+  return `https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/${props.cvUrl}`;
 });
 </script>
 
 <template>
-  <div v-if="cvUrl" class="cv-actions">
+  <div v-if="hasCv" class="cv-actions">
     <a
       :href="cvFullUrl"
-      target="_blank"
       class="btn-primary"
+      aria-label="Ver CV del candidato"
     >
       <i class="fa-solid fa-eye"></i>
       Ver CV
@@ -34,34 +43,64 @@ const cvFullUrl = computed(() => {
 </template>
 
 <style scoped>
+/* CvViewer.vue - Estilos Responsive */
 .cv-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 10px 0;
+   display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .cv-hint {
   font-size: 0.8rem;
   color: #94a3b8;
+  /* Evitamos que el texto de "no hay CV" se corte feo */
+  line-height: 1.2;
 }
 
 .btn-primary {
-  padding: 8px 16px;
-  background: #f1f5f9;
-  color: #334155;
-  border: none;
-  border-radius: 8px;
+  padding: 6px 12px;
+  background: var(--primary);
+  color: #ffffff;
+  border-radius: 6px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center; /* Centra el contenido si el botón se estira */
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  border: none;
+  /* Evita que el botón sea más pequeño que el texto */
+  white-space: nowrap;
+  width:100%; 
 }
 
 .btn-primary:hover {
-  background: #e2e8f0;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* --- Ajustes para pantallas pequeñas --- */
+@media (max-width: 600px) {
+  .cv-actions {
+     display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 8px 14px;
+  }
+  
+  .cv-hint {
+    text-align: center;
+    width: 100%;
+    font-style: italic;
+  }
 }
 </style>

@@ -819,4 +819,115 @@ const funGuardarOferta = async () => {
     font-size: 1rem;
   }
 }
+
+/* --- RESPONSIVE CORE --- */
+
+/* Tablets y Laptops pequeñas */
+@media (max-width: 1024px) {
+  .contenido-grid-new {
+    grid-template-columns: 1fr 280px; /* Estrechamos un poco el sidebar */
+    gap: 20px;
+  }
+}
+
+/* Móviles y Tablets verticales (El cambio principal) */
+@media (max-width: 768px) {
+  .detalle-page {
+    padding: 20px 10px;
+  }
+
+  /* El grid pasa a ser una sola columna */
+  .contenido-grid-new {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  /* El sidebar deja de ser "sticky" para fluir abajo */
+  .sidebar-new {
+    position: static;
+    order: -1; /* OPCIONAL: Pone los detalles de la oferta arriba en móvil */
+  }
+
+  .oferta-card-new {
+    padding: 20px;
+  }
+
+  /* Botones de acción en bloque para que sean fáciles de tocar */
+  .acciones-header {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-update, .btn-update-state {
+    width: 100%;
+    margin-right: 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Escondemos el encabezado de la tabla */
+  .postulaciones-table thead {
+    display: none;
+  }
+
+  .postulaciones-table, 
+  .postulaciones-table tbody, 
+  .postulaciones-table tr, 
+  .postulaciones-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .postulaciones-table tr {
+    margin-bottom: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+  }
+
+  .postulaciones-table td {
+    text-align: left;
+    padding: 8px 5px;
+    border: none;
+  }
+
+  /* Alineamos los botones de acción al centro o repartidos */
+  .candidato-actions-inline {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 5px;
+  }
+
+  /* Hacemos que los botones del CV y Perfil ocupen buen espacio */
+  .btn-icon-text {
+    flex: 1; 
+    min-width: 100px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .titulo-puesto {
+    font-size: 1.4rem; /* Texto más pequeño en móviles mini */
+  }
+
+  .candidato-cell {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .candidato-name {
+    font-size: 0.9rem;
+  }
+
+  .candidato-email {
+    font-size: 0.75rem;
+    word-break: break-all; /* Evita que correos largos rompan el layout */
+  }
+}
 </style>

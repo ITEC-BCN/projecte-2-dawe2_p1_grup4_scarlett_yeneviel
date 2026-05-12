@@ -282,6 +282,8 @@ h1 {
 .table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
 }
 
 .custom-table {
@@ -337,7 +339,7 @@ h1 {
 .actions-cell {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
 }
 
@@ -353,7 +355,8 @@ h1 {
 }
 
 .btn-view:hover {
-  background: #e5e7eb;
+  background: var(--primary);
+  color: white;
 }
 
 .btn-toggle {
@@ -361,11 +364,11 @@ h1 {
   align-items: center;
   justify-content: center;
   width: 40px;
-  height: 40px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+  margin-top:10px;
 }
 
 .btn-toggle.active {
@@ -446,6 +449,134 @@ h1 {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
+}
+
+@media (max-width: 768px) {
+  .custom-table th,
+  .custom-table td {
+    padding: 12px 12px;
+    font-size: 0.9rem;
+  }
+
+  .job-title {
+    font-size: 0.95rem;
+  }
+
+  .location-tag {
+    font-size: 0.75rem;
+  }
+
+  .btn-view {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 680px) {
+
+  .header-content{
+    justify-content: center;
+  }
+  /* ocultamos header */
+  .custom-table thead {
+    display: none;
+  }
+
+  /* tabla deja de ser tabla */
+  .custom-table,
+  .custom-table tbody,
+  .custom-table tr,
+  .custom-table td {
+    display: block;
+    width: 97%;
+    justify-content: center;
+  }
+
+  .custom-table{
+    border-collapse: separate;
+    text-align: left;
+    justify-items: center;
+  }
+
+  .custom-table tr {
+    background: white;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    justify-items: center;
+  }
+
+  .custom-table tr {
+    background: white;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    justify-items: center;
+  }
+
+  .custom-table td {
+    padding: 8px 0;
+    border: none;
+  }
+
+  /* stack de acciones */
+  .actions-cell {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+     gap: 8px;
+  }
+
+  .btn-view,
+  .btn-toggle {
+    width: 100%;
+    padding: 6px 10px;
+  }
+
+  .job-title {
+    font-size: 1rem;
+  }
+
+  .company-row {
+    font-size: 0.85rem;
+  }
+
+  .location-tag {
+    display: inline-block;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+
+  .admin-layout {
+    padding: 0 0.5rem;
+  }
+
+  .custom-table tr {
+    padding: 10px;
+  }
+
+  .btn-view,
+  .btn-toggle {
+    padding:6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .btn-content {
+    gap: 8px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+  }
 }
 
 @keyframes spin {

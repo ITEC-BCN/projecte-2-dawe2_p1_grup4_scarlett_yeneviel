@@ -286,7 +286,7 @@ app.get("/estudiantes/:id", requireAuth, async (req, res) => {
 });
 
 // PUT: Actualizar datos completos del estudiante
-app.put("/estudiantes/:id", async (req, res) => {
+app.put("/estudiantes/:id", requireAuth,  async (req, res) => {
   try {
     const actualizado = await actualizarEstudiante(req.params.id, req.body);
     res.json(actualizado);
@@ -752,7 +752,7 @@ app.get("/api/cv/:studentId", requireAuth, async (req, res) => {
 
 
 // POST: subir CV y extraer datos
-app.post("/api/upload-cv", upload.single("file"), async (req, res) => {
+app.post("/api/upload-cv", requireAuth, upload.single("file"), async (req, res) => {
   try {
     if (!req.file || !req.body.studentId) {
       return res.status(400).json({ error: "Faltan datos" });

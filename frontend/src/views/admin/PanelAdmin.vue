@@ -11,7 +11,7 @@ const urlUsers = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes`);
 const { data: users, error: usersError, loading: loadingUsers, fetchData: fetchUsers, actualizarEstado } = useFetchUser(urlUsers);
 
 // Filtro por pestañas: 'todos', 'pendiente', 'aprobado', 'rechazado'
-const activeTab = ref('pendiente'); 
+const activeTab = ref('pendiente');
 
 // Computed para filtrar según la pestaña activa
 const filteredUsers = computed(() => {
@@ -61,7 +61,7 @@ const updateUserEstado = async (id, newEstado) => {
   try {
     await actualizarEstado(id, newEstado);
     await fetchUsers();
-      const user = users.value.find(u => u.id === id);
+    const user = users.value.find(u => u.id === id);
 
     if (user && user.email) {
       console.log("Enviando correo a...", user.email);
@@ -90,14 +90,21 @@ const updateUserEstado = async (id, newEstado) => {
         <button class="btn-primary-nav" @click="router.push({ name: 'PanelOfertasAdmin' })">
           <div class="btn-content">
             <span class="btn-icon-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path><path d="M12 8h.01"></path></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                <path d="M9 12h6"></path>
+                <path d="M9 16h6"></path>
+                <path d="M12 8h.01"></path>
+              </svg>
             </span>
             <div class="btn-text">
               <span class="btn-title">Gestor de Ofertas</span>
               <span class="btn-desc">Ver vacantes activas</span>
             </div>
           </div>
-      </button>
+        </button>
       </div>
     </header>
 
@@ -160,15 +167,19 @@ const updateUserEstado = async (id, newEstado) => {
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <button class="btn-icon" title="Ver detalle" @click="viewUser(usuario.id)">👁️</button>
-                  
+                  <button class="btn-icon" title="Ver detalle" @click="viewUser(usuario.id)"><i class="fa-solid fa-eye"></i></button>
+
                   <template v-if="usuario.estado === 'pendiente'">
-                    <button class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Aceptar</button>
-                    <button class="btn-action reject" @click="updateUserEstado(usuario.id, 'rechazado')">Rechazar</button>
+                    <button class="btn-action approve"
+                      @click="updateUserEstado(usuario.id, 'aprobado')">Aceptar</button>
+                    <button class="btn-action reject"
+                      @click="updateUserEstado(usuario.id, 'rechazado')">Rechazar</button>
                   </template>
-                  
-                  <button v-if="usuario.estado === 'aprobado'" class="btn-action deactivate" @click="updateUserEstado(usuario.id, 'inactivo')">Desactivar</button>
-                  <button v-if="usuario.estado === 'rechazado' || usuario.estado === 'inactivo'" class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Reactivar</button>
+
+                  <button v-if="usuario.estado === 'aprobado'" class="btn-action deactivate"
+                    @click="updateUserEstado(usuario.id, 'inactivo')">Desactivar</button>
+                  <button v-if="usuario.estado === 'rechazado' || usuario.estado === 'inactivo'"
+                    class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Reactivar</button>
                 </td>
               </tr>
               <tr v-if="usersPaginados.length === 0">
@@ -181,9 +192,11 @@ const updateUserEstado = async (id, newEstado) => {
         <div class="pagination" v-if="totalUserPages > 1">
           <button class="page-btn" :disabled="currentUserPage === 1" @click="prevUserPage">Anterior</button>
           <div class="page-numbers">
-            <button v-for="p in totalUserPages" :key="p" :class="['page-number', { active: p === currentUserPage }]" @click="goToPage(p)">{{ p }}</button>
+            <button v-for="p in totalUserPages" :key="p" :class="['page-number', { active: p === currentUserPage }]"
+              @click="goToPage(p)">{{ p }}</button>
           </div>
-          <button class="page-btn" :disabled="currentUserPage === totalUserPages" @click="nextUserPage">Siguiente</button>
+          <button class="page-btn" :disabled="currentUserPage === totalUserPages"
+            @click="nextUserPage">Siguiente</button>
         </div>
       </div>
     </section>
@@ -192,77 +205,300 @@ const updateUserEstado = async (id, newEstado) => {
 
 <style scoped>
 /* Layout & Basics */
-.admin-layout { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; font-family: 'Inter', system-ui, sans-serif; color: #1f2937; }
-.main-header { margin-bottom: 2rem; }
-.header-content { display: flex; justify-content: space-between; align-items: center; }
-h1 { font-size: 1.75rem; font-weight: 800; margin: 0; color: #111827; }
-.subtitle { color: #6b7280; margin: 4px 0 0; }
+.admin-layout {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #1f2937;
+}
+
+.main-header {
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  color: #111827;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin: 4px 0 0;
+}
 
 /* Stats Cards */
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-.stat-card { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; }
-.stat-card:hover { border-color: #10b981; transform: translateY(-2px); }
-.stat-card.active { border-bottom: 4px solid #10b981; background: #f0fdf4; }
-.stat-card.pending.active { border-bottom-color: #f59e0b; background: #fffbeb; }
-.stat-label { display: block; color: #6b7280; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; }
-.stat-value { display: block; font-size: 2rem; font-weight: 800; margin-top: 0.5rem; }
-.stat-card.reject.active  { border-bottom: 4px solid #ef4444; background: #fef2f2; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  border-color: #10b981;
+  transform: translateY(-2px);
+}
+
+.stat-card.active {
+  border-bottom: 4px solid #10b981;
+  background: #f0fdf4;
+}
+
+.stat-card.pending.active {
+  border-bottom-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.stat-label {
+  display: block;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-top: 0.5rem;
+}
+
+.stat-card.reject.active {
+  border-bottom: 4px solid #ef4444;
+  background: #fef2f2;
+}
 
 /* Tabs */
-.table-section { background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.tabs-nav { display: flex; background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 0 1rem; }
-.tab-link { padding: 1rem 1.5rem; border: none; background: none; cursor: pointer; color: #6b7280; font-weight: 600; border-bottom: 2px solid transparent; }
-.tab-link.active { color: #10b981; border-bottom-color: #10b981; }
+.table-section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tabs-nav {
+  display: flex;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 1rem;
+}
+
+.tab-link {
+  padding: 1rem 1.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-link.active {
+  color: #10b981;
+  border-bottom-color: #10b981;
+}
 
 /* Table Style */
-.table-container { width: 100%; overflow-x: auto; }
-.custom-table { width: 100%; border-collapse: collapse; text-align: left; }
-.custom-table th { padding: 1rem; background: #f9fafb; color: #4b5563; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.custom-table td { padding: 1rem; border-bottom: 1px solid #f3f4f6; }
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: separate;
+  text-align: left;
+  border-spacing: 0 10px; /* espacio entre filas */
+}
+
+.custom-table th {
+  padding: 1rem;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.custom-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
 
 /* User Info */
-.user-info { display: flex; align-items: center; gap: 0.75rem; }
-.avatar { width: 32px; height: 32px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-.user-name { font-weight: 600; }
-.user-email { color: #6b7280; font-size: 0.9rem; }
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-email {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
 
 /* Pills */
-.pill { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: capitalize; }
-.pill.pendiente { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
-.pill.aprobado { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
-.pill.rechazado, .pill.inactivo { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+.pill {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.pill.pendiente {
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #ffedd5;
+}
+
+.pill.aprobado {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #d1fae5;
+}
+
+.pill.rechazado,
+.pill.inactivo {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+}
 
 /* Actions */
-.actions-cell { display: flex; gap: 0.5rem; justify-content: flex-end; }
-.btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.btn-action.approve { background: #10b981; color: white; }
-.btn-action.reject { background: #ef4444; color: white; }
-.btn-action.deactivate { background: #f3f4f6; color: #374151; }
-.btn-icon { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-action {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-action.approve {
+  background: #10b981;
+  color: white;
+}
+
+.btn-action.reject {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-action.deactivate {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-action.deactivate:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: var(--primary);
+  color: #fff;
+}
 
 /* Utils */
 
-.empty-state { text-align: center; padding: 3rem !important; color: #9ca3af; }
-.pagination { padding: 1rem; display: flex; justify-content: center; align-items: center; gap: 1.5rem; border-top: 1px solid #f3f4f6; }
-.page-numbers { display: flex; gap: 6px; }
+.empty-state {
+  text-align: center;
+  padding: 3rem !important;
+  color: #9ca3af;
+}
 
-.page-btn, .page-number { 
-  border: 1px solid #e6e6e6; 
-  background: white; 
-  padding: 8px 14px; 
-  border-radius: 8px; 
-  cursor: pointer; 
-  font-weight: 700; 
-  color: #4d1b95; 
+.pagination {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 6px;
+}
+
+.page-btn,
+.page-number {
+  border: 1px solid #e6e6e6;
+  background: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #4d1b95;
   transition: all 0.2s ease;
 }
-.page-btn:hover:not([disabled]) { border-color: #4d1b95; background: #f5f3ff; }
-.page-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 
-.page-number.active { 
-  background: #10b981; 
-  color: white; 
-  border-color: #10b981; 
+.page-btn:hover:not([disabled]) {
+  border-color: #4d1b95;
+  background: #f5f3ff;
+}
+
+.page-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-number.active {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
 }
 
 /* Nuevo Botón Principal de Navegación */
@@ -322,13 +558,135 @@ h1 { font-size: 1.75rem; font-weight: 800; margin: 0; color: #111827; }
   font-weight: 400;
 }
 
-/* Ajuste opcional para móviles: ocultar la descripción si no hay espacio */
-@media (max-width: 640px) {
-  .btn-desc { display: none; }
-  .btn-primary-nav { padding: 8px 14px; }
+@media (max-width: 768px) {
+  .custom-table td {
+    word-break: break-word;
+  }
+
+  .pill {
+    font-size: 0.7rem;
+  }
+
+  .custom-table thead {
+    display: none;
+  }
+
+  .custom-table,
+  .custom-table tbody,
+  .custom-table tr,
+  .custom-table td {
+    width: 100%;
+  }
+
+  .custom-table tr {
+    background: white;
+    margin: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  }
+
+  .custom-table td {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+    border: none;
+  }
+
+  .custom-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+
+  .user-info {
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
+  }
+
+  .user-name {
+    font-size: 0.95rem;
+  }
+
+  .user-email {
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+
+  .actions-cell {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .btn-action {
+    text-align: center;
+    font-size: 0.8rem;
+  }
+
+  .btn-icon {
+    flex: 0 0 auto;
+  }
 }
 
+/* Ajuste opcional para móviles: ocultar la descripción si no hay espacio */
+@media (max-width: 640px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .btn-primary-nav {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-desc {
+    display: none;
+  }
+
+  .btn-primary-nav {
+    padding: 8px 14px;
+  }
+
+  .stats-grid {
+    gap: 10px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+
+
 /* Spinner */
-.spinner { width: 24px; height: 24px; border: 3px solid #f3f4f6; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
 </style>

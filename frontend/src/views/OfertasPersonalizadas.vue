@@ -1,4 +1,5 @@
 <script setup>
+//TODO QUITAR FETCH Y SUBSITUIRLO POR AXIOS
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import CardOferta from '../components/cardOferta.vue'; 

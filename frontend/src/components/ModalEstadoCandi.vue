@@ -1,23 +1,45 @@
 <template>
-  <!-- Modal para actualizar el estado de la candidatura -->
-  <div v-if="isModalOpen" class="modal-backdrop">
+  <div v-if="isModalOpen" class="modal-backdrop" @click.self="closeModal">
     <div class="modal-content">
-      <select v-model="estado" v-show="!mensaje" >
-        <option value="" disabled>Selecciona un estado</option>
-        <option v-for="estadoOption in estadosCandidatura" :key="estadoOption" :value="estadoOption">
-          {{ estadoOption }}
-        </option>
-      </select>
-      <div class="modal-buttons" v-if="!mensaje">
-        <button @click="actualizarEstado" class="btn-confirm" :disabled="!estado || loading">
-          {{ loading ? "Actualizando..." : "Actualizar" }}
-        </button>
-        <button @click="closeModal" class="btn-cancel">No</button>
+      <header class="modal-header">
+        <h3>Actualizar Estado</h3>
+        <button @click="closeModal" class="btn-close">&times;</button>
+      </header>
+
+      <div class="modal-body">
+        <div v-if="!mensaje">
+          <p class="modal-instruction">Selecciona el nuevo estado para <strong>{{ estudiante.nombre }}</strong></p>
+          <div class="select-wrapper">
+            <select v-model="estado" class="custom-select">
+              <option value="" disabled selected>Elige una opción...</option>
+              <option v-for="estadoOption in estadosCandidatura" :key="estadoOption" :value="estadoOption">
+                {{ estadoOption }}
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div v-else class="message-container">
+          <p class="message-text">{{ mensaje }}</p>
+        </div>
       </div>
-      <div v-else>
-        <p>{{ mensaje }}</p>
-        <button @click="closeMensaje" class="btn-confirm">Aceptar</button>
-      </div>
+
+      <footer class="modal-footer">
+        <div class="modal-buttons" v-if="!mensaje">
+          <button @click="closeModal" class="btn-secondary">Cancelar</button>
+          <button 
+            @click="actualizarEstado" 
+            class="btn-primary" 
+            :disabled="!estado || loading"
+          >
+            <span v-if="loading" class="loader"></span>
+            {{ loading ? "Guardando..." : "Actualizar Estado" }}
+          </button>
+        </div>
+        <div v-else>
+          <button @click="closeMensaje" class="btn-primary">Aceptar</button>
+        </div>
+      </footer>
     </div>
   </div>
 </template>
@@ -102,22 +124,156 @@ defineExpose({ openModal });
 </script>
 
 <style scoped>
+/* Contenedor Principal */
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(15, 23, 42, 0.7); /* Azul oscuro traslúcido */
+  backdrop-filter: blur(4px);
   display: flex; justify-content: center; align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
 
+/* Tarjeta del Modal */
 .modal-content {
-  background: white; padding: 30px; border-radius: 12px;
-  text-align: center; max-width: 400px;
+  background: white;
+  width: 100%;
+  max-width: 450px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: modalIn 0.3s ease-out;
 }
 
-.modal-buttons { margin-top: 20px; display: flex; justify-content: space-around; }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-.btn-confirm { background: #2E7D32; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
-.btn-cancel { background: #ccc; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+/* Cabecera */
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-close:hover { color: #475569; }
+
+/* Cuerpo */
+.modal-body {
+  padding: 24px;
+}
+
+.modal-instruction {
+  color: #64748b;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.message-text {
+  font-size: 1.1rem;
+  color: #334155;
+  text-align: center;
+}
+
+/* Select Estilizado */
+.select-wrapper {
+  position: relative;
+}
+
+.custom-select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  color: #1e293b;
+  appearance: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Pie de página y Botones */
+.modal-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn-primary, .btn-secondary {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+.btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.btn-secondary:hover { background: #cbd5e1; }
+
+/* Loader simple */
+.loader {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>

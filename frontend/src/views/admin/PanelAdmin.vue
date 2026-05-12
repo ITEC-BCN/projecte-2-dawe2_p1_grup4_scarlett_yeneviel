@@ -10,14 +10,25 @@ const router = useRouter();
 const urlUsers = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes`);
 const { data: users, error: usersError, loading: loadingUsers, fetchData: fetchUsers, actualizarEstado } = useFetchUser(urlUsers);
 
-// Filtro por pestañas: 'todos', 'pendiente', 'aprobado', 'rechazado'
+// Filtro por pestañas: 'todos', 'pendiente', 'aprobado', 'rechazado/inactivo'
 const activeTab = ref('pendiente');
 
 // Computed para filtrar según la pestaña activa
 const filteredUsers = computed(() => {
   const allUsers = users.value || [];
   if (activeTab.value === 'todos') return allUsers;
-  return allUsers.filter(u => (u.estado || '').toLowerCase() === activeTab.value);
+
+  return allUsers.filter(u => {
+    const userEstado = (u.estado || '').toLowerCase();
+    
+    // Lógica especial para la pestaña de rechazados
+    if (activeTab.value === 'rechazado') {
+      return userEstado === 'rechazado' || userEstado === 'inactivo';
+    }
+    
+    // Filtro normal para el resto
+    return userEstado === activeTab.value;
+  });
 });
 
 // Pagination sobre los usuarios FILTRADOS
@@ -52,7 +63,7 @@ const goToPage = (p) => {
 const usersTotal = computed(() => (users.value || []).length);
 const pendingCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'pendiente').length);
 const approvedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'aprobado').length);
-const rejectedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'rechazado').length);
+const rejectedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'rechazado' || (u.estado || '').toLowerCase() === 'inactivo'  ).length);
 
 // Actions
 const viewUser = (id) => { router.push({ name: 'PerfilDetalleSolo', params: { id } }); };
@@ -120,7 +131,7 @@ const updateUserEstado = async (id, newEstado) => {
 
 
       <div class="stat-card reject" @click="setTab('rechazado')" :class="{ active: activeTab === 'rechazado' }">
-        <span class="stat-label">Rechazados</span>
+        <span class="stat-label">Rechazados | Inactivos</span>
         <span class="stat-value">{{ rejectedCount }}</span>
       </div>
 
@@ -179,7 +190,7 @@ const updateUserEstado = async (id, newEstado) => {
                   <button v-if="usuario.estado === 'aprobado'" class="btn-action deactivate"
                     @click="updateUserEstado(usuario.id, 'inactivo')">Desactivar</button>
                   <button v-if="usuario.estado === 'rechazado' || usuario.estado === 'inactivo'"
-                    class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Reactivar</button>
+                    class="btn-action approve" @click="updateUserEstado(usuario.id, 'aprobado')">Activar</button>
                 </td>
               </tr>
               <tr v-if="usersPaginados.length === 0">

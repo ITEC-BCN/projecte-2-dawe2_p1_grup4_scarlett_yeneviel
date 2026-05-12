@@ -8,6 +8,7 @@ const remember = ref(false)
 const error = ref('')
 const loading = ref(false)
 const router = useRouter()
+const showPassword = ref(false)
 
 const handleLoginAdmin = async(e) => {
   e.preventDefault()
@@ -49,7 +50,7 @@ const handleLoginAdmin = async(e) => {
       <div v-if="error" class="error-message">{{ error }}</div>
 
       <!-- Formulario conectado al backend -->
-      <form class="login-form" @submit="handleLoginAdmin" >
+      <form class="login-form" @submit="handleLoginAdmin">
         <label for="email">Correo electrónico</label>
         <input 
           id="email" 
@@ -61,14 +62,33 @@ const handleLoginAdmin = async(e) => {
         />
 
         <label for="password">Contraseña</label>
-        <input 
-          id="password" 
-          v-model="password"
-          type="password" 
-          placeholder="••••••••" 
-          required 
-          :disabled="loading"
-        />
+        <div class="password-input-wrapper">
+          <input 
+            id="password" 
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            required 
+            :disabled="loading"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            @click="showPassword = !showPassword"
+            :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <path d="M1 1l22 22" />
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8 1.31-2.51 3.34-4.62 5.76-6.02" />
+              <path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5" />
+              <path d="M14.47 14.47A3.5 3.5 0 0 1 12 8.5" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        </div>
 
         <div class="form-row">
           <label class="checkbox">
@@ -76,7 +96,7 @@ const handleLoginAdmin = async(e) => {
             <span>Recordarme</span>
           </label>
 
-          <a href="#" class="forgot">¿Olvidaste la contraseña?</a>
+          <router-link class="forgot" to="/restore-password">¿Olvidaste la contraseña?</router-link>
         </div>
 
         <button type="submit" class="btn-submit" :disabled="loading">
@@ -84,7 +104,7 @@ const handleLoginAdmin = async(e) => {
         </button>
       </form>
 
-      <p class="signup">¿Sin cuenta de Administración? <router-link to="/admin/registro">Regístrate</router-link></p>
+      <p class="signup">¿No tienes cuenta? <router-link to="/registro">Regístrate</router-link></p>
     </div>
   </div>
 </template>
@@ -95,17 +115,19 @@ const handleLoginAdmin = async(e) => {
   align-items: center;
   justify-content: center;
   min-height: 70vh;
-  padding: 40px;
+  padding: 20px;
   background: #f5f7fb;
 }
 
 .login-card {
-  width: 360px;
+  width: 400px;
   background: #fff;
   padding: 28px;
   border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(13, 27, 42, 0.08);
+  box-shadow: 0 0 0 1px #4b5563, 0 6px 16px rgba(0, 0, 0, 0.08);
   text-align: left;
+  box-sizing: border-box;
+
 }
 
 .login-card h1 {
@@ -115,44 +137,49 @@ const handleLoginAdmin = async(e) => {
 }
 
 .error-message {
-  background: #fee;
-  color: #c33;
-  padding: 10px 12px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 12px;
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 13px;
-  border-left: 3px solid #c33;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-label {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
 }
 
-input[type="email"],
-input[type="password"] {
-  padding: 10px 12px;
-  border: 1px solid #e6e9ef;
-  border-radius: 8px;
-  background: #fcfcff;
-  font-size: 14px;
-  color: #111827;
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #4d1b95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-input:disabled {
-  background: #f0f0f0;
-  cursor: not-allowed;
-  opacity: 0.6;
+.toggle-password:hover {
+  color: #6d28d9;
 }
+
 
 .form-row {
   display: flex;
@@ -171,7 +198,7 @@ input:disabled {
 
 .forgot {
   font-size: 13px;
-  color: #6b7280;
+  color: #374151;
   text-decoration: none;
 }
 
@@ -184,22 +211,24 @@ input:disabled {
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
+  width: 100%;
 }
 
 .btn-submit:hover:not(:disabled) {
   opacity: 0.95;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(77, 27, 149, 0.3);
 }
 
 .btn-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .signup {
   margin-top: 14px;
   font-size: 13px;
-  color: #6b7280;
+  color: #374151;
   text-align: center;
 }
 
@@ -209,10 +238,69 @@ input:disabled {
   font-weight: 600;
 }
 
-@media (max-width: 420px) {
+label {
+  font-size: 12px;
+  color: #374151;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+input {
+  padding: 10px 12px;
+  border: 2px solid #e6e9ef;
+  border-radius: 8px;
+  background: #fcfcff;
+  font-size: 14px;
+  color: #111827;
+  transition: all 0.3s ease;
+  border: 2px solid #4b5563;
+  width: 90%;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4d1b95;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(77, 27, 149, 0.2);
+}
+
+input.input-error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+input.input-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+::placeholder {
+  color: #6b7280;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 16px;
+  }
+
   .login-card {
+    padding: 18px;
+    border-radius: 10px;
+  }
+
+  .login-card h1 {
+    font-size: 20px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn-submit {
     width: 100%;
-    padding: 20px;
   }
 }
 </style>

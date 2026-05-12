@@ -35,6 +35,7 @@ import {
   actualizarEstadoOferta,
   guardarOferta,
   obtenerOfertasGuardadas,
+  updatedRequestRegistration,
   obtenerSkills,
   subirAvatarStorage,
   guardarFotoPerfil,
@@ -311,13 +312,15 @@ app.post("/estudiante/postular", async (req, res) => {
 
 app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
   try {
-    const { id_estudiante, estado } = req.body;
+    const { estado } = req.body;
+    const id_estudiante = req.params.idEstudiante;
+
 
     if (!id_estudiante || !estado) {
       return res.status(400).json({ error: "Faltan datos en el body" });
     }
 
-    const resultado = await actualizarSolicitudPendiente(id_estudiante, estado);
+    const resultado = await updatedRequestRegistration(id_estudiante, estado);
     res.status(200).json({
       message: "Solicitud actualizada exitosamente",
       data: resultado,

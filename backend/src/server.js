@@ -386,7 +386,7 @@ app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
 
 /*======== FOTOGRAFIA DE PERFIL =========*/
 
-app.post("/upload-avatar", upload.single("file"), async (req, res) => {
+app.post("/upload-avatar", requireAuth, upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
     const studentId = req.body.studentId;
@@ -520,7 +520,14 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: estudiante.id, email: estudiante.email },
       SECRET_JWT_KEY,
-      { expiresIn: "2h" },
+      { expiresIn: "1h" },
+    );
+
+    /* Generamos el token de refresco */
+    const refresh_token = jwt.sign(
+      { id: estudiante.id, email: estudiante.email, role: estudiante.role },
+      SECRET_JWT_KEY,
+      { expiresIn: "24h" },
     );
 
     // 4. GUARDAR EN COOKIE
@@ -528,8 +535,17 @@ app.post("/login", async (req, res) => {
       httpOnly: true, // Seguridad: No accesible desde JS del frontend
       secure: true, // Obligatorio para SameSite: 'none'
       sameSite: "none", // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
-      maxAge: 1000 * 60 * 60 * 2, // 2 horas
+      maxAge: 1000 * 60 * 60, // 1 horas
     });
+
+      res.cookie("refresh_token", refresh_token, {
+      httpOnly: true, // Seguridad: No accesible desde JS del frontend
+      secure: true, // Obligatorio para SameSite: 'none'
+      sameSite: "none", // Necesario si tu Front y Back están en dominios/puertos distintos (como en Codespaces)
+      maxAge: 1000 * 60 * 60 * 24, // 24 horas
+    });
+
+
 
     // 5. Respuesta al Frontend
     return res.status(200).json({
@@ -539,6 +555,7 @@ app.post("/login", async (req, res) => {
         email: estudiante.email,
       },
       token,
+      refresh_token
     });
   } catch (err) {
     console.error(err);
@@ -640,7 +657,7 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
 //================ SKILLS ====================
 
 // GET: Obtener todas las skills para el menú desplegable del frontend
-app.get("/skills", async (req, res) => {
+app.get("/skills", requireAuth, async (req, res) => {
   try {
     const skills = await obtenerSkills();
     res.json(skills);
@@ -1099,6 +1116,68 @@ app.get('/me', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error("Error en /me:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+/*================ Endpoint para regenerar el token del usuario ========================*/
+app.post('/refresh-token', async (req, res) => {
+  try {
+    // 1. Recogemos el token del body (en el frontend enviaste { token: refreshToken })
+    const { refresh_token } = req.body;
+
+    if (!refresh_token) {
+      return res.status(401).json({ error: "No se proporcionó un refresh token" });
+    }
+
+    // 2. Verificamos que el refresh token sea válido y no haya caducado.
+    // OJO: Debes usar el mismo secreto con el que firmaste el refresh token (puede ser distinto al del access token).
+    let decoded;
+    try {
+      decoded = jwt.verify(refresh_token, SECRET_JWT_KEY); 
+      // Si usaste la misma clave para ambos, usa process.env.JWT_SECRET
+    } catch (err) {
+      // Si el token es inválido o caducó, devolvemos 403 (Forbidden).
+      // Tu interceptor de Axios capturará esto y redirigirá al login.
+      return res.status(403).json({ error: "Refresh token inválido o expirado" });
+    }
+
+    // 3. (Opcional pero MUY recomendado) Comprobar si el usuario aún existe en la base de datos
+    // Usamos el ID que viene dentro del token decodificado (asumiendo que guardaste el id y el role).
+    let usuario;
+    if (decoded.role === 'admin') {
+      usuario = await obtenerAdminPorId(decoded.id);
+    } else {
+      usuario = await obtenerEstudiantePorId(decoded.id);
+    }
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado en la base de datos" });
+    }
+
+    // 4. Generamos el nuevo Access Token (corta duración, ej: 1h)
+    const nuevoAccessToken = jwt.sign(
+      { id: decoded.id, email: decoded.email }, // Payload
+      SECRET_JWT_KEY,                 // Tu secreto para el token de acceso
+      { expiresIn: '1h' }
+    );
+
+    // 5. (Opcional - Rotación de tokens) Generar un nuevo Refresh Token.
+    // Si tu frontend espera "data.refreshToken" para actualizarlo, debemos mandarlo.
+    const nuevoRefreshToken = jwt.sign(
+      { id: decoded.id, role: decoded.role },
+      SECRET_JWT_KEY,
+      { expiresIn: '24h' }
+    );
+
+    // 6. Devolvemos la respuesta exactamente como la espera tu interceptor en Axios
+    res.json({
+      token: nuevoAccessToken,
+      refreshToken: nuevoRefreshToken
+    });
+
+  } catch (err) {
+    console.error("Error en /refresh-token:", err);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

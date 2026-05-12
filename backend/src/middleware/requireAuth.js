@@ -8,7 +8,7 @@ export default async function requireAuth(req, res, next) {
         || req.cookies.access_token;
 
     if (!token) {
-        return res.status(401).json({
+        return res.status(400).json({
             error: 'No hay token'
         });
     }
@@ -31,7 +31,7 @@ export default async function requireAuth(req, res, next) {
         }
 
         if (!usuario) {
-            return res.status(401).json({
+            return res.status(404).json({
                 error: 'Usuario no existe'
             });
         }

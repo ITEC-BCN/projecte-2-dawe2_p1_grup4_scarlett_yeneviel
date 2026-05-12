@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useStudents } from "../composables/useStudents";
+import { useStudents, getSkills, postAvatar } from "../composables/useStudents";
 import {
   availableLanguagesList,
   languageLevels,
@@ -17,7 +17,7 @@ import {
 const route = useRoute();
 const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
-const url = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes/${studentId}`);
+const url = ref(`/estudiantes/${studentId}`);
 const role = localStorage.getItem("role");
 
 const { students, loadingStudents, refreshStudents } = useStudents(url);
@@ -31,13 +31,7 @@ const selectedSoftSkillId = ref("");
 
 // Cargar todas las skills al montar el componente
 onMounted(async () => {
-  try {
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/skills`);
-    const data = await res.json();
-    allDbSkills.value = data;
-  } catch (error) {
-    console.error("Error cargando skills de la BD:", error);
-  }
+  allDbSkills.value = await getSkills('/skills');
 });
 
 // Filtramos las skills para los selects
@@ -260,27 +254,19 @@ const uploadAvatar = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/upload-avatar`, {
-      method: "POST",
-      body: formData,
-    });
+    const data = await postAvatar('/upload-avatar', formData);
 
-    const data = await response.json();
+    user.avatar = data.url;
 
-    if (response.ok) {
-      // Como Node ya actualizó Supabase, solo actualizamos la pantalla
-      user.avatar = data.url;
-
-      if (students.value) {
-        students.value.foto_perfil = data.url;
-      }
-
-      alert("¡Foto actualizada con éxito!");
-    } else {
-      alert("Error al subir: " + data.error);
+    if (students.value) {
+      students.value.foto_perfil = data.url;
     }
+
+    alert("¡Foto actualizada con éxito!");
   } catch (error) {
-    console.error("Error de conexión:", error);
+    const mensajeError = error.response?.data?.error || "Error de conexión al subir la imagen";
+    console.error("Error detallado:", error);
+    alert("Error al subir: " + mensajeError);
   } finally {
     uploadingFile.value = false;
   }
@@ -548,6 +534,8 @@ async function saveProfile() {
   };
 
   try {
+
+    /* TODO */
     const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiantes/${studentId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -753,6 +741,7 @@ const uploadCV = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
+    /* TODO */
     const response = await fetch(
       `${import.meta.env.VITE_URL_BACK}/api/upload-cv`,
       {

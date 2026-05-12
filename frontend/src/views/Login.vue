@@ -38,12 +38,14 @@ const handleLogin = async (e) => {
     // --- LÓGICA DE GUARDADO CORREGIDA ---
     const userId = data.user?.id || data.id
     const userToken = data.token
+    const refreshToken = data.refresh_token
 
-    if (userToken) {
+    if (userToken && refreshToken) {
       localStorage.setItem('token', userToken)
+      localStorage.setItem('refreshToken', refreshToken)
       localStorage.setItem('role','estudiante')
       // Guardamos la cookie para el middleware del backend
-      document.cookie = `access_token=${userToken}; path=/; SameSite=None; Secure`
+      document.cookie = `access_token=${userToken}; refresh_token=${refreshToken}; path=/; SameSite=None; Secure`
     } else {
       console.error("EL BACKEND NO ENVIÓ TOKEN")
     }

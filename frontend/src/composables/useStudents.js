@@ -1,34 +1,26 @@
 import { ref, watch } from "vue";
+import api from "../services/api";
 
 export function useStudents(urlRef) {
     const students = ref(null);
     const loadingStudents = ref(true);
     const errorStudents = ref(null);
 
-
-    const fetchAllReq = async (url) => {
+    const fetchAllReq = async () => {
         const currentUrl = urlRef.value;
         if (!currentUrl || currentUrl.includes('null')) return;
 
         loadingStudents.value = true;
         try {
-             // Recuperamos el token
-            const token = localStorage.getItem('token');
-            const res = await fetch(currentUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`, // Por si falla la cookie
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
+
+            const res = await api.get(currentUrl, {
+                withCredentials: true
             });
 
-            if (!res.ok) throw new Error("Error en la carga de datos");
-
-            students.value = await res.json();
+            students.value = await res.data;
             errorStudents.value = null;
         } catch (err) {
-            errorStudents.value = err.message;
+            errorStudents.value = err.response?.data?.message || err.message || "Error en la carga de datos";
             console.error("Error detallado:", err);
         } finally {
             loadingStudents.value = false;
@@ -36,28 +28,17 @@ export function useStudents(urlRef) {
     };
 
     //Ver cv
-    const verCV=async(idEstudiante)=>{
+    const verCV = async (idEstudiante) => {
 
         if (!idEstudiante) {
             alert('No se proporcionó el id del estudiante');
             return;
         }
+
         try {
-            // Llamada a tu API de Node
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_URL_BACK}/get-cv/${idEstudiante}`,{
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            });
+            const response = await api.get(`/get-cv/${idEstudiante}`)
 
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'Error al obtener la URL');
-            }
-
+            const data = await response.data;
             const urlPublica = data.url;
 
             if (urlPublica) {
@@ -66,10 +47,11 @@ export function useStudents(urlRef) {
             } else {
                 alert('El estudiante no tiene un CV registrado.');
             }
-            
+
         } catch (error) {
             console.error('Error al obtener el CV de la API:', error);
-            alert('No se pudo abrir el archivo');
+            const mensajeError = error.response?.data?.error || 'No se pudo abrir el archivo';
+            alert(mensajeError);
         }
     };
 
@@ -83,6 +65,36 @@ export function useStudents(urlRef) {
         errorStudents,
         verCV,
         refreshStudents: fetchAllReq,
-        
+
     };
+}
+
+export async function getSkills(url) {
+    try {
+        const response = await api.get(url)
+
+        return await response.data;
+    } catch (error) {
+        console.error("Error cargando skills de la BD:", error);
+    }
+}
+
+export async function postAvatar(url, formData) {
+   try {
+        // 1. Pasamos formData DIRECTAMENTE, sin llaves { }
+        // 2. Le indicamos explícitamente a Axios que es un formulario multipart
+        const response = await api.post(url, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        // Devolvemos directamente la data
+        return response.data; 
+    } catch (error) {
+        console.error("Error subiendo el avatar:", error);
+        // Es MUY importante lanzar el error de nuevo para que 
+        // el bloque catch de 'uploadAvatar' pueda enterarse de que falló
+        throw error; 
+    }
 }

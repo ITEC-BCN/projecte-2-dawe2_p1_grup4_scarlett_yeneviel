@@ -1,7 +1,13 @@
 <script setup>
 import { ref, reactive, watch, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useStudents, getSkills, postAvatar } from "../composables/useStudents";
+import {
+  useStudents,
+  getSkills,
+  postAvatar,
+  putStudent,
+  postCv,
+} from "../composables/useStudents";
 import {
   availableLanguagesList,
   languageLevels,
@@ -31,7 +37,7 @@ const selectedSoftSkillId = ref("");
 
 // Cargar todas las skills al montar el componente
 onMounted(async () => {
-  allDbSkills.value = await getSkills('/skills');
+  allDbSkills.value = await getSkills("/skills");
 });
 
 // Filtramos las skills para los selects
@@ -254,7 +260,7 @@ const uploadAvatar = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
-    const data = await postAvatar('/upload-avatar', formData);
+    const data = await postAvatar("/upload-avatar", formData);
 
     user.avatar = data.url;
 
@@ -264,7 +270,8 @@ const uploadAvatar = async (event) => {
 
     alert("¡Foto actualizada con éxito!");
   } catch (error) {
-    const mensajeError = error.response?.data?.error || "Error de conexión al subir la imagen";
+    const mensajeError =
+      error.response?.data?.error || "Error de conexión al subir la imagen";
     console.error("Error detallado:", error);
     alert("Error al subir: " + mensajeError);
   } finally {
@@ -396,16 +403,9 @@ function toggleEdit() {
 const experience = ref([]);
 const newExp = reactive({ centro: "", anio: "", puesto: "" });
 function addExperience() {
-  const isValidYear = validateExperienceYear(
-    newExp.anio,
-    "new"
-  );
+  const isValidYear = validateExperienceYear(newExp.anio, "new");
 
-  if (
-    newExp.centro &&
-    newExp.puesto &&
-    isValidYear
-  ) {
+  if (newExp.centro && newExp.puesto && isValidYear) {
     experience.value.push({ ...newExp });
 
     newExp.centro = "";
@@ -534,43 +534,33 @@ async function saveProfile() {
   };
 
   try {
+    const data = await putStudent(`/estudiantes/${studentId}`, payload);
 
-    /* TODO */
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiantes/${studentId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      await response.json();
-
-      // 💾 actualizar estado local
-      if (students.value) {
-        students.value = {
-          ...students.value,
-          foto_perfil: user.avatar,
-          about: user.about,
-          telefono: contact.phone,
-          location: contact.location,
-          estudios: { formacion: academicBackground.value },
-          experiencia: { experiencia: experience.value },
-          idiomas: { idiomas: languages.value },
-          enlaces: documents.value,
-        };
-      }
-
-      editing.value = false;
-      hasUnsavedChanges.value = false;
-
-      alert("Perfil actualizado correctamente");
-    } else {
-      const err = await response.json();
-      alert("Error al guardar: " + err.error);
+    // 💾 actualizar estado local
+    if (students.value) {
+      students.value = {
+        ...students.value,
+        foto_perfil: user.avatar,
+        about: user.about,
+        telefono: contact.phone,
+        location: contact.location,
+        estudios: { formacion: academicBackground.value },
+        experiencia: { experiencia: experience.value },
+        idiomas: { idiomas: languages.value },
+        enlaces: documents.value,
+      };
     }
+
+    editing.value = false;
+    hasUnsavedChanges.value = false;
+
+    alert("Perfil actualizado correctamente");
   } catch (error) {
-    console.error(error);
-    alert("Error de conexión");
+    console.error("Error al guardar en el servidor:", error);
+    const mensajeError =
+      error.response?.data?.error || "Error de conexión o del servidor";
+
+    alert("Error al guardar: " + mensajeError);
   }
 }
 
@@ -741,28 +731,17 @@ const uploadCV = async (event) => {
   formData.append("studentId", students.value.id);
 
   try {
-    /* TODO */
-    const response = await fetch(
-      `${import.meta.env.VITE_URL_BACK}/api/upload-cv`,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
-    const data = await response.json();
-    if (response.ok) {
-      cvUrl.value = data.documento_cv;
-      // Mostrar modal con datos extraídos si existen
-      if (data.datosExtraidos) {
-        datosExtraidosCV.value = data.datosExtraidos;
-        showModalDatosCV.value = true;
-      }
-      await refreshStudents();
-      restoreOriginalData(); // 🔥 fuerza sincronización UI
-      alert("¡CV subido con éxito!");
-    } else {
-      alert("Error al subir el CV: " + data.error);
+    const data = await postCv("/api/upload-cv", formData);
+
+    cvUrl.value = data.documento_cv;
+    // Mostrar modal con datos extraídos si existen
+    if (data.datosExtraidos) {
+      datosExtraidosCV.value = data.datosExtraidos;
+      showModalDatosCV.value = true;
     }
+    await refreshStudents();
+    restoreOriginalData(); // 🔥 fuerza sincronización UI
+    alert("¡CV subido con éxito!");
   } catch (error) {
     console.error("Error de conexión:", error);
   } finally {

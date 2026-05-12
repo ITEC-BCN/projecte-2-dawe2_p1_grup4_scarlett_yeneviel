@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_URL_BACK,
-  // timeout: 10000,
 });
 
 // 1. Interceptor de Peticiones (Request)

@@ -1,4 +1,5 @@
 <script setup>
+//TODO QUITAR FETCH Y SUBSITUIRLO POR AXIOS
 import { useFetchUser } from '../composables/userFetchUser';
 import { URL_BACK } from '../../../config';
 import { ref, reactive } from 'vue';

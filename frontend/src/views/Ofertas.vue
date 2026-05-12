@@ -1,4 +1,5 @@
 <script setup>
+//TODO QUITAR FETCH Y SUBSITUIRLO POR AXIOS
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useFetch } from "../composables/useFetchOfertas";

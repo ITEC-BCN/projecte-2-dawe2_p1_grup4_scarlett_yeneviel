@@ -80,7 +80,7 @@ export async function getSkills(url) {
 }
 
 export async function postAvatar(url, formData) {
-   try {
+    try {
         // 1. Pasamos formData DIRECTAMENTE, sin llaves { }
         // 2. Le indicamos explícitamente a Axios que es un formulario multipart
         const response = await api.post(url, formData, {
@@ -90,11 +90,34 @@ export async function postAvatar(url, formData) {
         });
 
         // Devolvemos directamente la data
-        return response.data; 
+        return response.data;
     } catch (error) {
         console.error("Error subiendo el avatar:", error);
         // Es MUY importante lanzar el error de nuevo para que 
         // el bloque catch de 'uploadAvatar' pueda enterarse de que falló
-        throw error; 
+        throw error;
+    }
+}
+
+export async function putStudent(url, body) {
+    try {
+        const response = await api.put(url, body);
+
+        // Devolvemos directamente la data
+        return response.data;
+    } catch (error) {
+        console.error("Error al actualizar el perfil:", error);
+        throw error;
+    }
+}
+
+export async function postCv(url, body) {
+    try {
+        const response = await api.post(url, body);
+
+        return response.data;
+    } catch (error) {
+        console.error("Error al cargar Cv:", error);
+        throw error;
     }
 }

@@ -3,7 +3,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
-import ModalEliminar from '../../components/Modal.vue';
+import Modal from '../../components/Modal.vue';
 import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
 import CvViewer from '../../components/CvViewer.vue';
 import { useStudents } from "../../composables/useStudents";
@@ -22,7 +22,6 @@ import {
 defineProps({
   id: String
 });
-// --- FUNCIÓN PARA CV ---
 
 const route = useRoute();
 const router = useRouter();
@@ -37,26 +36,46 @@ const ActualizarOferta = (id) => {
 };
 
 // Funciones para el modal de eliminar
-// El ref guarda la instancia del modal para poder abrirlo desde aquí
-const modalEliminar = ref(null);
+// El ref guarda la instancia del modal 
+const modalRef = ref(null);
+const loadingModal = ref(false); // Importante para el feedback visual
+const handleOfertaEstado = async () => {
+  const nuevoEstado = oferta.value.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA';
 
-const abrirModal = (id) => {
-  // Preparamos el modal con el id y lo mostramos para confirmar el borrado
-  modalEliminar.value.openModal();
-};
+  try {
+    loadingModal.value = true;
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${oferta.value.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
 
-const ofertaEliminada = async () => {
-  console.log("El estado de la oferta fue actualizado. Refrescando datos...");
+    if (!res.ok) throw new Error('Error actualizando oferta');
 
-  setTimeout(async () => {
-    await fetchData();
-  }, 2500);
+    // Usamos la propiedad expuesta 'mensaje' del modal genérico
+    modalRef.value.mensaje = `Oferta ${nuevoEstado === 'ACTIVA' ? 'activada' : 'desactivada'} con éxito.`;
+
+    setTimeout(async () => {
+      modalRef.value.closeModal();
+      if (nuevoEstado === 'INACTIVA') {
+        router.push({ name: "PanelOfertasAdmin" });
+      } else {
+        await fetchData(); // Recargar datos si se queda en la página
+      }
+    }, 2000);
+
+  } catch (err) {
+    console.error(err);
+    modalRef.value.mensaje = "Error al procesar la petición";
+  } finally {
+    loadingModal.value = false;
+  }
 };
 
 
 // ACTUALIZAR ESTADO DE LA CANDIDATURA
 // Ref al modal que actualizará el estado
-const modalEstadoRef = ref(null);
+const modalEstadoCandiRef = ref(null);
 
 // Guardamos aquí los ids para pasarlos al modal
 const selectedOferta = ref(null);
@@ -73,7 +92,7 @@ const modalEstadoCandi = (oferta, estudiante) => {
     titulo: oferta.titulo,
   };
 
-  modalEstadoRef.value?.openModal();
+  modalEstadoCandiRef.value?.openModal();
 };
 
 
@@ -299,14 +318,16 @@ const goToPage = (p) => {
 
             <div class="acciones-header">
               <button class="btn-update" @click="ActualizarOferta(oferta.id)">Actualizar</button>
-              <button @click="abrirModal(oferta.id)" class="btn-update-state"
-                :class="oferta.estado === 'ACTIVA' ? 'desactivar' : 'activar'">{{ oferta.estado === 'ACTIVA' ?
-                  'Desactivar' :
-                'Activar' }}</button>
+              <button @click="modalRef.openModal()" class="btn-update-state"
+                :class="oferta.estado === 'ACTIVA' ? 'desactivar' : 'activar'">
+                {{ oferta.estado === 'ACTIVA' ? 'Desactivar' : 'Activar' }}
+              </button>
 
-              <!-- Componente del modal -->
-              <ModalEliminar ref="modalEliminar" :oferta-id="oferta.id"
-                :estado="oferta.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA'" @eliminado="ofertaEliminada" />
+              <Modal ref="modalRef"
+                :titulo="oferta.estado === 'ACTIVA' ? '¿Estás seguro de que deseas desactivar esta oferta?' : '¿Deseas activar esta oferta?'"
+                :textoBotonConfirmar="oferta.estado === 'ACTIVA' ? 'Sí, desactivar' : 'Sí, activar'"
+                :colorConfirmar="oferta.estado === 'ACTIVA' ? 'danger' : 'success'" :loading="loading"
+                @confirmar="handleOfertaEstado" />
             </div>
           </aside>
         </div>
@@ -834,7 +855,8 @@ const goToPage = (p) => {
 /* Tabla Estilo Admin */
 .table-responsive {
   width: 100%;
-  overflow-x: auto; /* Esto permite el scroll si la tabla es muy ancha */
+  overflow-x: auto;
+  /* Esto permite el scroll si la tabla es muy ancha */
 }
 
 .postulaciones-table {
@@ -855,15 +877,15 @@ const goToPage = (p) => {
 }
 
 .postulaciones-table tbody tr {
-background: #ffffff;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
 }
 
 .postulaciones-table tbody tr:hover {
-   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .postulaciones-table td {
@@ -879,12 +901,13 @@ background: #ffffff;
 }
 
 .candidato-avatar-mini {
- width: 44px;
+  width: 44px;
   height: 44px;
-  border-radius: 12px; /* más moderno que círculo */
+  border-radius: 12px;
+  /* más moderno que círculo */
   object-fit: cover;
   border: 2px solid #eef2ff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .candidato-data {
@@ -893,7 +916,7 @@ background: #ffffff;
 }
 
 .candidato-name {
-   font-weight: 700;
+  font-weight: 700;
   color: #111827;
 }
 
@@ -917,7 +940,7 @@ background: #ffffff;
 }
 
 .status-pill.aceptado {
-   background: #ecfdf5;
+  background: #ecfdf5;
   color: #047857;
 }
 
@@ -1056,13 +1079,13 @@ background: #ffffff;
   }
 
   .candidato-actions-inline {
-     display: grid;
+    display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
     width: 100%;
   }
 
-  .candidato-actions-inline > * {
+  .candidato-actions-inline>* {
     width: 100%;
   }
 
@@ -1072,7 +1095,7 @@ background: #ffffff;
     color: #64748b;
   }
 
-   .btn-icon-text {
+  .btn-icon-text {
     width: 100%;
     text-align: center;
   }
@@ -1168,9 +1191,9 @@ background: #ffffff;
 
   .candidato-actions-inline {
     display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
   }
 
   .btn-icon-text {

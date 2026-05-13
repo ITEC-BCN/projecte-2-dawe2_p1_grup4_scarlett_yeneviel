@@ -5,6 +5,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../composables/useFetchOfertas';
 import { useFetchUser } from '../composables/userFetchUser';
 import ModalInformativo from '../components/ModalInformativo.vue';
+import Modal from '../components/Modal.vue';
+
 // Importar la librería para enviar un e-mail cuando el estudiante se postula a una oferta
 import emailjs from "@emailjs/browser";
 // Importa los iconos específicos
@@ -68,6 +70,12 @@ const verificarEstado = async (idEstudiante, estado) => {
   }
 
 }
+
+//Modal para diferentes acciones
+const modalRef = ref(null);
+const modalAction = ref('')
+const loadingModal = ref(false); // Importante para el feedback visual
+
 //2. Estado de modal para abrir el modal informativo 
 const modalEstadoRef = ref(null);
 
@@ -98,9 +106,12 @@ const postularOferta = async () => {
     try {
 
       const res = await estudiantePostula(bodyPostulacion.value, `${import.meta.env.VITE_URL_BACK}/estudiante/postular`)
+
+      loading.value=true
       if (res.error) {
         console.error("Error al hacer la incripción: ", res.error)
-        alert("Error al hacer la incripción")
+        mensajePersonalizado.value = "Error al hacer la incripción"
+        modalInformativoEstado()
         return
       }
 
@@ -136,13 +147,13 @@ const postularOferta = async () => {
 
     } catch (error) {
       console.error("Error al hacer la incripción: ", error)
-      alert("Error al hacer la incripción")
+      mensajePersonalizado.value = "Error al hacer la incripción"
+      modalInformativoEstado()
 
     }
   } else {
-    const hacerLogin = confirm("Inicia sesión para inscribirte en la oferta")
-
-    if (hacerLogin) router.push({ name: "login" })
+    modalAction.value = 'postularOferta'
+    modalRef.value?.openModal()
 
   }
 
@@ -168,7 +179,8 @@ const funGuardarOferta = async () => {
 
     if (response.error) {
       console.error("Error al guardar la oferta: ", response.error)
-      alert("Error al guardar la oferta")
+      mensajePersonalizado.value = "Error al guardar la oferta"
+      modalInformativoEstado()
       return
     }
     // Actualizamos el estado local inmediatamente para que el botón se deshabilite sin esperar la recarga
@@ -177,12 +189,35 @@ const funGuardarOferta = async () => {
     modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
     verificarEstado(idEstudiante, "guardado")
   } else {
-    const hacerLogin = confirm("Inicia sesión para guardar la oferta")
 
-    if (hacerLogin) router.push({ name: "login" })
+    modalAction.value = 'guardarOferta'
+    modalRef.value?.openModal()
   }
 
 }
+
+const handleOfertaAction = async () => {
+  try {
+    loadingModal.value = true;
+    if (modalAction.value == 'guardarOferta' || modalAction.value == 'postularOferta') {
+      modalRef.value.mensaje = 'Redirigiendo al login. Espere...'
+
+      setTimeout(async () => {
+        modalRef.value.closeModal();
+        router.push({ name: "login" });
+
+      }, 2000);
+    }
+
+  } catch (err) {
+    console.error(err);
+    modalRef.value.mensaje = "Error al procesar la petición";
+    modalAction.value = ''
+  } finally {
+    loadingModal.value = false;
+  }
+}
+
 </script>
 
 <template>
@@ -337,6 +372,12 @@ const funGuardarOferta = async () => {
 
   <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
   <modal-informativo ref="modalEstadoRef" :mensaje="mensajePersonalizado" />
+
+  <Modal ref="modalRef"
+    :titulo="modalAction == 'guardarOferta' ? 'Inicia sesión para guardar la oferta' : 'Inicia sesión para inscribirte en la oferta'"
+    :textoBotonConfirmar="'Iniciar sesión'" :colorConfirmar="'success'" :loading="loading"
+    @confirmar="handleOfertaAction" />
+
 </template>
 
 <style scoped>
@@ -826,7 +867,8 @@ const funGuardarOferta = async () => {
 /* Tablets y Laptops pequeñas */
 @media (max-width: 1024px) {
   .contenido-grid-new {
-    grid-template-columns: 1fr 280px; /* Estrechamos un poco el sidebar */
+    grid-template-columns: 1fr 280px;
+    /* Estrechamos un poco el sidebar */
     gap: 20px;
   }
 }
@@ -846,7 +888,8 @@ const funGuardarOferta = async () => {
   /* El sidebar deja de ser "sticky" para fluir abajo */
   .sidebar-new {
     position: static;
-    order: -1; /* OPCIONAL: Pone los detalles de la oferta arriba en móvil */
+    order: -1;
+    /* OPCIONAL: Pone los detalles de la oferta arriba en móvil */
   }
 
   .oferta-card-new {
@@ -859,7 +902,8 @@ const funGuardarOferta = async () => {
     width: 100%;
   }
 
-  .btn-update, .btn-update-state {
+  .btn-update,
+  .btn-update-state {
     width: 100%;
     margin-right: 0;
     justify-content: center;
@@ -867,14 +911,15 @@ const funGuardarOferta = async () => {
 }
 
 @media (max-width: 600px) {
+
   /* Escondemos el encabezado de la tabla */
   .postulaciones-table thead {
     display: none;
   }
 
-  .postulaciones-table, 
-  .postulaciones-table tbody, 
-  .postulaciones-table tr, 
+  .postulaciones-table,
+  .postulaciones-table tbody,
+  .postulaciones-table tr,
   .postulaciones-table td {
     display: block;
     width: 100%;
@@ -906,7 +951,7 @@ const funGuardarOferta = async () => {
 
   /* Hacemos que los botones del CV y Perfil ocupen buen espacio */
   .btn-icon-text {
-    flex: 1; 
+    flex: 1;
     min-width: 100px;
     justify-content: center;
   }
@@ -914,7 +959,8 @@ const funGuardarOferta = async () => {
 
 @media (max-width: 480px) {
   .titulo-puesto {
-    font-size: 1.4rem; /* Texto más pequeño en móviles mini */
+    font-size: 1.4rem;
+    /* Texto más pequeño en móviles mini */
   }
 
   .candidato-cell {
@@ -928,7 +974,8 @@ const funGuardarOferta = async () => {
 
   .candidato-email {
     font-size: 0.75rem;
-    word-break: break-all; /* Evita que correos largos rompan el layout */
+    word-break: break-all;
+    /* Evita que correos largos rompan el layout */
   }
 }
 </style>

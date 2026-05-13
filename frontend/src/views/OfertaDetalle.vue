@@ -77,10 +77,10 @@ const modalAction = ref('')
 const loadingModal = ref(false); // Importante para el feedback visual
 
 //2. Estado de modal para abrir el modal informativo 
-const modalEstadoRef = ref(null);
+const modalInformativoRef = ref(null);
 
-const modalInformativoEstado = () => {
-  modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+const abrirModalInformativo = () => {
+  modalInformativoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
 };
 
 // Llamamos a la función cuando el componente se carga
@@ -98,7 +98,7 @@ const postularOferta = async () => {
 
   if (estadoActual.value !== 'aprobado' && estadoActual.value !== 'rechazado' && idEstudiante) {
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden postular a ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
-    modalInformativoEstado();
+    abrirModalInformativo();
     return;
   }
 
@@ -111,7 +111,7 @@ const postularOferta = async () => {
       if (res.error) {
         console.error("Error al hacer la incripción: ", res.error)
         mensajePersonalizado.value = "Error al hacer la incripción"
-        modalInformativoEstado()
+        abrirModalInformativo()
         return
       }
 
@@ -142,13 +142,13 @@ const postularOferta = async () => {
 
       //2. Uso la variable
       mensajePersonalizado.value = "¡Inscripción hecha correctamente!"
-      modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
+      abrirModalInformativo();//llamo la función que abre el modal después de guardar la oferta
       verificarEstado(idEstudiante, "postulacion")
 
     } catch (error) {
       console.error("Error al hacer la incripción: ", error)
       mensajePersonalizado.value = "Error al hacer la incripción"
-      modalInformativoEstado()
+      abrirModalInformativo()
 
     }
   } else {
@@ -164,12 +164,12 @@ const funGuardarOferta = async () => {
 
   if (estadoActual.value !== 'aprobado' && idEstudiante) {
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden guardar ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
-    modalInformativoEstado();
+    abrirModalInformativo();
     return;
 
   } else if (estadoActual.value === 'inactivo') {
     mensajePersonalizado.value = `Tu cuenta está inactiva. Por favor, contacta con soporte para más información.`;
-    modalInformativoEstado();
+    abrirModalInformativo();
     return;
   }
 
@@ -180,13 +180,13 @@ const funGuardarOferta = async () => {
     if (response.error) {
       console.error("Error al guardar la oferta: ", response.error)
       mensajePersonalizado.value = "Error al guardar la oferta"
-      modalInformativoEstado()
+      abrirModalInformativo()
       return
     }
     // Actualizamos el estado local inmediatamente para que el botón se deshabilite sin esperar la recarga
     ofertaYaGuardada.value = true
     mensajePersonalizado.value = "¡Oferta guardada correctamente!"
-    modalInformativoEstado();//llamo la función que abre el modal después de guardar la oferta
+    abrirModalInformativo();//llamo la función que abre el modal después de guardar la oferta
     verificarEstado(idEstudiante, "guardado")
   } else {
 
@@ -370,8 +370,8 @@ const handleOfertaAction = async () => {
     </div>
   </div>
 
-  <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalEstadoRef -->
-  <modal-informativo ref="modalEstadoRef" :mensaje="mensajePersonalizado" />
+  <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
+  <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
 
   <Modal ref="modalRef"
     :titulo="modalAction == 'guardarOferta' ? 'Inicia sesión para guardar la oferta' : 'Inicia sesión para inscribirte en la oferta'"

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 export function useValidacionOferta() {
     const erroresValidacion = ref({});
 
-    const validarFormulario = (datos) => {
+    const validarFormulario = (datos, esEdicion = false) => {
         const errores = {};
 
         // EMPRESA
@@ -24,19 +24,20 @@ export function useValidacionOferta() {
             }
         });
 
-        if (!datos.id_ubicacion) {
+        //Validamos que no sea undefined, null, "" o el string "0"
+        if (datos.id_ubicacion === undefined || datos.id_ubicacion === null || datos.id_ubicacion === "" || datos.id_ubicacion === "0") {
             errores.id_ubicacion = "La ubicación es obligatoria";
         }
 
-        if(!datos.jornada){
+        if (!datos.jornada) {
             errores.jornada = "La jornada es obligatoria";
         }
 
-        if(!datos.modelo_practicas){
+        if (!datos.modelo_practicas) {
             errores.modelo_practicas = "El modelo de prácticas es obligatorio";
         }
 
-        if(!datos.modalidad){
+        if (!datos.modalidad) {
             errores.modalidad = "La modalidad es obligatoria";
         }
 
@@ -48,7 +49,8 @@ export function useValidacionOferta() {
 
             if (exp < hoy) {
                 errores.fecha_expiracion = "La fecha NO puede ser menor a hoy";
-            } else {
+            } else if (!esEdicion) {
+                // Solo exigir los 30 días si NO estamos editando
                 const diffDias = Math.ceil((exp - hoy) / (1000 * 60 * 60 * 24));
                 if (diffDias < 28) {
                     errores.fecha_expiracion = "La expiración debe ser al menos 30 días desde hoy";
@@ -63,7 +65,7 @@ export function useValidacionOferta() {
             errores.descripcion = "Debe tener al menos una frase";
         }
 
-        if(!datos.oferta_skill || datos.oferta_skill.length === 0){
+        if (!datos.oferta_skill || datos.oferta_skill.length === 0) {
             errores.selectedSkills = "Debe seleccionar al menos una habilidad";
         }
 

@@ -47,7 +47,6 @@
 <script setup>
 import { ref, defineProps, defineEmits, defineExpose } from "vue";
 import { useRouter } from "vue-router";
-import { URL_BACK } from '../../../config';
 
 const estadosCandidatura = ["En Proceso", "Aceptado", "Rechazada","CV leido","Finalista"];
 // Props (camelCase to match Vue conventions)
@@ -97,7 +96,7 @@ const actualizarEstado = async () => {
     }
 
     // Usar path params: /candidatura/estado/:ofertaId/:estudianteId
-    const url = `${URL_BACK}/candidatura/estado/${encodeURIComponent(props.ofertaId)}/${encodeURIComponent(props.estudiante.id)}`;
+    const url = `${import.meta.env.VITE_URL_BACK}/candidatura/estado/${encodeURIComponent(props.ofertaId)}/${encodeURIComponent(props.estudiante.id)}`;
 
     const response = await fetch(url, {
       method: "PUT",

@@ -98,7 +98,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 /* ================= ofertas ================= */
 
-app.post("/ofertas", async (req, res) => {
+app.post("/ofertas", requireAuth,async (req, res) => {
   try {
     console.log("Body", req.body);
 

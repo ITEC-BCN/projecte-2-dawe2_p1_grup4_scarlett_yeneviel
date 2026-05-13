@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFetchUser } from '../../composables/userFetchUser';
 import { sendEmail } from '../../js/funEmail';
+import ModalInformativo from '../../components/ModalInformativo.vue';
 
 const router = useRouter();
 
@@ -20,12 +21,12 @@ const filteredUsers = computed(() => {
 
   return allUsers.filter(u => {
     const userEstado = (u.estado || '').toLowerCase();
-    
+
     // Lógica especial para la pestaña de rechazados
     if (activeTab.value === 'rechazado') {
       return userEstado === 'rechazado' || userEstado === 'inactivo';
     }
-    
+
     // Filtro normal para el resto
     return userEstado === activeTab.value;
   });
@@ -63,7 +64,7 @@ const goToPage = (p) => {
 const usersTotal = computed(() => (users.value || []).length);
 const pendingCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'pendiente').length);
 const approvedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'aprobado').length);
-const rejectedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'rechazado' || (u.estado || '').toLowerCase() === 'inactivo'  ).length);
+const rejectedCount = computed(() => (users.value || []).filter(u => (u.estado || '').toLowerCase() === 'rechazado' || (u.estado || '').toLowerCase() === 'inactivo').length);
 
 // Actions
 const viewUser = (id) => { router.push({ name: 'PerfilDetalleSolo', params: { id } }); };
@@ -82,11 +83,18 @@ const updateUserEstado = async (id, newEstado) => {
     }
   } catch (err) {
     console.error('Error:', err);
-    alert('No se pudo actualizar el estado');
+    mensajePersonalizado.value = 'No se pudo actualizar el estado';
+    abrirModalInformativo();
   }
 };
 
-
+//Modal
+const mensajePersonalizado = ref("");
+//2. Estado de modal para abrir el modal informativo 
+const modalInformativoRef = ref(null);
+const abrirModalInformativo = () => {
+  modalInformativoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+};
 </script>
 
 <template>
@@ -178,7 +186,8 @@ const updateUserEstado = async (id, newEstado) => {
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <button class="btn-icon" title="Ver detalle" @click="viewUser(usuario.id)"><i class="fa-solid fa-eye"></i></button>
+                  <button class="btn-icon" title="Ver detalle" @click="viewUser(usuario.id)"><i
+                      class="fa-solid fa-eye"></i></button>
 
                   <template v-if="usuario.estado === 'pendiente'">
                     <button class="btn-action approve"
@@ -212,6 +221,9 @@ const updateUserEstado = async (id, newEstado) => {
       </div>
     </section>
   </div>
+
+  <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
+  <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>
@@ -339,7 +351,8 @@ h1 {
   width: 100%;
   border-collapse: separate;
   text-align: left;
-  border-spacing: 0 10px; /* espacio entre filas */
+  border-spacing: 0 10px;
+  /* espacio entre filas */
 }
 
 .custom-table th {

@@ -203,7 +203,7 @@ app.put('/ofertaDesactivar/:id', async (req, res) => {
 
 /*========OFERTAS RECOMENDADAS Filtradas=========*/
 
-app.get("/estudiantes/:id/ofertas-recomendadas", async (req, res) => {
+app.get("/estudiantes/:id/ofertas-recomendadas", requireAuth2,async (req, res) => {
   try {
     const estudianteId = req.params.id;
 

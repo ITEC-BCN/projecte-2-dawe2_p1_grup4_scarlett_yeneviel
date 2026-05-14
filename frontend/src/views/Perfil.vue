@@ -19,12 +19,21 @@ import {
   MAX_HARD_SKILLS,
   MAX_SOFT_SKILLS,
 } from "../js/const.js";
+import ModalInformativo from '../components/ModalInformativo.vue';
 
 const route = useRoute();
 const router = useRouter();
 const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`/estudiantes/${studentId}`);
 const role = localStorage.getItem("role");
+
+//Modal
+const mensajePersonalizado = ref("");
+//2. Estado de modal para abrir el modal informativo 
+const modalInformativoRef = ref(null);
+const abrirModalInformativo = () => {
+  modalInformativoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+};
 
 const { students, loadingStudents, refreshStudents } = useStudents(url);
 
@@ -268,12 +277,13 @@ const uploadAvatar = async (event) => {
       students.value.foto_perfil = data.url;
     }
 
-    alert("¡Foto actualizada con éxito!");
+    mensajePersonalizado.value = "¡Foto actualizada con éxito!";
+    abrirModalInformativo()
   } catch (error) {
     const mensajeError =
       error.response?.data?.error || "Error de conexión al subir la imagen";
     console.error("Error detallado:", error);
-    alert("Error al subir: " + mensajeError);
+    mensajePersonalizado.value = "Error al subir: " + mensajeError;
   } finally {
     uploadingFile.value = false;
   }
@@ -331,10 +341,10 @@ const restoreOriginalData = () => {
   // el objeto original de 'students' se mantiene intacto.
   languages.value = source.idiomas?.idiomas
     ? source.idiomas.idiomas.map((l) => ({
-        id: l.id || Date.now(),
-        name: normalizeLang(l.name || l.idioma),
-        level: (l.level || l.nivel || "").trim(),
-      }))
+      id: l.id || Date.now(),
+      name: normalizeLang(l.name || l.idioma),
+      level: (l.level || l.nivel || "").trim(),
+    }))
     : [];
 
   academicBackground.value = source.estudios?.formacion
@@ -424,7 +434,8 @@ function removeExperience(index) {
 // --- FUNCIONES DE SKILLS CON LÍMITE DE 6 ---
 function addHardFromSelect() {
   if (hardSkills.value.length >= MAX_HARD_SKILLS) {
-    alert(`Has alcanzado el límite máximo de ${MAX_HARD_SKILLS} Hard Skills.`);
+    mensajePersonalizado.value = `Has alcanzado el límite máximo de ${MAX_HARD_SKILLS} Hard Skills.`;
+    abrirModalInformativo();
     return;
   }
   const skill = allDbSkills.value.find(
@@ -439,7 +450,8 @@ function addHardFromSelect() {
 
 function addSoftFromSelect() {
   if (softSkills.value.length >= MAX_SOFT_SKILLS) {
-    alert(`Has alcanzado el límite máximo de ${MAX_SOFT_SKILLS} Soft Skills.`);
+    mensajePersonalizado.value = `Has alcanzado el límite máximo de ${MAX_SOFT_SKILLS} Soft Skills.`;
+    abrirModalInformativo();
     return;
   }
   const skill = allDbSkills.value.find(
@@ -499,7 +511,8 @@ async function saveProfile() {
 
   // 🚨 BLOQUEO FINAL (IMPORTANTE: SOLO UNA VEZ)
   if (!isValid) {
-    alert("Corrige los errores antes de guardar.");
+    mensajePersonalizado.value = ("Corrige los errores antes de guardar.");
+    abrirModalInformativo();
     return;
   }
 
@@ -554,13 +567,15 @@ async function saveProfile() {
     editing.value = false;
     hasUnsavedChanges.value = false;
 
-    alert("Perfil actualizado correctamente");
+    mensajePersonalizado.value = "Perfil actualizado correctamente";
+    abrirModalInformativo();
   } catch (error) {
     console.error("Error al guardar en el servidor:", error);
     const mensajeError =
       error.response?.data?.error || "Error de conexión o del servidor";
 
-    alert("Error al guardar: " + mensajeError);
+    mensajePersonalizado.value = ("Error al guardar: " + mensajeError);
+    abrirModalInformativo();
   }
 }
 
@@ -594,12 +609,14 @@ const remainingSoftSkills = computed(
 
 function addEducation() {
   if (academicBackground.value.length >= MAX_EDUCATION) {
-    alert(`Solo puedes añadir un máximo de ${MAX_EDUCATION} estudios.`);
+    mensajePersonalizado.value = (`Solo puedes añadir un máximo de ${MAX_EDUCATION} estudios.`);
+    abrirModalInformativo();
     return;
   }
 
   if (newEdu.anio && !validateEducationYear(newEdu.anio, "new")) {
-    alert("Introduce un año válido solo con números.");
+    mensajePersonalizado.value = ("Introduce un año válido solo con números.");
+    abrirModalInformativo();
     return;
   }
 
@@ -635,7 +652,8 @@ function addLanguage() {
 
   //Evita que pueda añadir más de 5 idiomas
   if (languages.value.length >= 5) {
-    alert("Has alcanzado el límite máximo de 5 idiomas.");
+    mensajePersonalizado.value = ("Has alcanzado el límite máximo de 5 idiomas.");
+    abrirModalInformativo();
     return;
   }
 
@@ -645,7 +663,8 @@ function addLanguage() {
   );
 
   if (exists) {
-    alert("Este idioma ya está añadido");
+    mensajePersonalizado.value = ("Este idioma ya está añadido");
+    abrirModalInformativo();
     return;
   }
 
@@ -684,7 +703,8 @@ watch(documents, () => {
 
 function addDocument() {
   if (documents.value.length >= 3) {
-    alert("Solo puedes añadir un máximo de 3 enlaces.");
+    mensajePersonalizado.value = ("Solo puedes añadir un máximo de 3 enlaces.");
+    abrirModalInformativo();
     return;
   }
 
@@ -722,7 +742,8 @@ const cvUrl = ref("");
 const uploadCV = async (event) => {
   const file = event.target.files[0];
   if (!file || file.type !== "application/pdf") {
-    alert("Por favor, selecciona un archivo PDF.");
+    mensajePersonalizado.value = ("Por favor, selecciona un archivo PDF.");
+    abrirModalInformativo();
     return;
   }
   uploadingCV.value = true;
@@ -741,7 +762,8 @@ const uploadCV = async (event) => {
     }
     await refreshStudents();
     restoreOriginalData(); // 🔥 fuerza sincronización UI
-    alert("¡CV subido con éxito!");
+    mensajePersonalizado.value = ("¡CV subido con éxito!");
+    abrirModalInformativo();
   } catch (error) {
     console.error("Error de conexión:", error);
   } finally {
@@ -761,13 +783,7 @@ const uploadCV = async (event) => {
           <label for="avatar-upload" class="btn-primary">
             <i class="fa-solid fa-camera"></i> Cambiar foto
           </label>
-          <input
-            id="avatar-upload"
-            type="file"
-            accept="image/*"
-            @change="uploadAvatar"
-            :disabled="uploadingFile"
-          />
+          <input id="avatar-upload" type="file" accept="image/*" @change="uploadAvatar" :disabled="uploadingFile" />
           <span v-if="uploadingFile">Subiendo...</span>
         </div>
 
@@ -776,14 +792,8 @@ const uploadCV = async (event) => {
       </div>
 
       <div class="profile-actions" v-if="role == 'estudiante'">
-        <button
-          class="btn-primary"
-          :class="{ 'btn-cancel': editing }"
-          @click="toggleEdit"
-        >
-          <i
-            :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"
-          ></i>
+        <button class="btn-primary" :class="{ 'btn-cancel': editing }" @click="toggleEdit">
+          <i :class="editing ? 'fa-solid fa-xmark' : 'fa-solid fa-pen-to-square'"></i>
           {{ editing ? " Cancelar" : " Editar perfil" }}
         </button>
         <button v-if="editing" class="btn-save" @click="saveProfile">
@@ -805,15 +815,8 @@ const uploadCV = async (event) => {
       <div class="sidebar-block about-block">
         <h3 class="sidebar-title"><i class="fa-solid fa-user"></i> Sobre mí</h3>
 
-        <textarea
-          v-if="editing"
-          v-model="user.about"
-          @input="validateAbout(user.about)"
-          class="input about-input"
-          rows="4"
-          placeholder="Escribe algo sobre ti..."
-          maxlength="300"
-        ></textarea>
+        <textarea v-if="editing" v-model="user.about" @input="validateAbout(user.about)" class="input about-input"
+          rows="4" placeholder="Escribe algo sobre ti..." maxlength="300"></textarea>
         <div v-if="editing && user.about" class="char-counter">
           <span :class="{ 'char-warning': user.about.length > 250 }">
             {{ user.about.length }}/{{ MAX_ABOUT_LENGTH }} caracteres
@@ -849,18 +852,9 @@ const uploadCV = async (event) => {
             <div class="contact-content">
               <span class="contact-label">Teléfono</span>
               <template v-if="editing">
-                <input
-                  v-model="contact.phone"
-                  @input="validatePhone(contact.phone)"
-                  type="text"
-                  class="input input-sm contact-input"
-                  placeholder="Tu teléfono"
-                  maxlength="9"
-                />
-                <div
-                  v-if="validationErrors.phone"
-                  class="error-message error-small"
-                >
+                <input v-model="contact.phone" @input="validatePhone(contact.phone)" type="text"
+                  class="input input-sm contact-input" placeholder="Tu teléfono" maxlength="9" />
+                <div v-if="validationErrors.phone" class="error-message error-small">
                   <i class="fa-solid fa-exclamation-circle"></i>
                   {{ validationErrors.phone }}
                 </div>
@@ -878,24 +872,14 @@ const uploadCV = async (event) => {
             <div class="contact-content">
               <span class="contact-label">Ubicación</span>
               <template v-if="editing">
-                <select
-                  v-model="contact.location"
-                  @change="validateLocation(contact.location)"
-                  class="input input-sm contact-input"
-                >
+                <select v-model="contact.location" @change="validateLocation(contact.location)"
+                  class="input input-sm contact-input">
                   <option value="" disabled>Selecciona tu ciudad</option>
-                  <option
-                    v-for="city in validSpanishCities"
-                    :key="city"
-                    :value="city"
-                  >
+                  <option v-for="city in validSpanishCities" :key="city" :value="city">
                     {{ city }}
                   </option>
                 </select>
-                <div
-                  v-if="validationErrors.location"
-                  class="error-message error-small"
-                >
+                <div v-if="validationErrors.location" class="error-message error-small">
                   <i class="fa-solid fa-exclamation-circle"></i>
                   {{ validationErrors.location }}
                 </div>
@@ -924,15 +908,9 @@ const uploadCV = async (event) => {
 
           <!-- SI EXISTE CV -->
           <div v-if="cvUrl" class="cv-actions">
-            <a
-              :href="
-                'https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/' +
-                cvUrl
-              "
-              target="_blank"
-              class="btn-primary"
-              style="text-decoration: none"
-            >
+            <a :href="'https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/cvs/' +
+              cvUrl
+              " target="_blank" class="btn-primary" style="text-decoration: none">
               <i class="fa-solid fa-eye"></i> Ver CV
             </a>
           </div>
@@ -943,15 +921,8 @@ const uploadCV = async (event) => {
           </div>
 
           <!-- UPLOAD SIEMPRE DISPONIBLE -->
-          <input
-            id="cv-upload"
-            type="file"
-            accept="application/pdf"
-            style="display: none"
-            @change="uploadCV"
-            @click="$event.target.value = null"
-            :disabled="uploadingCV"
-          />
+          <input id="cv-upload" type="file" accept="application/pdf" style="display: none" @change="uploadCV"
+            @click="$event.target.value = null" :disabled="uploadingCV" />
 
           <label for="cv-upload" class="btn-primary">
             <i class="fa-solid fa-upload"></i>
@@ -977,11 +948,7 @@ const uploadCV = async (event) => {
             Sin formación registrada aún.
           </div>
 
-          <div
-            v-for="(edu, index) in academicBackground"
-            :key="index"
-            class="edu-item"
-          >
+          <div v-for="(edu, index) in academicBackground" :key="index" class="edu-item">
             <div class="edu-year">{{ edu.anio }}</div>
             <div class="edu-dot"></div>
             <div class="edu-info">
@@ -992,23 +959,12 @@ const uploadCV = async (event) => {
         </div>
 
         <div v-else class="edit-education">
-          <div
-            v-for="(edu, index) in academicBackground"
-            :key="'edit' + index"
-            class="edit-grid-row"
-          >
+          <div v-for="(edu, index) in academicBackground" :key="'edit' + index" class="edit-grid-row">
             <div class="input-col">
               <label for="edu-anio">Año</label>
-              <input
-                v-model="edu.anio"
-                @input="validateEducationYear(edu.anio, index)"
-                placeholder="Año"
-                class="input"
-              />
-              <div
-                v-if="validationErrors.educationYear[index]"
-                class="error-message error-small"
-              >
+              <input v-model="edu.anio" @input="validateEducationYear(edu.anio, index)" placeholder="Año"
+                class="input" />
+              <div v-if="validationErrors.educationYear[index]" class="error-message error-small">
                 <i class="fa-solid fa-exclamation-circle"></i>
                 {{ validationErrors.educationYear[index] }}
               </div>
@@ -1021,19 +977,12 @@ const uploadCV = async (event) => {
               <label for="edu-centro">Centro</label>
               <input v-model="edu.centro" placeholder="Centro" class="input" />
             </div>
-            <button
-              @click="removeEducation(index)"
-              class="btn-icon-danger"
-              title="Eliminar"
-            >
+            <button @click="removeEducation(index)" class="btn-icon-danger" title="Eliminar">
               <i class="fa-solid fa-trash"></i> Eliminar
             </button>
           </div>
 
-          <div
-            v-if="academicBackground.length < MAX_EDUCATION"
-            class="add-box new-education-box"
-          >
+          <div v-if="academicBackground.length < MAX_EDUCATION" class="add-box new-education-box">
             <p class="subtitle">Añadir nueva titulación</p>
             <p class="info-text" v-if="remainingEducation > 1">
               {{ remainingEducation }} estudios por añadir.
@@ -1045,46 +994,24 @@ const uploadCV = async (event) => {
             <div class="edit-grid-row form-labels-top">
               <div class="input-col">
                 <label for="edu-anio">Año</label>
-                <input
-                  id="edu-anio"
-                  v-model="newEdu.anio"
-                  @input="validateEducationYear(newEdu.anio, 'new')"
-                  placeholder="Ej: 2026"
-                  class="input"
-                />
-                <div
-                  v-if="validationErrors.educationYear['new']"
-                  class="error-message error-small"
-                >
+                <input id="edu-anio" v-model="newEdu.anio" @input="validateEducationYear(newEdu.anio, 'new')"
+                  placeholder="Ej: 2026" class="input" />
+                <div v-if="validationErrors.educationYear['new']" class="error-message error-small">
                   {{ validationErrors.educationYear["new"] }}
                 </div>
               </div>
 
               <div class="input-col">
                 <label for="edu-titulo">Título</label>
-                <input
-                  id="edu-titulo"
-                  v-model="newEdu.titulo"
-                  placeholder="Ej: Programación Web"
-                  class="input"
-                />
+                <input id="edu-titulo" v-model="newEdu.titulo" placeholder="Ej: Programación Web" class="input" />
               </div>
 
               <div class="input-col">
                 <label for="edu-centro">Centro</label>
-                <input
-                  id="edu-centro"
-                  v-model="newEdu.centro"
-                  placeholder="Ej: ITB"
-                  class="input"
-                />
+                <input id="edu-centro" v-model="newEdu.centro" placeholder="Ej: ITB" class="input" />
               </div>
 
-              <button
-                @click.prevent="addEducation"
-                class="btn-icon-success btn-align-bottom"
-                title="Añadir"
-              >
+              <button @click.prevent="addEducation" class="btn-icon-success btn-align-bottom" title="Añadir">
                 <i class="fa-solid fa-plus"></i> Añadir
               </button>
             </div>
@@ -1121,21 +1048,10 @@ const uploadCV = async (event) => {
 
         <!-- ✏️ MODO EDICIÓN -->
         <div v-else class="edit-education">
-          <div
-            v-for="(exp, index) in experience"
-            :key="'exp' + index"
-            class="edit-row"
-          >
-            <input
-              v-model="exp.anio"
-              @input="validateExperienceYear(exp.anio, index)"
-              placeholder="Periodo"
-              class="input input-sm"
-            />
-            <div
-              v-if="validationErrors.experienceYear[index]"
-              class="error-message error-small"
-            >
+          <div v-for="(exp, index) in experience" :key="'exp' + index" class="edit-row">
+            <input v-model="exp.anio" @input="validateExperienceYear(exp.anio, index)" placeholder="Periodo"
+              class="input input-sm" />
+            <div v-if="validationErrors.experienceYear[index]" class="error-message error-small">
               {{ validationErrors.experienceYear[index] }}
             </div>
 
@@ -1149,29 +1065,14 @@ const uploadCV = async (event) => {
           <div class="add-box">
             <p class="subtitle">Añadir experiencia</p>
             <div class="edit-row">
-              <input
-                v-model="newExp.anio"
-                @input="validateExperienceYear(newExp.anio, 'new')"
-                placeholder="Periodo"
-                class="input input-sm"
-              />
-              <div
-                v-if="validationErrors.experienceYear['new']"
-                class="error-message error-small"
-              >
+              <input v-model="newExp.anio" @input="validateExperienceYear(newExp.anio, 'new')" placeholder="Periodo"
+                class="input input-sm" />
+              <div v-if="validationErrors.experienceYear['new']" class="error-message error-small">
                 {{ validationErrors.experienceYear["new"] }}
               </div>
 
-              <input
-                v-model="newExp.puesto"
-                placeholder="Puesto"
-                class="input"
-              />
-              <input
-                v-model="newExp.centro"
-                placeholder="Empresa"
-                class="input"
-              />
+              <input v-model="newExp.puesto" placeholder="Puesto" class="input" />
+              <input v-model="newExp.centro" placeholder="Empresa" class="input" />
               <button @click.prevent="addExperience" class="btn-icon-success">
                 <i class="fa-solid fa-plus"></i>
               </button>
@@ -1190,37 +1091,21 @@ const uploadCV = async (event) => {
           <div class="skill-group">
             <h3 class="skill-subtitle">Hard Skills</h3>
             <div class="skill-list">
-              <span
-                v-for="(s, i) in hardSkills"
-                :key="i"
-                class="skill-chip hard"
-              >
+              <span v-for="(s, i) in hardSkills" :key="i" class="skill-chip hard">
                 {{ s.nombre }}
-                <button
-                  v-if="editing"
-                  @click="removeHard(i)"
-                  class="btn-remove-chip"
-                >
+                <button v-if="editing" @click="removeHard(i)" class="btn-remove-chip">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </span>
-              <span v-if="hardSkills.length === 0" class="empty-state"
-                >No hay hard skills.</span
-              >
+              <span v-if="hardSkills.length === 0" class="empty-state">No hay hard skills.</span>
             </div>
 
             <div v-if="editing" class="add-box">
-              <p
-                v-if="hardSkills.length >= MAX_HARD_SKILLS"
-                class="empty-state"
-              >
+              <p v-if="hardSkills.length >= MAX_HARD_SKILLS" class="empty-state">
                 <i class="fa-solid fa-circle-exclamation"></i> Límite de
                 {{ MAX_HARD_SKILLS }} hard skills alcanzado.
               </p>
-              <p
-                v-else-if="availableHardSkills.length === 0"
-                class="empty-state"
-              >
+              <p v-else-if="availableHardSkills.length === 0" class="empty-state">
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las
                 hard skills disponibles!
               </p>
@@ -1231,25 +1116,13 @@ const uploadCV = async (event) => {
                 <p class="info-text" v-else>
                   {{ remainingHardSkills }} hard skill disponible.
                 </p>
-                <select
-                  v-model="selectedHardSkillId"
-                  class="input"
-                  :disabled="hardSkills.length >= MAX_HARD_SKILLS"
-                >
+                <select v-model="selectedHardSkillId" class="input" :disabled="hardSkills.length >= MAX_HARD_SKILLS">
                   <option value="" disabled>Selecciona una skill...</option>
-                  <option
-                    v-for="skill in availableHardSkills"
-                    :key="skill.id"
-                    :value="skill.id"
-                  >
+                  <option v-for="skill in availableHardSkills" :key="skill.id" :value="skill.id">
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button
-                  class="btn-icon-success"
-                  @click.prevent="addHardFromSelect"
-                  :disabled="!selectedHardSkillId"
-                >
+                <button class="btn-icon-success" @click.prevent="addHardFromSelect" :disabled="!selectedHardSkillId">
                   <i class="fa-solid fa-plus"></i> Añadir
                 </button>
               </div>
@@ -1259,37 +1132,21 @@ const uploadCV = async (event) => {
           <div class="skill-group">
             <h3 class="skill-subtitle">Soft Skills</h3>
             <div class="skill-list">
-              <span
-                v-for="(s, i) in softSkills"
-                :key="i"
-                class="skill-chip soft"
-              >
+              <span v-for="(s, i) in softSkills" :key="i" class="skill-chip soft">
                 {{ s.nombre }}
-                <button
-                  v-if="editing"
-                  @click="removeSoft(i)"
-                  class="btn-remove-chip"
-                >
+                <button v-if="editing" @click="removeSoft(i)" class="btn-remove-chip">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </span>
-              <span v-if="softSkills.length === 0" class="empty-state"
-                >No hay soft skills.</span
-              >
+              <span v-if="softSkills.length === 0" class="empty-state">No hay soft skills.</span>
             </div>
 
             <div v-if="editing" class="add-box">
-              <p
-                v-if="softSkills.length >= MAX_SOFT_SKILLS"
-                class="empty-state"
-              >
+              <p v-if="softSkills.length >= MAX_SOFT_SKILLS" class="empty-state">
                 <i class="fa-solid fa-circle-exclamation"></i> Límite de
                 {{ MAX_SOFT_SKILLS }} soft skills alcanzado.
               </p>
-              <p
-                v-else-if="availableSoftSkills.length === 0"
-                class="empty-state"
-              >
+              <p v-else-if="availableSoftSkills.length === 0" class="empty-state">
                 <i class="fa-solid fa-check-double"></i> ¡Has añadido todas las
                 soft skills disponibles!
               </p>
@@ -1300,25 +1157,13 @@ const uploadCV = async (event) => {
                 <p class="info-text" v-else>
                   {{ remainingSoftSkills }} soft skill disponible.
                 </p>
-                <select
-                  v-model="selectedSoftSkillId"
-                  class="input"
-                  :disabled="softSkills.length >= MAX_SOFT_SKILLS"
-                >
+                <select v-model="selectedSoftSkillId" class="input" :disabled="softSkills.length >= MAX_SOFT_SKILLS">
                   <option value="" disabled>Selecciona una skill...</option>
-                  <option
-                    v-for="skill in availableSoftSkills"
-                    :key="skill.id"
-                    :value="skill.id"
-                  >
+                  <option v-for="skill in availableSoftSkills" :key="skill.id" :value="skill.id">
                     {{ skill.nombre }}
                   </option>
                 </select>
-                <button
-                  class="btn-icon-success"
-                  @click.prevent="addSoftFromSelect"
-                  :disabled="!selectedSoftSkillId"
-                >
+                <button class="btn-icon-success" @click.prevent="addSoftFromSelect" :disabled="!selectedSoftSkillId">
                   <i class="fa-solid fa-plus"></i> Añadir
                 </button>
               </div>
@@ -1334,40 +1179,25 @@ const uploadCV = async (event) => {
           </h2>
 
           <div v-if="!editing" class="skill-list">
-            <span
-              v-for="(lang, i) in languages"
-              :key="i"
-              class="skill-chip lang"
-            >
+            <span v-for="(lang, i) in languages" :key="i" class="skill-chip lang">
               <strong>{{ lang.name }}</strong>
               <span class="badge-level">{{ lang.level }}</span>
             </span>
-            <span v-if="languages.length === 0" class="empty-state"
-              >Sin idiomas registrados.</span
-            >
+            <span v-if="languages.length === 0" class="empty-state">Sin idiomas registrados.</span>
           </div>
 
           <div v-else class="languages-edit-list">
-            <div
-              v-for="(lang, i) in languages"
-              :key="'edit' + i"
-              class="contenedor"
-            >
+            <div v-for="(lang, i) in languages" :key="'edit' + i" class="contenedor">
               <div class="edit-grid-row">
                 <div class="input-col">
                   <label>Idioma</label>
                   <select v-model="lang.name" class="input">
                     <option disabled>Selecciona idioma</option>
-                    <option
-                      v-for="langOption in availableLanguagesList"
-                      :key="langOption"
-                      :value="langOption"
-                      :disabled="
-                        languages.some(
-                          (l) => l.name === langOption && l !== lang,
-                        )
-                      "
-                    >
+                    <option v-for="langOption in availableLanguagesList" :key="langOption" :value="langOption"
+                      :disabled="languages.some(
+                        (l) => l.name === langOption && l !== lang,
+                      )
+                        ">
                       {{ langOption }}
                     </option>
                   </select>
@@ -1376,22 +1206,14 @@ const uploadCV = async (event) => {
                 <div class="input-col">
                   <label>Nivel</label>
                   <select v-model="lang.level" class="input">
-                    <option
-                      v-for="lvl in languageLevels"
-                      :key="lvl"
-                      :value="lvl"
-                    >
+                    <option v-for="lvl in languageLevels" :key="lvl" :value="lvl">
                       {{ lvl }}
                     </option>
                   </select>
                 </div>
               </div>
 
-              <button
-                @click="removeLanguage(i)"
-                class="btn-icon-danger align-self-end"
-                title="Eliminar"
-              >
+              <button @click="removeLanguage(i)" class="btn-icon-danger align-self-end" title="Eliminar">
                 <i class="fa-solid fa-trash"></i> Eliminar idioma
               </button>
             </div>
@@ -1419,11 +1241,7 @@ const uploadCV = async (event) => {
                   <label>Idioma</label>
                   <select v-model="newLangName" class="input">
                     <option value="" disabled>Selecciona idioma</option>
-                    <option
-                      v-for="lang in filteredLanguages"
-                      :key="lang"
-                      :value="lang"
-                    >
+                    <option v-for="lang in filteredLanguages" :key="lang" :value="lang">
                       {{ lang }}
                     </option>
                   </select>
@@ -1432,11 +1250,7 @@ const uploadCV = async (event) => {
                 <div class="form-group">
                   <label>Nivel</label>
                   <select v-model="newLangLevel" class="input">
-                    <option
-                      v-for="lvl in languageLevels"
-                      :key="lvl"
-                      :value="lvl"
-                    >
+                    <option v-for="lvl in languageLevels" :key="lvl" :value="lvl">
                       {{ lvl }}
                     </option>
                   </select>
@@ -1468,35 +1282,21 @@ const uploadCV = async (event) => {
           </div>
 
           <div v-else class="links-edit-list">
-            <div
-              v-for="doc in documents"
-              :key="'edit' + doc.id"
-              class="contenedor"
-            >
+            <div v-for="doc in documents" :key="'edit' + doc.id" class="contenedor">
               <div class="edit-grid-row">
                 <div class="input-col">
                   <label>Nombre</label>
-                  <input
-                    v-model="doc.name"
-                    class="input"
-                    placeholder="Ej: Mi Portfolio"
-                  />
+                  <input v-model="doc.name" class="input" placeholder="Ej: Mi Portfolio" />
                 </div>
 
                 <div class="input-col">
                   <label>Tipo</label>
                   <select v-model="doc.tipo" class="input">
                     <option value="" disabled>Tipo...</option>
-                    <option
-                      v-for="tipo in allLinkTypes"
-                      :key="tipo"
-                      :value="tipo"
-                      :disabled="
-                        documents.some(
-                          (d) => d.tipo === tipo && d.id !== doc.id,
-                        )
-                      "
-                    >
+                    <option v-for="tipo in allLinkTypes" :key="tipo" :value="tipo" :disabled="documents.some(
+                      (d) => d.tipo === tipo && d.id !== doc.id,
+                    )
+                      ">
                       {{ tipo }}
                     </option>
                   </select>
@@ -1504,19 +1304,11 @@ const uploadCV = async (event) => {
 
                 <div class="input-col">
                   <label>URL</label>
-                  <input
-                    v-model="doc.url"
-                    class="input"
-                    placeholder="https://..."
-                  />
+                  <input v-model="doc.url" class="input" placeholder="https://..." />
                 </div>
               </div>
 
-              <button
-                @click="removeDocument(doc.id)"
-                class="btn-icon-danger align-self-end"
-                title="Eliminar"
-              >
+              <button @click="removeDocument(doc.id)" class="btn-icon-danger align-self-end" title="Eliminar">
                 <i class="fa-solid fa-trash"></i> Eliminar enlace
               </button>
             </div>
@@ -1540,28 +1332,16 @@ const uploadCV = async (event) => {
                 {{ remainingLinks }} enlace por añadir.
               </p>
               <label for="input-sm">Alias:</label>
-              <input
-                v-model="newDocName"
-                class="input input-sm"
-                placeholder="Nombre (Ej: Mi perfil)"
-              />
+              <input v-model="newDocName" class="input input-sm" placeholder="Nombre (Ej: Mi perfil)" />
               <label for="input-sm">Tipo:</label>
               <select v-model="newDocTipo" class="input input-sm">
                 <option value="" disabled>Tipo...</option>
-                <option
-                  v-for="tipo in availableLinkTypes"
-                  :key="tipo"
-                  :value="tipo"
-                >
+                <option v-for="tipo in availableLinkTypes" :key="tipo" :value="tipo">
                   {{ tipo }}
                 </option>
               </select>
               <label for="input-sm">URL:</label>
-              <input
-                v-model="newDocURL"
-                class="input"
-                placeholder="URL (https://...)"
-              />
+              <input v-model="newDocURL" class="input" placeholder="URL (https://...)" />
 
               <button class="btn-icon-success" @click.prevent="addDocument">
                 <i class="fa-solid fa-plus"></i>Añadir
@@ -1587,6 +1367,9 @@ const uploadCV = async (event) => {
       </div>
     </div>
   </Transition>
+
+  <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
+  <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>
@@ -1638,11 +1421,9 @@ const uploadCV = async (event) => {
 .avatar-container {
   display: inline-block;
   padding: 4px;
-  background: linear-gradient(
-    135deg,
-    var(--accent-green),
-    var(--accent-purple)
-  );
+  background: linear-gradient(135deg,
+      var(--accent-green),
+      var(--accent-purple));
   border-radius: 50%;
   margin-bottom: 10px;
 }
@@ -2127,10 +1908,12 @@ const uploadCV = async (event) => {
   color: #1e293b;
   transition: all 0.2s ease;
 }
+
 input,
 select,
 textarea {
-  font-size: 16px; /* evita zoom iOS y mejora legibilidad */
+  font-size: 16px;
+  /* evita zoom iOS y mejora legibilidad */
   min-width: 0;
 }
 
@@ -2436,16 +2219,19 @@ button {
   .skills-grid {
     grid-template-columns: 1fr;
   }
+
   .grid-two-cols {
     grid-template-columns: 1fr;
     gap: 14px;
   }
+
   .link-icon {
     width: 32px;
     height: 32px;
     font-size: 1rem;
   }
 }
+
 .cv-subtitle {
   font-size: 0.85rem;
   color: #64748b;

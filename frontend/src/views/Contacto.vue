@@ -2,6 +2,7 @@
 import { ref } from "vue";
 // IMPORTANTE: Debes importar la librería que instalaste
 import emailjs from "@emailjs/browser";
+import ModalInformativo from '../components/ModalInformativo.vue';
 
 const formulario = ref({
   nombre: "",
@@ -30,17 +31,27 @@ const enviarFormulario = () => {
     .send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY)
     .then((response) => {
       console.log("ÉXITO!", response.status, response.text);
-      alert("¡Mensaje enviado correctamente! Revisaremos tu duda pronto.");
+      mensajePersonalizado.value="¡Mensaje enviado correctamente! Revisaremos tu duda pronto.";
+      abrirModalInformativo();
       formulario.value = { nombre: "", email: "", mensaje: "" };
     })
     .catch((err) => {
       console.error("ERROR AL ENVIAR:", err);
-      alert("Algo ha fallado al conectar con el servidor de correo.");
+      mensajePersonalizado.value="Algo ha fallado al conectar con el servidor de correo.";
     })
     .finally(() => {
       enviando.value = false;
     });
 };
+
+//Modal
+const mensajePersonalizado = ref("");
+//2. Estado de modal para abrir el modal informativo 
+const modalInformativoRef = ref(null);
+const abrirModalInformativo = () => {
+  modalInformativoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+};
+
 </script>
 
 <template>
@@ -129,6 +140,8 @@ const enviarFormulario = () => {
       </div>
     </div>
   </section>
+    <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
+  <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>

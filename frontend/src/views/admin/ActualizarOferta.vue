@@ -3,6 +3,7 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import { useValidacionOferta } from '../../composables/useValidacionOferta';
+import ModalInformativo from '../../components/ModalInformativo.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -61,8 +62,8 @@ const skillsDisponibles = computed(() => {
 const skillsDisponiblesFiltradas = computed(() => {
   // Obtenemos un Set de IDs seleccionados para una búsqueda rápida
   const idsSeleccionados = new Set(selectedSkills.value.map(s => s.id));
-  
-  return skillsDisponibles.value.filter(skill => 
+
+  return skillsDisponibles.value.filter(skill =>
     !idsSeleccionados.has(skill.id)
   );
 });
@@ -78,7 +79,7 @@ const addSkill = () => {
       id: skillToAdd.value.id,
       nombre: skillToAdd.value.nombre
     });
-    
+
     // Actualizamos la referencia visual
     selectedSkills.value = [...form.value.oferta_skill];
   }
@@ -141,13 +142,16 @@ watch(ofertaOriginal, (newData) => {
       modalidad: newData.modalidad || '',
       oferta_skill: skillsMapeadas
     };
-    selectedSkills.value =[...skillsMapeadas];
+    selectedSkills.value = [...skillsMapeadas];
+
+    //  Forzamos la validación en cuanto el formulario tiene datos
+    validarFormulario(form.value);
   }
 }, { immediate: true });
 
 // Validar en tiempo real
 watch(form, (val) => {
-  validarFormulario(val);
+  validarFormulario(val, true);
 }, { deep: true });
 
 
@@ -182,7 +186,7 @@ function deepEqual(a, b) {
 
 const submitFormulario = async () => {
   // 1. Validar antes de hacer nada
-  if (!validarFormulario(form.value)) {
+  if (!validarFormulario(form.value, true)) {
     // Si hay errores, marcamos todos como tocados para que se vean en rojo
     Object.keys(touched.value).forEach(key => touched.value[key] = true);
     return;
@@ -228,7 +232,10 @@ const submitFormulario = async () => {
     };
   }
 
-  if (Object.keys(datosCambiados).length === 0) return alert("No has realizado ningún cambio.");
+  if (Object.keys(datosCambiados).length === 0) {
+    mensajePersonalizado.value = "No has realizado ningún cambio."
+    return abrirModalInformativo();
+  }
 
   loading.value = true;
   serverError.value = null;
@@ -236,7 +243,8 @@ const submitFormulario = async () => {
   try {
     const urlPut = `${import.meta.env.VITE_URL_BACK}/oferta/${route.params.id}`;
     await actualizarOferta(datosCambiados, urlPut);
-    alert("¡Oferta actualizada!");
+    //mensajePersonalizado.value = "¡Oferta actualizada!";
+    //abrirModalInformativo();
     router.push(`/admin/oferta/${route.params.id}`);
   } catch (err) {
     serverError.value = "Error al conectar con el servidor.";
@@ -244,6 +252,14 @@ const submitFormulario = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+//Modal
+const mensajePersonalizado = ref("");
+//2. Estado de modal para abrir el modal informativo 
+const modalInformativoRef = ref(null);
+const abrirModalInformativo = () => {
+  modalInformativoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
 };
 
 const volver = () => router.back();
@@ -437,6 +453,8 @@ const volver = () => router.back();
       </div>
     </main>
   </div>
+    <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
+  <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
 </template>
 
 <style scoped>

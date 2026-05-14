@@ -15,7 +15,7 @@ const equipo = ref([
     nombre: "Scarlett Toala",
     rol: "Fullstack Developer",
     especialidad: "Backend",
-    img: "https://via.placeholder.com/150",
+    img: "https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/avatars/Foto%20de%20Scarlett.jpg",
     descripcion:
       "Enfocada en la lógica de servidor, APIs y arquitectura robusta.",
   },

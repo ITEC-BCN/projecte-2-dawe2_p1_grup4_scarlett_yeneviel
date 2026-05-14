@@ -161,6 +161,11 @@ const router = createRouter({
       name: 'espera',
       component: () => import('../views/EnEspera.vue')
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('../views/PaginaError.vue')
+    }
   ],
 })
 

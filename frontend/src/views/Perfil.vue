@@ -1386,9 +1386,9 @@ const uploadCV = async (event) => {
   --border-color: #e2e8f0;
 
   display: flex;
-  gap: 30px;
+  justify-content: center;
   align-items: flex-start;
-  justify-content: flex-start;
+  gap: 30px;
   padding: 40px 20px;
   background-color: var(--bg-main);
   min-height: 100vh;

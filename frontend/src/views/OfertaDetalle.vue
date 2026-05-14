@@ -95,6 +95,13 @@ onMounted(() => {
 
 const postularOferta = async () => {
 
+  // NUEVA VALIDACIÓN: Si la oferta no está activa, no permitir postular
+  if (oferta.value?.estado !== 'ACTIVA') {
+    mensajePersonalizado.value = "Esta oferta ya no acepta más postulaciones porque está desactivada.";
+    abrirModalInformativo();
+    return;
+  }
+
 
   if (estadoActual.value !== 'aprobado' && estadoActual.value !== 'rechazado' && idEstudiante) {
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden postular a ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
@@ -107,7 +114,7 @@ const postularOferta = async () => {
 
       const res = await estudiantePostula(bodyPostulacion.value, `${import.meta.env.VITE_URL_BACK}/estudiante/postular`)
 
-      loading.value=true
+      loading.value = true
       if (res.error) {
         console.error("Error al hacer la incripción: ", res.error)
         mensajePersonalizado.value = "Error al hacer la incripción"
@@ -161,6 +168,13 @@ const postularOferta = async () => {
 }
 
 const funGuardarOferta = async () => {
+
+  // NUEVA VALIDACIÓN: Si la oferta no está activa, no permitir guardar
+  if (oferta.value?.estado !== 'ACTIVA') {
+    mensajePersonalizado.value = "No puedes guardar esta oferta porque ya no está vigente.";
+    abrirModalInformativo();
+    return;
+  }
 
   if (estadoActual.value !== 'aprobado' && idEstudiante) {
     mensajePersonalizado.value = `Tu cuenta está en estado: ${estadoActual.value.toUpperCase()}. Solo los estudiantes con cuentas aprobadas pueden guardar ofertas. Por favor, espera a que un administrador revise tu cuenta.`;
@@ -262,16 +276,18 @@ const handleOfertaAction = async () => {
 
           <div class="acciones-header">
             <button @click="funGuardarOferta"
-              :disabled="ofertaYaGuardada || estadoActual === 'pendiente' || estadoActual === 'inactivo'"
+              :disabled="ofertaYaGuardada || estadoActual === 'pendiente' || estadoActual === 'inactivo ' || oferta.estado !== 'ACTIVA'"
               class="btn-guardar-oferta" :class="{ 'is-saved': ofertaYaGuardada }">
               <Heart :size="20" :fill="ofertaYaGuardada ? '#ff4b4b' : 'none'"
                 :color="ofertaYaGuardada ? '#ff4b4b' : '#374151'" />
-              <span class="btn-text">{{ ofertaYaGuardada ? 'Oferta guardada' : 'Guardar' }}</span>
+              <span class="btn-text">
+                {{ oferta.estado !== 'ACTIVA' ? 'No disponible' : (ofertaYaGuardada ? 'Oferta guardada' : 'Guardar') }}
+              </span>
             </button>
 
             <button class="btn-postular-main" @click="postularOferta"
-              :disabled="yaPostulado || estadoActual === 'pendiente' || estadoActual === 'inactivo'">
-              {{ yaPostulado ? 'Ya postulado' : 'Postularme' }}
+              :disabled="yaPostulado || estadoActual === 'pendiente' || oferta.estado != 'ACTIVA' || oferta.estado !== 'ACTIVA'">
+              {{ oferta.estado !== 'ACTIVA' ? 'Oferta Finalizada' : (yaPostulado ? 'Ya postulado' : 'Postularme') }}
             </button>
           </div>
         </header>

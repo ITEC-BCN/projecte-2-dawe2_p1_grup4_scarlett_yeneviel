@@ -8,7 +8,7 @@ import { checkAuthStatus } from '@/js/role.js';
 
 const router = useRouter();
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);
-const { data, error, loading, fetchData } = useFetch(url);
+const { ofertasActivas, error, loading, fetchData } = useFetch(url);
 
 // 1. Variables de estado para los filtros
 const searchQuery = ref("");
@@ -19,18 +19,18 @@ const skillToAdd = ref("");
 const selectedModeloPracticas = ref('');
 
 const ciudadesDisponibles = computed(() => {
-    if (!data.value) return [];
-    const ciudades = data.value.map(oferta => oferta.ubicacion?.ciudad);
+    if (!ofertasActivas.value) return [];
+    const ciudades = ofertasActivas.value.map(oferta => oferta.ubicacion?.ciudad);
     const ciudadesValidas = ciudades.filter(ciudad => ciudad != null && ciudad !== "");
     return [...new Set(ciudadesValidas)].sort();
 });
 
 const skillsDisponibles = computed(() => {
-    if (!data.value) return [];
+    if (!ofertasActivas.value) return [];
 
     const set = new Set();
 
-    data.value.forEach(oferta => {
+    ofertasActivas.value.forEach(oferta => {
         oferta.oferta_skill?.forEach(os => {
             if (os.skill?.nombre) set.add(os.skill.nombre);
         });
@@ -61,14 +61,14 @@ const removeSkill = (skill) => {
 
 // 2. Lógica de Filtrado Combinada
 const ofertasFiltradas = computed(() => {
-    if (!data.value) return [];
+    if (!ofertasActivas.value) return [];
 
     const q = searchQuery.value.toLowerCase().trim();
     const city = searchUbicacion.value.toLowerCase().trim();
     const modalidad = selectedModalidad.value.toLowerCase().trim();
     const modelo = selectedModeloPracticas.value.toLowerCase().trim();
 
-    return data.value.filter((oferta) => {
+    return ofertasActivas.value.filter((oferta) => {
         // Preparar datos de la oferta
         const ciudadOferta = (oferta.ubicacion?.ciudad || '').toLowerCase();
         const modalidadOferta = (oferta.modalidad || '').toLowerCase();

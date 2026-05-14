@@ -45,17 +45,24 @@ export function useValidacionOferta() {
         if (datos.fecha_expiracion) {
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
-            const exp = new Date(datos.fecha_expiracion);
 
-            if (exp < hoy) {
-                errores.fecha_expiracion = "La fecha NO puede ser menor a hoy";
-            } else if (!esEdicion) {
-                // Solo exigir los 30 días si NO estamos editando
+            const exp = new Date(datos.fecha_expiracion);
+            exp.setHours(0, 0, 0, 0);
+
+            // ❌ no puede ser anterior a hoy
+            if (exp <= hoy) {
+                errores.fecha_expiracion = "La fecha debe ser mayor a hoy";
+            }
+
+            // 🔒 solo validación extra en creación
+            if (!esEdicion && exp > hoy) {
                 const diffDias = Math.ceil((exp - hoy) / (1000 * 60 * 60 * 24));
-                if (diffDias < 28) {
+
+                if (diffDias < 30) {
                     errores.fecha_expiracion = "La expiración debe ser al menos 30 días desde hoy";
                 }
             }
+
         } else {
             errores.fecha_expiracion = "La fecha de expiración es obligatoria";
         }

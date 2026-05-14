@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import { useValidacionOferta } from '../../composables/useValidacionOferta';
 import ModalInformativo from '../../components/ModalInformativo.vue';
+import api from '../../services/api';
+import { MAX_SKILLS } from "../../js/const.js"
 
 const route = useRoute();
 const router = useRouter();
@@ -18,7 +20,15 @@ const serverError = ref(null);
 
 const skills = ref([]);
 const selectedSkills = ref([]);//Array para multiselect
-const skillToAdd = ref('');
+const skillToAdd = ref("");
+
+defineProps({
+  id: String
+})
+
+const limiteSkillsAlcanzado = computed(() => {
+  return selectedSkills.value.length >= MAX_SKILLS;
+});
 
 const touched = ref({
   nombre_empresa: false,
@@ -39,29 +49,28 @@ const ubicaciones = ref([]);
 
 const cargarCiudades = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ubicaciones`);
-    if (!res.ok) throw new Error("Error al cargar ubicaciones");
-    ubicaciones.value = await res.json();
+    const res = await api.get(
+      `${import.meta.env.VITE_URL_BACK}/ubicaciones`,
+      {
+        withCredentials: true
+      }
+    );
+
+    ubicaciones.value = res.data;
+
   } catch (err) {
     console.error("Error cargando ubicaciones:", err);
   }
 };
 
 const skillsDisponibles = computed(() => {
-  if (!skills.value) return [];
-  const set = []
-  skills.value.forEach(s => {
-    if (s.nombre) set.push({
-      id: s.id,
-      nombre: s.nombre
-    });
-  });
-  return [...set].sort();
+  return skills.value || [];
 });
 
 const skillsDisponiblesFiltradas = computed(() => {
-  // Obtenemos un Set de IDs seleccionados para una búsqueda rápida
-  const idsSeleccionados = new Set(selectedSkills.value.map(s => s.id));
+  const idsSeleccionados = new Set(
+    selectedSkills.value.map(s => s.id)
+  );
 
   return skillsDisponibles.value.filter(skill =>
     !idsSeleccionados.has(skill.id)
@@ -69,22 +78,33 @@ const skillsDisponiblesFiltradas = computed(() => {
 });
 
 const addSkill = () => {
-  if (!skillToAdd.value || skillToAdd.value === "0") return;
 
-  const existe = form.value.oferta_skill.some(s => s.id === skillToAdd.value.id);
+  if (selectedSkills.value.length >= MAX_SKILLS) {
+    return;
+  }
+
+  if (!skillToAdd.value) return;
+
+  const skill = skills.value.find(
+    s => s.id === Number(skillToAdd.value)
+  );
+
+  if (!skill) return;
+
+  const existe = form.value.oferta_skill.some(
+    s => s.id === skill.id
+  );
 
   if (!existe) {
-    // Añadimos al formulario
     form.value.oferta_skill.push({
-      id: skillToAdd.value.id,
-      nombre: skillToAdd.value.nombre
+      id: skill.id,
+      nombre: skill.nombre
     });
 
-    // Actualizamos la referencia visual
     selectedSkills.value = [...form.value.oferta_skill];
   }
 
-  skillToAdd.value = "0"; // Reset al valor por defecto del select
+  skillToAdd.value = "";
 };
 
 const removeSkill = (skill) => {
@@ -96,19 +116,21 @@ const removeSkill = (skill) => {
 
 const cargarSkills = async () => {
   try {
+    const res = await api.get(
+      `${import.meta.env.VITE_URL_BACK}/skills`,
+      {
+        withCredentials: true
+      }
+    );
 
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/skills`);
-    if (!res.ok) {
-      throw new Error("Error al cargar skills");
-    }
-    return skills.value = await res.json();
+    skills.value = res.data;
+
+    //console.log("SKILLS:", skills.value);
 
   } catch (err) {
     console.error("Error cargando skills:", err);
-    return [];
   }
-}
-
+};
 
 onMounted(() => {
   cargarCiudades();
@@ -154,8 +176,6 @@ watch(form, (val) => {
   validarFormulario(val, true);
 }, { deep: true });
 
-
-console.log(form)
 
 // Función para comparar profundamente dos valores
 function deepEqual(a, b) {
@@ -263,6 +283,9 @@ const abrirModalInformativo = () => {
 };
 
 const volver = () => router.back();
+
+console.log(erroresValidacion)
+
 </script>
 
 <template>
@@ -396,12 +419,16 @@ const volver = () => router.back();
             <div class="field-group">
               <label>Skills</label>
               <select v-model="skillToAdd" @change="addSkill" @blur="touched.selectedSkills = true"
-                :class="{ 'input-error': touched.selectedSkills && erroresValidacion.selectedSkills }">
-                <option value="0" disabled>Skills...</option>
-                <option v-for="skill in skillsDisponiblesFiltradas" :key="skill.id" :value="skill">{{
-                  skill.nombre }}
+                :disabled="limiteSkillsAlcanzado"
+                :class="{ 'input-error': touched.selectedSkills && erroresValidacion.selectedSkills, 'select-disabled': limiteSkillsAlcanzado }">
+                <option value="" disabled>Skills...</option>
+                <option v-for="skill in skillsDisponiblesFiltradas" :key="skill.id" :value="skill.id">
+                  {{ skill.nombre }}
                 </option>
               </select>
+              <p v-if="limiteSkillsAlcanzado" class="max-skills-msg">
+                Máximo 6 skills permitidas
+              </p>
 
               <div v-if="selectedSkills.length > 0" class="skills-selected">
                 <transition-group name="list">
@@ -453,7 +480,7 @@ const volver = () => router.back();
       </div>
     </main>
   </div>
-    <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
+  <!-- Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
   <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
 </template>
 
@@ -473,6 +500,19 @@ const volver = () => router.back();
   padding: 2rem 1rem;
   color: var(--text-main);
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+.select-disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+.max-skills-msg {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
 }
 
 .top-nav {

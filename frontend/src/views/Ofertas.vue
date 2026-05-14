@@ -725,6 +725,8 @@ button:focus {
     .grid-ofertas {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
+         justify-items: center; /* centra horizontalmente */
+        align-items: center;   /* centra verticalmente */
     }
 }
 

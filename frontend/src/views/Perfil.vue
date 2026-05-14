@@ -1560,6 +1560,7 @@ const uploadCV = async (event) => {
 .about-block,
 .contact-block,
 .cv-block {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #f8fafc;
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -1733,6 +1734,8 @@ const uploadCV = async (event) => {
   font-size: 0.95rem;
   font-weight: 500;
 }
+
+
 
 /* SKILLS Y CHIPS */
 .skills-grid {

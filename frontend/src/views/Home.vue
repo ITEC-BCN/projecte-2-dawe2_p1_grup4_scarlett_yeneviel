@@ -78,7 +78,7 @@ const startLink = computed(() => {
 ========================= */
 main,
 .perfiles {
-  width: 100%;
+  width: 90%;
   max-width: 1200px;
   margin-inline: auto;
   padding: clamp(1rem, 3vw, 2rem);
@@ -92,7 +92,6 @@ main {
   grid-template-columns: 1fr 1fr;
   gap: clamp(1.5rem, 4vw, 3rem);
   align-items: center;
-  margin-block: 2rem;
 }
 
 /* Texto */

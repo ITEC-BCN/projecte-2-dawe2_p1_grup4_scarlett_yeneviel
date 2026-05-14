@@ -24,7 +24,7 @@ export const checkAuthStatus = async () => {
     const data = await response.json();
 
     isAuthenticated.value = true;
-    userRole.value = data.user?.role || localStorage.getItem('role') || 'estudiante';
+    userRole.value = data.user?.role || 'estudiante';
   } catch {
     isAuthenticated.value = false;
     userRole.value = '';

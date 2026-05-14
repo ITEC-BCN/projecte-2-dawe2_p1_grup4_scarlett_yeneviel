@@ -17,7 +17,7 @@ export function useFetch(url) {
         error.value = null
 
         try {
-            const res = await api.get(url.value,{
+            const res = await api.get(url.value, {
                 withCredentials: true
             });
 
@@ -31,7 +31,14 @@ export function useFetch(url) {
 
             // Guardamos todos los datos originales
             data.value = jsonResponse;
-            ofertasActivas.value = jsonResponse.filter(o => o.estado === 'ACTIVA');
+            //ofertasActivas.value = jsonResponse.filter(o => o.estado === 'ACTIVA');
+            if (Array.isArray(jsonResponse)) {
+                ofertasActivas.value = jsonResponse.filter(
+                    o => o.estado === 'ACTIVA'
+                );
+            } else {
+                ofertasActivas.value = [];
+            }
 
         } catch (err) {
             // Si hay cualquier error lo guardamos en 'error' para mostrarlo al usuario
@@ -47,7 +54,7 @@ export function useFetch(url) {
 
         ///postulaciones/:id  id de la oferta
         try {
-            const res = await api.get(urlPostulaciones,{
+            const res = await api.get(urlPostulaciones, {
                 withCredentials: true
             });
 
@@ -76,7 +83,7 @@ export function useFetch(url) {
 
         // Si pasa una url, usa esa. Si no, usa la del composable.
         try {
-            const res = await api.put(urlAlternativa,body, {
+            const res = await api.put(urlAlternativa, body, {
                 headers: { 'Content-Type': 'application/json' }
             });
 

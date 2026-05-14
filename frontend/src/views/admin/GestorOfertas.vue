@@ -1,19 +1,16 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue'; // <--- 1. IMPORTANTE: Agregamos nextTick aquí
 import { useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
-import ModalEliminar from '../../components/Modal.vue';//Paso 1: Importar el componente del modal
+import Modal from '../../components/Modal.vue';
 
 const router = useRouter();
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);
 const { data: ofertas, error, loading, fetchData } = useFetch(url);
 
-
-
-// Simulación de rol (ajusta según tu lógica de auth)
 const roleUser = ref('admin');
 
-// pagination
+// Pagination
 const currentPage = ref(1);
 const pageSize = ref(8);
 const totalPages = computed(() => Math.max(1, Math.ceil((ofertas.value || []).length / pageSize.value)));
@@ -29,36 +26,59 @@ const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.v
 const goToPage = (p) => { currentPage.value = p; };
 
 const crearOferta = () => {
-  router.push({ name: 'CrearOferta' }); // Ajusta el nombre de tu ruta
+  router.push({ name: 'CrearOferta' });
 };
 
-//Actualizar el estado de la oferta (activar/desactivar)
-// 1. Añadimos variables para controlar qué oferta se va a gestionar
-const ofertaSeleccionadaId = ref(null);
-const ofertaSeleccionadaEstado = ref(null);
+// --- LÓGICA DEL MODAL ---
+const ofertaSeleccionada = ref(null);
+const modalEstadoOfertaRef = ref(null);
+const loadingModal = ref(false);
 
-// El ref guarda la instancia del modal para poder abrirlo desde aquí
-const modalEliminar = ref(null);
-
-const abrirModal = (oferta) => {
-  // 2. Guardamos los datos de la oferta específica que se clickeó
-  ofertaSeleccionadaId.value = oferta.id;
-  // Calculamos el estado al que queremos ir (el opuesto al actual)
-  ofertaSeleccionadaEstado.value = oferta.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA';
-
-  // 3. Abrimos el modal
-  modalEliminar.value.openModal();
+const abrirModalEstado = async (oferta) => {
+  ofertaSeleccionada.value = oferta; 
+  
+  // Esperamos a que el DOM se actualice (porque el v-if del modal depende de ofertaSeleccionada)
+  await nextTick();
+  
+  if (modalEstadoOfertaRef.value) {
+    modalEstadoOfertaRef.value.openModal();
+  }
 };
 
-const ofertaEliminada = async () => {
+const handleOfertaEstado = async () => {
+  if (!ofertaSeleccionada.value) return;
 
-    console.log("El estado de la oferta fue actualizado. Refrescando datos...");
-  setTimeout(async () => {
-    await fetchData();
-  }, 2500);
+  const oferta = ofertaSeleccionada.value;
+  const nuevoEstado = oferta.estado === 'ACTIVA' ? 'INACTIVA' : 'ACTIVA';
 
+  try {
+    loadingModal.value = true;
+    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${oferta.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
+
+    if (!res.ok) throw new Error('Error actualizando oferta');
+
+    // Éxito: mostramos mensaje en el modal
+    modalEstadoOfertaRef.value.mensaje = `Oferta ${nuevoEstado === 'ACTIVA' ? 'activada' : 'desactivada'} con éxito.`;
+
+    setTimeout(async () => {
+      if (modalEstadoOfertaRef.value) modalEstadoOfertaRef.value.closeModal();
+      await fetchData(); // Refrescamos la tabla
+      ofertaSeleccionada.value = null; // Limpiamos para el siguiente uso
+    }, 1500);
+
+  } catch (err) {
+    console.error(err);
+    if (modalEstadoOfertaRef.value) {
+        modalEstadoOfertaRef.value.mensaje = "Error al procesar la petición";
+    }
+  } finally {
+    loadingModal.value = false;
+  }
 };
-
 </script>
 
 <template>
@@ -130,25 +150,25 @@ const ofertaEliminada = async () => {
                   </button>
                   <!-- Toggle button: shows a green check when active, gray slash when inactive -->
                   <button type="button" :class="['btn-toggle', { active: oferta.estado === 'ACTIVA' }]"
-                    @click="abrirModal(oferta)" :title="oferta.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'">
+                    @click="abrirModalEstado(oferta)" :title="oferta.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'">
 
-                    <template v-if="oferta.estado === 'ACTIVA'">
-                      <!-- active: green check-circle -->
-                      <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" fill="#10b981" />
-                        <path d="M9 12.5l1.8 1.8L15 10" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" fill="none" />
-                      </svg>
-                    </template>
-                    <template v-else>
-                      <!-- inactive: gray slash-circle -->
-                      <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" fill="#9ca3af" />
-                        <path d="M8 12h8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
-                      </svg>
-                    </template>
+                  <template v-if="oferta.estado === 'ACTIVA'">
+                    <!-- active: green check-circle -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" fill="#10b981" />
+                      <path d="M9 12.5l1.8 1.8L15 10" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" fill="none" />
+                    </svg>
+                  </template>
+                  <template v-else>
+                    <!-- inactive: gray slash-circle -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" fill="#9ca3af" />
+                      <path d="M8 12h8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </template>
                   </button>
                 </td>
               </tr>
@@ -157,9 +177,6 @@ const ofertaEliminada = async () => {
               </tr>
             </tbody>
           </table>
-          <!-- Componente del modal -->
-          <ModalEliminar ref="modalEliminar" :oferta-id="ofertaSeleccionadaId" :estado="ofertaSeleccionadaEstado"
-            @eliminado="ofertaEliminada" />
         </div>
 
         <div class="pagination-footer" v-if="totalPages > 1">
@@ -175,6 +192,12 @@ const ofertaEliminada = async () => {
       </div>
     </div>
   </div>
+
+  <Modal ref="modalEstadoOfertaRef" v-if="ofertaSeleccionada"
+    :titulo="ofertaSeleccionada.estado === 'ACTIVA' ? '¿Estás seguro de que deseas desactivar esta oferta?' : '¿Deseas activar esta oferta?'"
+    :textoBotonConfirmar="ofertaSeleccionada.estado === 'ACTIVA' ? 'Sí, desactivar' : 'Sí, activar'"
+    :colorConfirmar="ofertaSeleccionada.estado === 'ACTIVA' ? 'danger' : 'success'" :loading="loadingModal"
+    @confirmar="handleOfertaEstado" />
 </template>
 
 <style scoped>
@@ -368,7 +391,7 @@ h1 {
   border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
-  margin-top:10px;
+  margin-top: 10px;
 }
 
 .btn-toggle.active {
@@ -452,6 +475,7 @@ h1 {
 }
 
 @media (max-width: 768px) {
+
   .custom-table th,
   .custom-table td {
     padding: 12px 12px;
@@ -474,9 +498,10 @@ h1 {
 
 @media (max-width: 680px) {
 
-  .header-content{
+  .header-content {
     justify-content: center;
   }
+
   /* ocultamos header */
   .custom-table thead {
     display: none;
@@ -492,7 +517,7 @@ h1 {
     justify-content: center;
   }
 
-  .custom-table{
+  .custom-table {
     border-collapse: separate;
     text-align: left;
     justify-items: center;
@@ -504,7 +529,7 @@ h1 {
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     justify-items: center;
   }
 
@@ -514,7 +539,7 @@ h1 {
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     justify-items: center;
   }
 
@@ -527,7 +552,7 @@ h1 {
   .actions-cell {
     justify-content: flex-start;
     flex-wrap: wrap;
-     gap: 8px;
+    gap: 8px;
   }
 
   .btn-view,
@@ -562,7 +587,7 @@ h1 {
 
   .btn-view,
   .btn-toggle {
-    padding:6px 10px;
+    padding: 6px 10px;
     font-size: 0.8rem;
   }
 

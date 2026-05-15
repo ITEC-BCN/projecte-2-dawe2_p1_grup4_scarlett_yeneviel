@@ -660,7 +660,7 @@ app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
 //================ SKILLS ====================
 
 // GET: Obtener todas las skills para el menú desplegable del frontend
-app.get("/skills", requireAuth, async (req, res) => {
+app.get("/skills", async (req, res) => {
   try {
     const skills = await obtenerSkills();
     res.json(skills);

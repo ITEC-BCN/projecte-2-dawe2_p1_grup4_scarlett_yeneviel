@@ -4,6 +4,7 @@
 <p align="center">
     <img src="frontend/public/logos/InterniaVerde.png " width="500">
 </p>
+
 ## Visión Estratégica y Propuesta de Valor
 
 En un contexto donde la demanda de perfiles técnicos continúa creciendo, los estudiantes de Formación Profesional siguen encontrando dificultades para acceder a prácticas profesionales y a su primera experiencia laboral. Muchas oportunidades no llegan directamente al alumnado, ya que las empresas suelen comunicarse exclusivamente con los centros educativos y no existe un canal centralizado que permita gestionar estas ofertas de forma eficiente. 
@@ -16,11 +17,11 @@ Internia nace para resolver este problema mediante una plataforma centralizada q
 ## Actores Clave del Ecosistema
 A diferencia de los portales de empleo genéricos, Internia opera bajo un modelo B2B2C donde el centro educativo es el eje del proceso:
 
-**Estudiantes:** Candidatos que construyen una identidad profesional digital y gestionan sus candidaturas de forma autónoma.
+- **Estudiantes:** Candidatos que construyen una identidad profesional digital y gestionan sus candidaturas de forma autónoma.
 
-**Centros Educativos (Administradores):** Actúan como orquestadores y validadores de calidad. Son los únicos encargados de publicar las ofertas remitidas por las empresas externas y de supervisar el progreso académico de los alumnos.
+- **Centros Educativos (Administradores):** Actúan como orquestadores y validadores de calidad. Son los únicos encargados de publicar las ofertas remitidas por las empresas externas y de supervisar el progreso académico de los alumnos.
 
-**Empresas:** Proveedoras de talento que interactúan con el sistema a través del centro educativo, recibiendo perfiles cualificados sin necesidad de gestionar directamente la infraestructura de la plataforma.
+- **Empresas:** Proveedoras de talento que interactúan con el sistema a través del centro educativo, recibiendo perfiles cualificados sin necesidad de gestionar directamente la infraestructura de la plataforma.
 
 ## La plataforma permite:
 Centralizar las ofertas de prácticas enviadas por empresas.
@@ -57,13 +58,13 @@ Digitaliza procesos administrativos tradicionalmente manuales.
 
 Internia incorpora funcionalidades innovadoras orientadas a mejorar la experiencia tanto del alumnado como de los centros educativos:
 
-- Integración con Centros de FP: Permite a los institutos validar perfiles, gestionar convenios.
+- **Integración con Centros de FP:** Permite a los institutos validar perfiles, gestionar convenios.
 
-- Sistema de Recomendaciones: Algoritmos que sugieren ofertas basadas en las skills del estudiante.
+- **Sistema de Recomendaciones:** Algoritmos que sugieren ofertas basadas en las skills del estudiante.
 
-- Extracción Inteligente de Datos del CV : Mediante IA y procesamiento de documentos PDF, el sistema puede extraer automáticamente información relevante del currículum y completar el perfil del usuario. 
+- **Extracción Inteligente de Datos del CV:** Mediante IA y procesamiento de documentos PDF, el sistema puede extraer automáticamente información relevante del currículum y completar el perfil del usuario. 
 
-- ChatBot:El usuario puede interactuar con un asistente conversacional para buscar ofertas mediante lenguaje natural, por ejemplo: “Buscar prácticas de desarrollo web en Barcelona”.
+- **ChatBot:** El usuario puede interactuar con un asistente conversacional para buscar ofertas mediante lenguaje natural, por ejemplo: “Buscar prácticas de desarrollo web en Barcelona”.
 
 
 ## Funcionalidades y Roles de Usuario 
@@ -219,7 +220,15 @@ Algunos endpoints principales expuestos por la API REST:
 3. Se postula a una oferta y puede ver el estado de su postulación.
 4. Un administrador revisa y aprueba/rechaza usuarios y ofertas desde el panel.
 
-## Autores
+## Demo
+
+
+
+https://github.com/user-attachments/assets/3dec11a9-1db1-46d0-a8fd-026a85fd6ee7
+
+
+
+## Desarrolladoras
 - Scarlett Toala
 - Yeneviel Roberts
 - Silvia Serra

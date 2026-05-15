@@ -71,6 +71,7 @@ const verDetalle = (id) => {
 
     <div v-else class="estado-mensaje">
       <p>Ups, no hemos encontrado ofertas que hagan match con tus skills en este momento.</p>
+      <p><strong>¿Es tu primera vez aquí?</strong> Para recibir ofertas recomendadas según tu perfil, asegúrate de <strong>añadir tus skills</strong> en la configuración de tu cuenta.</p>
     </div>
 
     <div class="boton-container">

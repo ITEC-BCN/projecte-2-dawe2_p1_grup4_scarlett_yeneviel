@@ -1,12 +1,14 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, onMounted } from 'vue';
+import { checkAuthStatus, isAuthenticated } from '@/js/role.js';
 
-const startLink = computed(() => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const hasToken = !!token;
-  const hasCookie = typeof document !== 'undefined' && document.cookie.includes('access_token=');
-  return hasToken || hasCookie ? '/ofertas' : '/login';
+const startLink = ref('/login');
+
+onMounted(async () => {
+  await checkAuthStatus();
+  startLink.value = isAuthenticated.value ? '/ofertas' : '/login';
 });
+
 </script>
 
 <template>

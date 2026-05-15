@@ -39,12 +39,26 @@ watch(() => route.path, () => {
 
 console.log(userRole.value);
 
+// Función para limpiar cookies
+const clearAuthCookies = () => {
+  // Limpiar todas las cookies de autenticación
+  const cookieNames = ['access_token', 'refresh_token', 'token', 'Authorization'];
+  cookieNames.forEach(name => {
+    document.cookie = `${name}=; Max-Age=0; path=/;`;
+    document.cookie = `${name}=; Max-Age=0; path=/; domain=${window.location.hostname};`;
+  });
+};
+
 // Función para cerrar sesión
 const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('role');
   localStorage.removeItem('studentId');
   localStorage.removeItem('studentEmail');
+  localStorage.removeItem('refreshToken');
+  
+  // Limpiar cookies de autenticación
+  clearAuthCookies();
 
   if(userRole.value == 'admin'){
     localStorage.removeItem('userId');

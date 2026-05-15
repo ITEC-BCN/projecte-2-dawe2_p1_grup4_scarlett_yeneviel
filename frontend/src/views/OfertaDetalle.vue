@@ -119,6 +119,7 @@ const postularOferta = async () => {
         console.error("Error al hacer la incripción: ", res.error)
         mensajePersonalizado.value = "Error al hacer la incripción"
         abrirModalInformativo()
+        loading.value = false
         return
       }
 
@@ -157,6 +158,8 @@ const postularOferta = async () => {
       mensajePersonalizado.value = "Error al hacer la incripción"
       abrirModalInformativo()
 
+    }finally{
+      loading.value = false
     }
   } else {
     modalAction.value = 'postularOferta'

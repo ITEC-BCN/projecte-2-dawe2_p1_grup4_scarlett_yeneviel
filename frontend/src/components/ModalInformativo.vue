@@ -3,6 +3,9 @@
   <div v-if="isModalOpen" class="modal-backdrop">
     <div class="modal-content">
         <p>{{ mensaje }}</p>
+        <div v-if="payload" style="text-align:left; margin-top:12px;">
+          <pre style="white-space:pre-wrap; font-size:0.9rem; color:#333">{{ formattedPayload }}</pre>
+        </div>
         <button @click="closeMensaje" class="btn-confirm">Aceptar</button>
     </div>
   </div>
@@ -25,22 +28,37 @@ const mensaje = computed(() => props.mensaje);
 const isModalOpen = ref(false);
 const estado = ref("");
 const loading = ref(false);
+const payload = ref(null);
 
-const openModal = () => {
+// formatted payload for display
+const formattedPayload = computed(() => {
+  if (!payload.value) return "";
+  try {
+    return typeof payload.value === "string"
+      ? payload.value
+      : JSON.stringify(payload.value, null, 2);
+  } catch (e) {
+    return String(payload.value);
+  }
+});
+
+const openModal = (p = null) => {
   // reset state when opening
   estado.value = "";
+  payload.value = p;
   isModalOpen.value = true;
 };
 const closeModal = () => {
   isModalOpen.value = false;
+  payload.value = null;
 
 };
 const closeMensaje = () => {
   closeModal();
 };
 
-// Exponer función para abrir modal desde el padre
-defineExpose({ openModal });
+// Exponer función para abrir modal desde el padre (acepta payload opcional)
+defineExpose({ openModal, closeModal });
 </script>
 
 <style scoped>

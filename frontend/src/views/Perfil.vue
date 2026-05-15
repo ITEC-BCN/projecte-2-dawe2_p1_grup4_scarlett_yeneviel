@@ -27,12 +27,52 @@ const studentId = route.params.id || localStorage.getItem("studentId");
 const url = ref(`/estudiantes/${studentId}`);
 const role = localStorage.getItem("role");
 
+const studentData = computed(() => {
+  return Array.isArray(students.value)
+    ? students.value[0]
+    : students.value;
+});
+
+// Modal confirmar guardar
+const showSaveModal = ref(false);
+const pendingAction = ref(null);
+
 //Modal
 const mensajePersonalizado = ref("");
 //2. Estado de modal para abrir el modal informativo 
 const modalInformativoRef = ref(null);
-const abrirModalInformativo = () => {
-  modalInformativoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
+const abrirModalInformativo = (msg = null, payload = null) => {
+  if (msg) mensajePersonalizado.value = msg;
+  modalInformativoRef.value?.openModal(payload); // modalEstadoRef es la instancia del componente ModalInformativo
+};
+
+const abrirModalGuardar = (callback) => {
+  pendingAction.value = callback;
+  showSaveModal.value = true;
+};
+
+const confirmarGuardar = async () => {
+  showSaveModal.value = false;
+
+  await saveProfile();
+
+  // Ejecutar acción pendiente después de guardar
+  if (pendingAction.value) {
+    pendingAction.value();
+    pendingAction.value = null;
+  }
+};
+
+const descartarCambios = () => {
+  showSaveModal.value = false;
+
+  restoreOriginalData();
+  editing.value = false;
+
+  if (pendingAction.value) {
+    pendingAction.value();
+    pendingAction.value = null;
+  }
 };
 
 const { students, loadingStudents, refreshStudents } = useStudents(url);
@@ -266,16 +306,18 @@ const uploadAvatar = async (event) => {
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("studentId", students.value.id);
+  formData.append("studentId", studentData.value.id);
+
+formData.append("studentId", studentData.value.id);
 
   try {
     const data = await postAvatar("/upload-avatar", formData);
 
     user.avatar = data.url;
 
-    if (students.value) {
-      students.value.foto_perfil = data.url;
-    }
+if (studentData.value) {
+  studentData.value.foto_perfil = data.url;
+}
 
     mensajePersonalizado.value = "¡Foto actualizada con éxito!";
     abrirModalInformativo()
@@ -291,7 +333,7 @@ const uploadAvatar = async (event) => {
 
 // --- NUEVO: Función para cargar/restaurar los datos originales ---
 const restoreOriginalData = () => {
-  const source = students.value;
+ const source = studentData.value;
   if (!source) return;
 
   user.name = (source.nombre || "") + " " + (source.apellido || "");
@@ -356,7 +398,13 @@ const restoreOriginalData = () => {
     : [];
 
   // Ordenar por año descendente (más recientes primero)
-  academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
+  const getStartYear = (anio) => {
+  return parseInt(String(anio).match(/\d{4}/)?.[0] || 0);
+};
+
+academicBackground.value.sort(
+  (a, b) => getStartYear(b.anio) - getStartYear(a.anio)
+);
 
   if (source.enlaces) {
     documents.value = source.enlaces.map((e, i) => ({
@@ -374,11 +422,14 @@ const restoreOriginalData = () => {
 
 // El watch ahora simplemente llama a nuestra función cuando llegan los datos
 watch(
-  () => students.value,
+  studentData,
   () => {
     restoreOriginalData();
   },
-  { immediate: true },
+  {
+    immediate: true,
+    deep: true,
+  }
 );
 
 // Watchers para detectar cambios en edición directa
@@ -401,13 +452,27 @@ watch(
 const editing = ref(false);
 
 function toggleEdit() {
-  if (editing.value) {
-    // Si estaba editando y decide cancelar, restauramos todo a como estaba
-    restoreOriginalData();
-  }
-  editing.value = !editing.value;
-}
+  if (!editing.value) {
 
+documents.value = JSON.parse(JSON.stringify(documents.value));
+languages.value = JSON.parse(JSON.stringify(languages.value));
+experience.value = JSON.parse(JSON.stringify(experience.value));
+academicBackground.value = JSON.parse(JSON.stringify(academicBackground.value));
+
+    editing.value = true;
+    return;
+  }
+
+  if (hasUnsavedChanges.value) {
+    abrirModalGuardar(() => {
+      editing.value = false;
+    });
+    return;
+  }
+
+  restoreOriginalData();
+  editing.value = false;
+}
 // --- FUNCIONES PARA EXPERIENCIA ---
 
 const experience = ref([]);
@@ -421,6 +486,9 @@ function addExperience() {
     newExp.centro = "";
     newExp.anio = "";
     newExp.puesto = "";
+
+    // limpiar error visual
+    validationErrors.experienceYear["new"] = "";
   }
 
   hasUnsavedChanges.value = true;
@@ -550,19 +618,18 @@ async function saveProfile() {
     const data = await putStudent(`/estudiantes/${studentId}`, payload);
 
     // 💾 actualizar estado local
-    if (students.value) {
-      students.value = {
-        ...students.value,
-        foto_perfil: user.avatar,
-        about: user.about,
-        telefono: contact.phone,
-        location: contact.location,
-        estudios: { formacion: academicBackground.value },
-        experiencia: { experiencia: experience.value },
-        idiomas: { idiomas: languages.value },
-        enlaces: documents.value,
-      };
-    }
+if (studentData.value) {
+  Object.assign(studentData.value, {
+    foto_perfil: user.avatar,
+    about: user.about,
+    telefono: contact.phone,
+    location: contact.location,
+    estudios: { formacion: academicBackground.value },
+    experiencia: { experiencia: experience.value },
+    idiomas: { idiomas: languages.value },
+    enlaces: documents.value,
+  });
+}
 
     editing.value = false;
     hasUnsavedChanges.value = false;
@@ -623,9 +690,13 @@ function addEducation() {
   if (newEdu.centro && newEdu.titulo) {
     academicBackground.value.push({ ...newEdu });
     // Ordenar por año descendente después de añadir
-    academicBackground.value.sort(
-      (a, b) => parseInt(b.anio) - parseInt(a.anio),
-    );
+const getStartYear = (anio) => {
+  return parseInt(String(anio).match(/\d{4}/)?.[0] || 0);
+};
+
+academicBackground.value.sort(
+  (a, b) => getStartYear(b.anio) - getStartYear(a.anio)
+);
     newEdu.centro = "";
     newEdu.anio = "";
     newEdu.titulo = "";
@@ -636,7 +707,13 @@ function addEducation() {
 function removeEducation(index) {
   academicBackground.value.splice(index, 1);
   // Reordenar por año descendente después de remover
-  academicBackground.value.sort((a, b) => parseInt(b.anio) - parseInt(a.anio));
+  const getStartYear = (anio) => {
+  return parseInt(String(anio).match(/\d{4}/)?.[0] || 0);
+};
+
+academicBackground.value.sort(
+  (a, b) => getStartYear(b.anio) - getStartYear(a.anio)
+);
   hasUnsavedChanges.value = true;
 }
 
@@ -695,11 +772,15 @@ const availableLinkTypes = computed(() => {
   return allLinkTypes.filter((tipo) => !usados.includes(tipo.toLowerCase()));
 });
 
-watch(documents, () => {
-  if (!availableLinkTypes.value.includes(newDocTipo.value)) {
-    newDocTipo.value = "";
-  }
-});
+watch(
+  documents,
+  () => {
+    if (!availableLinkTypes.value.includes(newDocTipo.value)) {
+      newDocTipo.value = "";
+    }
+  },
+  { deep: true }
+);
 
 function addDocument() {
   if (documents.value.length >= 3) {
@@ -749,7 +830,8 @@ const uploadCV = async (event) => {
   uploadingCV.value = true;
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("studentId", students.value.id);
+ formData.append("studentId", studentData.value.id);
+
 
   try {
     const data = await postCv("/api/upload-cv", formData);
@@ -1353,20 +1435,26 @@ const uploadCV = async (event) => {
     </main>
   </div>
 
-  <Transition name="toast">
-    <div v-if="editing && hasUnsavedChanges" class="toast-notification">
-      <div class="toast-icon">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </div>
-      <div class="toast-content">
-        <strong>Cambios sin guardar</strong>
-        <p>
-          No olvides dar al botón <strong>Guardar</strong> para que se
-          registren.
-        </p>
+<!-- Modal confirmar guardar -->
+<Transition name="fade">
+  <div v-if="showSaveModal" class="modal-overlay">
+    <div class="modal-confirm">
+      <h3>¿Guardar cambios?</h3>
+
+      <p>Tienes cambios sin guardar.</p>
+
+      <div class="modal-actions">
+        <button class="btn-primary btn-cancel" @click="descartarCambios">
+          Descartar
+        </button>
+
+        <button class="btn-primary" @click="confirmarGuardar">
+          Guardar cambios
+        </button>
       </div>
     </div>
-  </Transition>
+  </div>
+</Transition>
 
   <!-- 4. Llamada al modal para mostrar mensaje de oferta guardada correctamente se asigna una instancia del componente ModalInformativo a modalInformativoRef -->
   <modal-informativo ref="modalInformativoRef" :mensaje="mensajePersonalizado" />
@@ -1897,6 +1985,43 @@ const uploadCV = async (event) => {
   /* un poco más oscuro para el número */
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+}
+
+.modal-confirm {
+  background: white;
+  padding: 2rem;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 420px;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,.15);
+}
+
+.modal-confirm h3 {
+  margin-bottom: .5rem;
+}
+
+.modal-confirm p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
 /* =========================================
    FORMULARIOS Y EDICIÓN (MODO RESPONSIVE)
 ========================================== */
@@ -2251,5 +2376,35 @@ button {
 .cv-hint {
   font-size: 0.8rem;
   color: #94a3b8;
+}
+
+/* TRANSICIÓN MODAL */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+}
+
+.btn-cancel {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  background: #fca5a5;
 }
 </style>

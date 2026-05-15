@@ -103,8 +103,6 @@ const handleLoginAdmin = async(e) => {
           {{ loading ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
-
-      <p class="signup">¿No tienes cuenta? <router-link to="/registro">Regístrate</router-link></p>
     </div>
   </div>
 </template>

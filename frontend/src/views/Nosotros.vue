@@ -23,7 +23,7 @@ const equipo = ref([
     nombre: "Yeneviel Roberts",
     rol: "Fullstack Developer",
     especialidad: "Base de Datos",
-    img: "https://via.placeholder.com/150",
+    img: "https://elayqirhsjqfupeerxjw.supabase.co/storage/v1/object/public/avatars/yeneviel_profile_photo.jpg",
     descripcion:
       "Experta en el diseño, gestión y optimización de grandes volúmenes de datos.",
   },

@@ -2,6 +2,7 @@
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import MensajeModal from "@/components/ModalRestaurarPass.vue";
+import api from '@/services/api';
 import {
   validarContraseña,
   validarContraseñasCoinciden,
@@ -57,36 +58,18 @@ const handlePasswordReset = async () => {
   loading.value = true;
 
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_URL_BACK}/update-password`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          password: form.password_hash,
-          token: router.currentRoute.value.params.token,
-        }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      error.value = data.error || "Error al restablecer la contraseña";
-      loading.value = false;
-      return;
-    }
+    await api.post('/update-password', {
+      password: form.password_hash,
+      token: router.currentRoute.value.params.token,
+    });
 
     mensajeExito.value =
       "Contraseña restablecida correctamente. Por favor, inicie sesión.";
     modalRef.value.openModal();
   } catch (err) {
-    error.value = "Error de conexión con el servidor";
+    error.value = err.response?.data?.error || "Error al restablecer la contraseña";
     console.error(err);
-} finally {
-    // Es buena práctica quitar el loading en el bloque finally
+  } finally {
     loading.value = false;
   }
 };

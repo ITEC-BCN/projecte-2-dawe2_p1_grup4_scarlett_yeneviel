@@ -1,8 +1,7 @@
 <script setup>
-//TODO QUITAR FETCH Y SUBSITUIRLO POR AXIOS
-import { useFetchUser } from '../composables/userFetchUser';
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '@/services/api';
 import {
   validarNombre,
   validarApellido,
@@ -13,9 +12,7 @@ import {
   validarFormulario
 } from '../js/validations';
 
-const urlNewStudent = ref(`${import.meta.env.VITE_URL_BACK}/estudiantes`)
 const router = useRouter()
-const { NewStudent } = useFetchUser(import.meta.env.VITE_URL_BACK)
 
 const errorGeneral = ref(null)
 const successMessage = ref(null)
@@ -84,7 +81,7 @@ const InsertNewStudent = async () => {
     errorGeneral.value = null;
     cargando.value = true;
 
-    const data = await NewStudent(form, urlNewStudent.value);
+    const { data } = await api.post('/estudiantes', form);
 
     // --- LÓGICA DE GUARDADO CORREGIDA ---
     const userId = data.user?.id;
@@ -100,8 +97,8 @@ const InsertNewStudent = async () => {
     }, 1500);
 
   } catch (error) {
-    console.error("Error de conexión con el servidor: ", error);
-    errorGeneral.value = error.message || 'Error al registrarse. Intenta de nuevo.';
+    console.error("Error al registrarse: ", error);
+    errorGeneral.value = error.response?.data?.error || error.message || 'Error al registrarse. Intenta de nuevo.';
     successMessage.value = null;
     cargando.value = false;
   }

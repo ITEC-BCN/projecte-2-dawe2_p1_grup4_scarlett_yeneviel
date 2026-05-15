@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
 
 const router = useRouter()
 
@@ -17,23 +18,10 @@ const handleLogin = async (e) => {
   error.value = ''
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value
-      })
+    const { data } = await api.post('/login', {
+      email: email.value,
+      password: password.value
     })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      error.value = data.error || 'Error al iniciar sesión'
-      return
-    }
 
     // --- LÓGICA DE GUARDADO CORREGIDA ---
     const userId = data.user?.id || data.id

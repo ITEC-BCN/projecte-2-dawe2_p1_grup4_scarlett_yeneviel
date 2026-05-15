@@ -91,7 +91,7 @@ const addSkill = () => {
 
   if (!skill) return;
 
-  const existe = form.value.oferta_skill.some(
+  const existe = (form.value.oferta_skill || []).some(
     s => s.id === skill.id
   );
 
@@ -286,6 +286,33 @@ const volver = () => router.back();
 
 console.log(erroresValidacion)
 
+const hayCambios = computed(() => {
+  if (!ofertaOriginal.value) return false;
+
+  // Comparar campos normales
+  const cambiosNormales = Object.keys(form.value).some(key => {
+    if (key === "oferta_skill") return false;
+
+    return !deepEqual(
+      form.value[key],
+      ofertaOriginal.value[key]
+    );
+  });
+
+  // Comparar skills
+  const originales = (ofertaOriginal.value.oferta_skill || [])
+    .map(s => s.id_skill)
+    .sort();
+
+  const actuales = (form.value.oferta_skill || [])
+    .map(s => s.id)
+    .sort();
+
+  const cambiosSkills = !deepEqual(originales, actuales);
+
+  return cambiosNormales || cambiosSkills;
+});
+
 </script>
 
 <template>
@@ -467,7 +494,11 @@ console.log(erroresValidacion)
 
           <div class="form-actions">
             <p v-if="serverError" class="server-error-msg">{{ serverError }}</p>
-            <button type="submit" class="btn-submit" :disabled="loading || Object.keys(erroresValidacion).length > 0">
+            <button
+  type="submit"
+  class="btn-submit"
+  :disabled="loading || !hayCambios"
+>
               <span v-if="!loading">Guardar Cambios</span>
               <span v-else class="loader"></span>
             </button>

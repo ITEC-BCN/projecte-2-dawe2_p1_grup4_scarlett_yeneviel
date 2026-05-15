@@ -418,7 +418,7 @@ const goToPage = (p) => {
   </div>
 
   <!-- Modal para actualizar estado (bindamos ids y manejamos evento actualizado) -->
-  <ActualizarEstado ref="modalEstadoRef" :oferta-id="selectedOferta" :estudiante="selectedEstudiante"
+  <ActualizarEstado ref="modalEstadoCandiRef" :oferta-id="selectedOferta" :estudiante="selectedEstudiante"
     @actualizado="candidaturaActualizada" />
 </template>
 

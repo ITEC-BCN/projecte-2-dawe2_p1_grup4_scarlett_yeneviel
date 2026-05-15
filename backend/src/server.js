@@ -1185,6 +1185,20 @@ app.post('/refresh-token', async (req, res) => {
   }
 });
 
+/* ================= KEEP ALIVE (Render + Supabase) ================= */
+
+app.get("/ping", async (req, res) => {
+  try {
+    // Petición mínima a la base de datos para evitar que Supabase pause el proyecto
+    const { data, error } = await supabase.from("skill").select("id").limit(1);
+    if (error) throw error;
+    res.json({ status: "ok", message: "Servidor activo y Supabase conectado" });
+  } catch (err) {
+    console.error("Error en el ping de mantenimiento:", err);
+    res.status(500).json({ error: "Error en el ping", details: err.message });
+  }
+});
+
 /* ================= SERVER, LÍNEA SIEMPRE AL FINAL ================= */
 
 app.listen(3000, () => {

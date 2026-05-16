@@ -58,7 +58,7 @@ Digitaliza procesos administrativos tradicionalmente manuales.
 
 Internia incorpora funcionalidades innovadoras orientadas a mejorar la experiencia tanto del alumnado como de los centros educativos:
 
-- **Integración con Centros de FP:** Permite a los institutos validar perfiles, gestionar convenios.
+- **Integración con Centros de FP:** Permite a los institutos validar perfiles, gestionar .
 
 - **Sistema de Recomendaciones:** Algoritmos que sugieren ofertas basadas en las skills del estudiante.
 

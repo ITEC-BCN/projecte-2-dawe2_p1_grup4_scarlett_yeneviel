@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import api from "../services/api";
 
 export const isAuthenticated = ref(false);
 export const userRole = ref('');
@@ -16,15 +17,12 @@ export const checkAuthStatus = async () => {
   }
 
   try {
-    const response = await fetch(url, {
-      credentials: 'include',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get(url, {
+      credentials:true
     });
 
     // 2. SI EL TOKEN ES INVÁLIDO O EXPIRÓ (El servidor responde error)
-    if (!response.ok) {
+    if (!response.data) {
       // Si el servidor da error, limpiamos el token corrupto
       localStorage.removeItem('token'); 
       isAuthenticated.value = false;
@@ -32,7 +30,7 @@ export const checkAuthStatus = async () => {
       return;
     }
 
-    const data = await response.json();
+    const data = await response.data;
 
     // 3. TODO OK: Usuario identificado
     isAuthenticated.value = true;

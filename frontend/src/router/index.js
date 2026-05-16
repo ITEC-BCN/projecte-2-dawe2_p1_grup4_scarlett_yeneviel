@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { URL_BACK } from '../../../config.js';
 import { obtenerIdDesdeToken } from '../js/obtenerId.js';
+import api from '../services/api.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -188,10 +189,8 @@ router.beforeEach(async (to, from, next) => {
 
         //VERSION CON ENDPOINT
         // Llamamos a tu endpoint para obtener el estado actual del estudiante
-        const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiante/estado/${userId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+        const response = await api.get(`${import.meta.env.VITE_URL_BACK}/estudiante/estado/${userId}`);
+        const data = await response.data;
         const estado = data.estado;
 
         const estaPendiente = estado !== 'aprobado' && estado !== 'rechazado';

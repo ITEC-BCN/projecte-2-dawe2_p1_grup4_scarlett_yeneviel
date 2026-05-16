@@ -50,10 +50,7 @@ const ubicaciones = ref([]);
 const cargarCiudades = async () => {
   try {
     const res = await api.get(
-      `${import.meta.env.VITE_URL_BACK}/ubicaciones`,
-      {
-        withCredentials: true
-      }
+      `${import.meta.env.VITE_URL_BACK}/ubicaciones`
     );
 
     ubicaciones.value = res.data;
@@ -117,10 +114,7 @@ const removeSkill = (skill) => {
 const cargarSkills = async () => {
   try {
     const res = await api.get(
-      `${import.meta.env.VITE_URL_BACK}/skills`,
-      {
-        withCredentials: true
-      }
+      `${import.meta.env.VITE_URL_BACK}/skills`
     );
 
     skills.value = res.data;

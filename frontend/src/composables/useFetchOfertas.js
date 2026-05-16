@@ -54,9 +54,7 @@ export function useFetch(url) {
 
         ///postulaciones/:id  id de la oferta
         try {
-            const res = await api.get(urlPostulaciones, {
-                withCredentials: true
-            });
+            const res = await api.get(urlPostulaciones);
 
             if (!res.data) {
                 // Si el servidor responde mal, ponemos un mensaje claro
@@ -108,13 +106,12 @@ export function useFetch(url) {
 
     const estudiantePostula = async (body, urlAlternativa) => {
         try {
-            const res = await fetch(urlAlternativa, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+            const res = await api.post(urlAlternativa,body, {
+                headers: { 'Content-Type': 'application/json' }
+                
             })
-            const resultado = await res.json();
-            if (!res.ok) {
+            const resultado = await res.data;
+            if (!res.data) {
                 error.value = resultado.error || "Error en el servidor";
                 throw new Error(error.value);
             }

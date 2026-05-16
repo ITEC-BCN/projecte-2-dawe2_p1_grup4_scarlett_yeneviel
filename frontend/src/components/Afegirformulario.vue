@@ -120,10 +120,14 @@ const loading = ref(false);
 const serverError = ref(null);
 
 // Validar cada vez que cambie cualquier campo
+//  vigila AMBOS estados (formulario y skills elegidas)
 watch(
-  () => form.value,
-  (nuevoValor) => {
-    validarFormulario(nuevoValor);
+  () => [form.value, selectedSkills.value],
+  () => {
+    validarFormulario({
+      ...form.value,
+      oferta_skill: selectedSkills.value
+    });
   },
   { deep: true, immediate: true }
 );
@@ -131,49 +135,52 @@ watch(
 // Enviar formulario
 const submitFormulario = async () => {
 
-  if (!validarFormulario(form.value)) return;
+  const datosAValidar = { ...form.value, oferta_skill: selectedSkills.value };
+  if (!validarFormulario(datosAValidar)) return;
 
   loading.value = true;
   serverError.value = null;
 
   try {
-      const res = await api.post(`${import.meta.env.VITE_URL_BACK}/ofertas/`, {
-          nombre_empresa: form.value.nombre_empresa,
-          tipo_puesto: form.value.tipo_puesto,
-          fecha_expiracion: form.value.fecha_expiracion,
-          descripcion: form.value.descripcion,
-          funciones: form.value.funciones,
-          requisitos: form.value.requisitos,
-          beneficios: form.value.beneficios,
-          id_ubicacion: parseInt(form.value.id_ubicacion),
-          jornada: form.value.jornada,
-          modelo_practicas: form.value.modelo_practicas,
-          modalidad: form.value.modalidad,
-          selectedSkills: selectedSkills.value.map(skill => skill.id)
-        }, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const res = await api.post(`${import.meta.env.VITE_URL_BACK}/ofertas/`, {
+      nombre_empresa: form.value.nombre_empresa,
+      tipo_puesto: form.value.tipo_puesto,
+      fecha_expiracion: form.value.fecha_expiracion,
+      descripcion: form.value.descripcion,
+      funciones: form.value.funciones,
+      requisitos: form.value.requisitos,
+      beneficios: form.value.beneficios,
+      id_ubicacion: parseInt(form.value.id_ubicacion),
+      jornada: form.value.jornada,
+      modelo_practicas: form.value.modelo_practicas,
+      modalidad: form.value.modalidad,
+      selectedSkills: selectedSkills.value.map(skill => skill.id)
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    const data = await res.data.catch(() => null);
+    const data = await res.data;
 
-    if (!validarFormulario(form.value)) {
-      console.log(" Validación falló", erroresValidacion.value);
+    if (!validarFormulario(datosAValidar)) {
+      console.log("Validación falló", erroresValidacion.value);
       return;
     }
 
     console.log(" Validación OK, enviando POST...");
 
-    if (!res.ok) {
+    if (res.status < 200 || res.status >= 300) {
       console.error("Error response body:", data);
       throw new Error(data?.error || data?.message || "Error del servidor");
     }
 
     router.push("/ofertas");
+
   } catch (err) {
     console.error(err);
     serverError.value = err.message;
+
   } finally {
     loading.value = false;
   }
@@ -300,6 +307,9 @@ const volver = () => router.back();
               <option v-for="skill in skillsDisponiblesFiltradas" :key="skill" :value="skill">{{ skill.nombre }}
               </option>
             </select>
+            <span v-if="erroresValidacion.selectedSkills" class="error-text">
+              {{ erroresValidacion.selectedSkills }}
+            </span>
           </div>
 
           <div v-if="selectedSkills.length > 0" class="skills-selected">

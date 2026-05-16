@@ -487,10 +487,11 @@ export const subirAvatarStorage = async (fileName, fileBuffer, mimeType) => {
 };
 
 export const guardarFotoPerfil = async (studentId, urlPublica) => {
+  const studentIdNum = Number(studentId);
   const { data, error } = await supabase
     .from('usuario_estudiante')
     .update({ foto_perfil: urlPublica })
-    .eq('id', studentId);
+    .eq('id', studentIdNum);
   if (error) throw error;
   return data;
 };
@@ -620,13 +621,15 @@ export const VerPostulacionesAdmin = async (idOferta) => {
 
 
 export const actualizarEstadoOferta = async (idOferta, id_estudiante, nuevoEstado) => {
-
+  // Convertir a número para asegurar coincidencia de tipos
+  const idOfertaNum = Number(idOferta);
+  const idEstudianteNum = Number(id_estudiante);
   const { data, error } = await supabase
     .from('postulaciones')
     .update({ estado: nuevoEstado })
-    .eq('id_oferta', idOferta)
-    .eq('id_usuario_estudiante', id_estudiante)
-
+    .eq('id_oferta', idOfertaNum)
+    .eq('id_usuario_estudiante', idEstudianteNum)
+    .select();
 
   if (error) {
     console.error("Error al actualizar el estado de la candidatura:", error.message);

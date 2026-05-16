@@ -1,6 +1,7 @@
 import { onMounted, ref, watch } from "vue";
 import { URL_BACK } from "../../../config";
 import{obtenerIdDesdeToken} from '../js/obtenerId.js';
+import api from "../services/api";
 
 export function useFetchUser(url) {
 
@@ -17,15 +18,17 @@ export function useFetchUser(url) {
         error.value = null
 
         try {
-            const res = await fetch(url.value);
+            const res = await api.get(url.value,{
+                withCredentials: true
+            });
 
-            if (!res.ok) {
+            if (!res.data) {
                 // Si el servidor responde mal, ponemos un mensaje claro
                 throw new Error('Error a la petició: ' + res.status)
             }
 
             // Guardamos los datos para que los componentes los usen
-            data.value = await res.json();
+            data.value = await res.data;
 
         } catch (err) {
             // Si hay cualquier error lo guardamos en 'error' para mostrarlo al usuario
@@ -38,11 +41,11 @@ export function useFetchUser(url) {
     const OfertasGuardadasUser = async (id_estudiante) => {
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiante/ofertas-guardadas/${id_estudiante}`);
+            const res = await api.get(`${import.meta.env.VITE_URL_BACK}/estudiante/ofertas-guardadas/${id_estudiante}`);
 
             // Guardamos los datos para que los componentes los usen
-            const resultado= await res.json()
-            if (!res.ok) {
+            const resultado= await res.data
+            if (!res.data) {
                 throw new Error('Error a la petició: ' + res.status)
             }
 
@@ -55,13 +58,12 @@ export function useFetchUser(url) {
      const getOneStudent=async()=>{
 
               try {
-            const res = await fetch(urlAlternativa, {
-                method: 'GET',
+            const res = await api.get(urlAlternativa, {
                 headers: { 'Content-Type': 'application/json' },
             });
 
-            const resultado = await res.json();
-            if (!res.ok) {
+            const resultado = await res.data;
+            if (!res.data) {
                 // Si el servidor nos devuelve un error, lo guardamos para que la UI lo muestre
                 error.value = resultado.error || "Error en el servidor";
                 throw new Error(error.value);
@@ -85,14 +87,12 @@ export function useFetchUser(url) {
     const NewStudent = async (body, urlAlternativa) => {
         // body = datos del registr. urlAlternativa = ruta donde enviarlo .
         try {
-            const res = await fetch(urlAlternativa, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+            const res = await api.post(urlAlternativa, body,{
+                headers: { 'Content-Type': 'application/json' }
             });
 
-            const resultado = await res.json();
-            if (!res.ok) {
+            const resultado = await res.data;
+            if (!res.data) {
                 throw new Error(resultado.error || "Error en el servidor");
             }
             return resultado // Devolvemos el resultado para que quien llame lo pueda usar
@@ -105,14 +105,12 @@ export function useFetchUser(url) {
 
     const guardarOferta = async (id_estudiante, id_oferta) => {
         try {
-            const res = await fetch(`${import.meta.env.VITE_URL_BACK}/guardar-oferta`, {
-                method: 'POST',
+            const res = await api.post(`${import.meta.env.VITE_URL_BACK}/guardar-oferta`, { id_estudiante, id_oferta },{
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_estudiante, id_oferta })
             });
 
-            const resultado = await res.json();
-            if (!res.ok) {
+            const resultado = await res.data;
+            if (!res.data) {
                 throw new Error(resultado.error || "Error en el servidor");
             }
             return resultado; // Devolvemos el resultado para que quien llame lo pueda usar
@@ -126,19 +124,15 @@ export function useFetchUser(url) {
     const actualizarEstado = async (idEstudiante, nuevoEstado) => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`${import.meta.env.VITE_URL_BACK}/actualizar-estado/${idEstudiante}`, {
-                method: 'PUT',
+            const res = await api.put(`${import.meta.env.VITE_URL_BACK}/actualizar-estado/${idEstudiante}`,{ estado: nuevoEstado }, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                credentials: 'include',
-                body: JSON.stringify({ estado: nuevoEstado })
             });
 
-            if (!res.ok) throw new Error("Error al actualizar el estado");
+            if (!res.data) throw new Error("Error al actualizar el estado");
 
-            const data = await res.json();
+            const data = await res.data;
             //console.log("Estado actualizado:");
             // Aquí podrías actualizar el estado en el objeto `students`
         } catch (err) {
@@ -151,10 +145,8 @@ export function useFetchUser(url) {
         try {
             const userId = obtenerIdDesdeToken();
             const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_URL_BACK}/estudiante/estado/${userId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const response = await api.get(`${import.meta.env.VITE_URL_BACK}/estudiante/estado/${userId}`);
+            const data = await response.data;
             return data.estado;
         } catch (error) {
             console.error("Error al obtener el estado del estudiante:", error);

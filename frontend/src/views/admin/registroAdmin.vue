@@ -10,6 +10,7 @@ import {
   validarContraseñasCoinciden,
   validarFormulario
 } from '../../js/validations';
+import api from "../../services/api";
 
 const urlNewAdmin = ref(`${import.meta.env.VITE_URL_BACK}/admin/registro`)
 const router = useRouter()
@@ -68,14 +69,12 @@ const validarCampo = (campo, valor) => {
 
     const apiResquestNewAdmin = async (body, url) => {
         try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+            const res = await api.post(url,body, {
+                headers: { 'Content-Type': 'application/json' }
             });
 
-            const resultado = await res.json();
-            if (!res.ok) {
+            const resultado = await res.data;
+            if (!res.data) {
                 throw new Error(resultado.error || "Error en el servidor");
             }
             return resultado // Devolvemos el resultado para que quien llame lo pueda usar

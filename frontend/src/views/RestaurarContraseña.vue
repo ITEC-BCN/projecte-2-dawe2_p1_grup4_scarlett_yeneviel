@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import MensajeModal from "@/components/ModalRestaurarPass.vue";
+import api from "../services/api";
 
 const router = useRouter();
 // 1. Cambiamos a modalRef para que coincida con el <template>
@@ -21,22 +22,18 @@ const handleRestorePassword = async () => {
   loading.value = true;
 
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_URL_BACK}/restore-password`,
+    const response = await api.post(
+      `${import.meta.env.VITE_URL_BACK}/restore-password`, {email: email.value},
       {
-        method: "POST",
         headers: {
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.value,
-        }),
-      },
+        }
+      }
     );
 
-    const data = await response.json();
+    const data = await response.data;
 
-    if (!response.ok) {
+    if (!response.data) {
       error.value = data.error || "Error al restablecer la contraseña";
       return;
     }
@@ -69,14 +66,7 @@ const onModalCerrado = () => {
 
       <form class="login-form" @submit.prevent="handleRestorePassword">
         <label for="email">Correo Electrónico</label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          placeholder="tu@email.com"
-          required
-          :disabled="loading"
-        />
+        <input id="email" v-model="email" type="email" placeholder="tu@email.com" required :disabled="loading" />
 
         <button type="submit" class="btn-submit" :disabled="loading">
           {{ loading ? "Enviando..." : "Solicitar Restablecimiento" }}
@@ -84,11 +74,7 @@ const onModalCerrado = () => {
       </form>
     </div>
 
-    <MensajeModal
-      ref="modalRef"
-      :mensaje="mensajeExito"
-      @close="onModalCerrado"
-    />
+    <MensajeModal ref="modalRef" :mensaje="mensajeExito" @close="onModalCerrado" />
   </div>
 </template>
 

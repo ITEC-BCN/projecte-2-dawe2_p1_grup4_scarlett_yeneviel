@@ -2,6 +2,8 @@ import emailjs from "@emailjs/browser";
 
 export async function sendEmail(studentEmail, studentName, type, additionalInfo = {}) { 
     try {
+
+        console.log(additionalInfo)
         
         let TEMPLATE_ID = "";
         let templateParams = {};

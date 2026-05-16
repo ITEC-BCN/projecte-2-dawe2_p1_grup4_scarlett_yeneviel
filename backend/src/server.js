@@ -147,7 +147,7 @@ app.get("/ofertas/:id", async (req, res) => {
 });
 
 //Actualiza las ofertas
-app.put("/oferta/:id", async (req, res) => {
+app.put("/oferta/:id", requireAuth, async (req, res) => {
   try {
     const body = req.body;
     const id = req.params.id;
@@ -171,7 +171,7 @@ app.put("/oferta/:id", async (req, res) => {
 
 //delete
 
-app.delete("/ofertas/:id", async (req, res) => {
+app.delete("/ofertas/:id",requireAuth, async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -186,7 +186,7 @@ app.delete("/ofertas/:id", async (req, res) => {
 
 //Desactivar oferta (en lugar de eliminarla físicamente, la marcamos como inactiva)
 
-app.put('/ofertaDesactivar/:id', async (req, res) => {
+app.put('/ofertaDesactivar/:id',requireAuth, async (req, res) => {
   try {
     const id = req.params.id;
     // Leer el nuevo estado desde el body
@@ -266,7 +266,7 @@ app.post("/estudiantes", async (req, res) => {
 });
 
 // GET: Listar todos los estudiantes
-app.get("/estudiantes", async (req, res) => {
+app.get("/estudiantes",requireAuth, async (req, res) => {
   try {
     const lista = await obtenerEstudiantes();
     res.json(lista);
@@ -299,7 +299,7 @@ app.put("/estudiantes/:id", requireAuth,  async (req, res) => {
 
 /*======== POSTULACIONES Y GUARDADOS =========*/
 
-app.post("/estudiante/postular", async (req, res) => {
+app.post("/estudiante/postular",requireAuth, async (req, res) => {
   try {
     const { id_oferta, id_estudiante } = req.body;
     const postulacion = await postularOferta(id_oferta, id_estudiante);
@@ -310,7 +310,7 @@ app.post("/estudiante/postular", async (req, res) => {
   }
 });
 
-app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
+app.put("/actualizar-estado/:idEstudiante",requireAuth, async (req, res) => {
   try {
     const { estado } = req.body;
     const id_estudiante = req.params.idEstudiante;
@@ -330,7 +330,7 @@ app.put("/actualizar-estado/:idEstudiante", async (req, res) => {
   }
 });
 
-app.get("/estudiante/estado/:idEstudiante", async (req, res) => {
+app.get("/estudiante/estado/:idEstudiante",requireAuth, async (req, res) => {
   try {
     const id_estudiante = req.params.idEstudiante;
     if (!id_estudiante) {
@@ -347,7 +347,7 @@ app.get("/estudiante/estado/:idEstudiante", async (req, res) => {
   }
 });
 
-app.post("/guardar-oferta", async (req, res) => {
+app.post("/guardar-oferta",requireAuth, async (req, res) => {
   try {
     const { id_estudiante, id_oferta } = req.body;
 
@@ -392,7 +392,9 @@ app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
 app.post("/upload-avatar", requireAuth, upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
-    const studentId = req.body.studentId;
+    let studentId = req.body.studentId;
+    // Asegurar que es número
+    studentId = Number(studentId);
 
     if (!file) {
       return res.status(400).json({ error: "No se subió ningún archivo" });
@@ -474,7 +476,7 @@ app.get("/admins/:id", async (req, res) => {
 });
 
 // PUT: Actualizar datos del administrador
-app.put("/admins/:id", async (req, res) => {
+app.put("/admins/:id", requireAuth,async (req, res) => {
   try {
     const actualizado = await actualizarAdmin(req.params.id, req.body);
     if (!actualizado || actualizado.length === 0) {
@@ -624,7 +626,7 @@ app.post("/login-admin", async (req, res) => {
 //=================== Funcionalidades administrador ===================
 
 // GET: Obtener las postulaciones de ua oferta
-app.get("/postulaciones/:id", async (req, res) => {
+app.get("/postulaciones/:id", requireAuth,async (req, res) => {
   try {
     const datos = await VerPostulacionesAdmin(req.params.id);
     res.json(datos);
@@ -636,7 +638,7 @@ app.get("/postulaciones/:id", async (req, res) => {
 });
 
 // PUT: Actualizar el estado de una candidatura (ahora acepta ofertaId y estudianteId por la URL)
-app.put("/candidatura/estado/:ofertaId/:estudianteId", async (req, res) => {
+app.put("/candidatura/estado/:ofertaId/:estudianteId",requireAuth, async (req, res) => {
   try {
     const { ofertaId, estudianteId } = req.params;
     const { estado } = req.body;
@@ -969,7 +971,7 @@ FORMATO:
 /* ================= UBICACIONES ================= */
 
 //MOSTRAR CV (URL pública de Supabase Storage)
-app.get('/get-cv/:idEstudiante', async (req, res) => {
+app.get('/get-cv/:idEstudiante',requireAuth, async (req, res) => {
   try {
     const { idEstudiante } = req.params;
 

@@ -13,9 +13,7 @@ export function useStudents(urlRef) {
         loadingStudents.value = true;
         try {
 
-            const res = await api.get(currentUrl, {
-                withCredentials: true
-            });
+            const res = await api.get(currentUrl);
 
             students.value = await res.data;
             errorStudents.value = null;

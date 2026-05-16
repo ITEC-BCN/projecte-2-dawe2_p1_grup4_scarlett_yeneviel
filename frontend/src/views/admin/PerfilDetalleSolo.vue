@@ -14,6 +14,7 @@ import {
   MAX_SOFT_SKILLS,
 } from "../../js/const.js";
 import CvViewer from "../../components/CvViewer.vue";
+import api from '../../services/api.js'
 
 const route = useRoute();
 
@@ -30,8 +31,8 @@ const allDbSkills = ref([]);
 // Cargar todas las skills al montar el componente
 onMounted(async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/skills`);
-    const data = await res.json();
+    const res = await api.get(`${import.meta.env.VITE_URL_BACK}/skills`);
+    const data = await res.data;
     allDbSkills.value = data;
   } catch (error) {
     console.error("Error cargando skills de la BD:", error);

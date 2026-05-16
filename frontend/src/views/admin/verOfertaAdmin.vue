@@ -8,6 +8,7 @@ import ActualizarEstado from '../../components/ModalEstadoCandi.vue';
 import CvViewer from '../../components/CvViewer.vue';
 import { useStudents } from "../../composables/useStudents";
 import { sendEmail } from '../../js/funEmail';
+import api from "../../services/api";
 import {
   Calendar as CalendarIcon,
   MapPin as MapPinIcon,
@@ -17,6 +18,7 @@ import {
   Bookmark as BookmarkIcon,
   Heart as Heart
 } from 'lucide-vue-next';
+import { json } from 'body-parser';
 
 /*Oferta id*/
 defineProps({
@@ -44,13 +46,11 @@ const handleOfertaEstado = async () => {
 
   try {
     loadingModal.value = true;
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${oferta.value.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado: nuevoEstado }),
+    const res = await api.put(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${oferta.value.id}`,{ estado: nuevoEstado }, {
+      headers: { 'Content-Type': 'application/json' }
     });
 
-    if (!res.ok) throw new Error('Error actualizando oferta');
+    if (!res.data) throw new Error('Error actualizando oferta');
 
     // Usamos la propiedad expuesta 'mensaje' del modal genérico
     modalRef.value.mensaje = `Oferta ${nuevoEstado === 'ACTIVA' ? 'activada' : 'desactivada'} con éxito.`;
@@ -83,13 +83,13 @@ const selectedEstudiante = ref(null);
 
 const modalEstadoCandi = (oferta, estudiante) => {
   // Al pulsar 'Actualizar estado' guardamos los ids y abrimos el modal
-  selectedOferta.value = oferta;
+  selectedOferta.value = oferta.id;
 
   selectedEstudiante.value = {
     id: estudiante.id,
     email: estudiante.email,
     nombre: estudiante.nombre,
-    titulo: oferta.titulo,
+    titulo: oferta.tipo_puesto,
   };
 
   modalEstadoCandiRef.value?.openModal();
@@ -380,7 +380,7 @@ const goToPage = (p) => {
                 </td>
                 <td>
                   <div class="candidato-actions-inline">
-                    <button @click="modalEstadoCandi(Number(route.params.id), item.usuario_estudiante)"
+                    <button @click="modalEstadoCandi(oferta, item.usuario_estudiante)"
                       class="btn-icon-text primary" title="Actualizar estado">
                       Actualizar
                     </button>

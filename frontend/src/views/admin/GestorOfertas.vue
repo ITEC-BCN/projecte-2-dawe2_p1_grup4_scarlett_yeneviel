@@ -3,6 +3,7 @@ import { ref, computed, nextTick } from 'vue'; // <--- 1. IMPORTANTE: Agregamos 
 import { useRouter } from 'vue-router';
 import { useFetch } from '../../composables/useFetchOfertas';
 import Modal from '../../components/Modal.vue';
+import api from '../../services/api';
 
 const router = useRouter();
 const url = ref(`${import.meta.env.VITE_URL_BACK}/ofertas`);
@@ -53,13 +54,11 @@ const handleOfertaEstado = async () => {
 
   try {
     loadingModal.value = true;
-    const res = await fetch(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${oferta.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado: nuevoEstado }),
+    const res = await api.put(`${import.meta.env.VITE_URL_BACK}/ofertaDesactivar/${oferta.id}`,{ estado: nuevoEstado }, {
+      headers: { 'Content-Type': 'application/json' }
     });
 
-    if (!res.ok) throw new Error('Error actualizando oferta');
+    if (!res.data) throw new Error('Error actualizando oferta');
 
     // Éxito: mostramos mensaje en el modal
     modalEstadoOfertaRef.value.mensaje = `Oferta ${nuevoEstado === 'ACTIVA' ? 'activada' : 'desactivada'} con éxito.`;

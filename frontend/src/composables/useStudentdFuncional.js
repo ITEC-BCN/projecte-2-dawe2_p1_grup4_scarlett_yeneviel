@@ -1,5 +1,6 @@
 import { useApi } from "./useApi";
 import { ref, watch } from "vue";
+import api from "../services/api";
 
 export function useStudents(urlRef) {
     const students = ref(null);
@@ -14,18 +15,13 @@ export function useStudents(urlRef) {
         try {
             const token = localStorage.getItem('token'); // Recuperamos el token
 
-            const res = await fetch(currentUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`, // Por si falla la cookie
-                    'Content-Type': 'application/json'
-                },
+            const res = await api.get(currentUrl, {
                 credentials: 'include'
             });
 
-            if (!res.ok) throw new Error("Error en la carga de datos");
+            if (!res.data) throw new Error("Error en la carga de datos");
 
-            students.value = await res.json();
+            students.value = await res.data;
             errorStudents.value = null;
         } catch (err) {
             errorStudents.value = err.message;

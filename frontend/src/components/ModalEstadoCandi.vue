@@ -47,6 +47,7 @@
 <script setup>
 import { ref, defineProps, defineEmits, defineExpose } from "vue";
 import { useRouter } from "vue-router";
+import api from '../services/api'
 
 const estadosCandidatura = ["En Proceso", "Aceptado", "Rechazada","CV leido","Finalista"];
 // Props (camelCase to match Vue conventions)
@@ -98,13 +99,11 @@ const actualizarEstado = async () => {
     // Usar path params: /candidatura/estado/:ofertaId/:estudianteId
     const url = `${import.meta.env.VITE_URL_BACK}/candidatura/estado/${encodeURIComponent(props.ofertaId)}/${encodeURIComponent(props.estudiante.id)}`;
 
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado: estado.value })
+    const response = await api.put(url, { estado: estado.value },{
+      headers: { "Content-Type": "application/json" }
     });
 
-    if (!response.ok) throw new Error("Error al actualizar la candidatura");
+    if (!response.data) throw new Error("Error al actualizar la candidatura");
 
     mensaje.value = "Candidatura actualizada correctamente";
 

@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from "../../services/api";
 
 const email = ref('')
 const password = ref('')
@@ -15,15 +16,9 @@ const handleLoginAdmin = async(e) => {
   error.value = ''
   loading.value = true
   try {
-    const response = await fetch(`${import.meta.env.VITE_URL_BACK}/login-admin`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email: email.value, password: password.value })
-    })
-    const data = await response.json()
-    if (!response.ok) {
+    const response = await api.post(`${import.meta.env.VITE_URL_BACK}/login-admin`,{ email: email.value, password: password.value })
+    const data = await response.data
+    if (!response.data) {
       error.value = data.error || 'Error al iniciar sesión'
       loading.value = false
       return

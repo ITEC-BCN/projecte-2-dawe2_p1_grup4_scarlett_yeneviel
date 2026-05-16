@@ -24,6 +24,7 @@ const modalInformativoEstado = () => {
   modalEstadoRef.value?.openModal(); // modalEstadoRef es la instancia del componente ModalInformativo
 };
 const reprobarEstado = async () => {
+  await actualizarEstado ()
   if (estadoActual.value === 'aprobado') {
     //3. Uso la variable
     mensajePersonalizado.value = '¡Tu cuenta ha sido aprobada! Redirigiendo al dashboard...';

@@ -18,7 +18,7 @@ import {
   Bookmark as BookmarkIcon,
   Heart as Heart
 } from 'lucide-vue-next';
-import { json } from 'body-parser';
+
 
 /*Oferta id*/
 defineProps({

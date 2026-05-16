@@ -306,9 +306,9 @@ const uploadAvatar = async (event) => {
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("studentId", studentData.value.id);
 
-formData.append("studentId", studentData.value.id);
+console.log("studentData:", studentData.value);
+console.log("ID:", studentData.value?.id);
 
   try {
     const data = await postAvatar("/upload-avatar", formData);
@@ -323,8 +323,12 @@ if (studentData.value) {
     abrirModalInformativo()
   } catch (error) {
     const mensajeError =
-      error.response?.data?.error || "Error de conexión al subir la imagen";
-    console.error("Error detallado:", error);
+  error.response?.data?.details ||
+  error.response?.data?.error ||
+  "Error de conexión";
+
+  console.error(error.response?.data);
+
     mensajePersonalizado.value = "Error al subir: " + mensajeError;
   } finally {
     uploadingFile.value = false;

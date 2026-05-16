@@ -392,41 +392,45 @@ app.get("/estudiante/ofertas-guardadas/:id", async (req, res) => {
 app.post("/upload-avatar", requireAuth, upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
-    let studentId = req.body.studentId;
-    // Asegurar que es número
-    studentId = Number(studentId);
+
+    const studentId = Number(req.user.id);
+
+    if (!studentId || isNaN(studentId)) {
+      return res.status(400).json({
+        error: "ID inválido",
+      });
+    }
 
     if (!file) {
-      return res.status(400).json({ error: "No se subió ningún archivo" });
+      return res.status(400).json({
+        error: "No se subió ningún archivo",
+      });
     }
-    if (!file.mimetype.startsWith("image/"))
-      return res.status(400).json({ error: "Solo se permiten imágenes" });
-    if (file.size > 2 * 1024 * 1024)
-      return res.status(400).json({ error: "El tamaño máximo es 2MB" });
 
     const fileExt = file.originalname.split(".").pop();
+
     const fileName = `avatar_${studentId}_${Date.now()}.${fileExt}`;
 
-    // 1. Subir a Supabase Storage
     const urlPublica = await subirAvatarStorage(
       fileName,
       file.buffer,
-      file.mimetype,
+      file.mimetype
     );
 
-    // 2. GUARDAR EN LA BASE DE DATOS (AQUÍ, NO EN VUE)
     await guardarFotoPerfil(studentId, urlPublica);
 
     return res.json({
       message: "Subida exitosa",
       url: urlPublica,
-      studentId,
     });
+
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json({ error: "Falló la subida", details: error.message });
+
+    return res.status(500).json({
+      error: "Falló la subida",
+      details: error.message,
+    });
   }
 });
 

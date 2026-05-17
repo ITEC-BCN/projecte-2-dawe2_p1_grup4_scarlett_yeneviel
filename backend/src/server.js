@@ -949,12 +949,14 @@ FORMATO:
 
     //Guardar ruta del stora en la tabla de documento
     await supabase
-      .from("documento")
-      .update({
-        ruta_archivo: supabasePDF.data.path,
-      })
-      .eq("id_estudiante", studentId)
-      .eq("tipo", "cv");
+  .from("documento")
+  .upsert({
+    id_estudiante: studentId,
+    tipo: "cv",
+    ruta_archivo: supabasePDF.data.path
+  }, {
+    onConflict: "id_estudiante, tipo"
+  });
 
 
     // -------------------------

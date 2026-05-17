@@ -6,20 +6,17 @@ export function useStudents(urlRef) {
     const loadingStudents = ref(true);
     const errorStudents = ref(null);
 
-    const fetchAllReq = async () => {
+    const refreshStudents = async () => {
         const currentUrl = urlRef.value;
         if (!currentUrl || currentUrl.includes('null')) return;
 
         loadingStudents.value = true;
         try {
-
             const res = await api.get(currentUrl);
-
-            students.value = await res.data;
+            students.value = res.data;
             errorStudents.value = null;
         } catch (err) {
             errorStudents.value = err.response?.data?.message || err.message || "Error en la carga de datos";
-            console.error("Error detallado:", err);
         } finally {
             loadingStudents.value = false;
         }
@@ -54,7 +51,7 @@ export function useStudents(urlRef) {
     };
 
     watch(urlRef, () => {
-        fetchAllReq();
+        refreshStudents();
     }, { immediate: true });
 
     return {
@@ -62,7 +59,7 @@ export function useStudents(urlRef) {
         loadingStudents,
         errorStudents,
         verCV,
-        refreshStudents: fetchAllReq,
+        refreshStudents,
 
     };
 }

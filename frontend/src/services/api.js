@@ -9,7 +9,7 @@ api.interceptors.request.use(
   (config) => {
     // Recuperar el token (desde localStorage, Pinia, cookies, etc.)
     const token = localStorage.getItem('token');
-    
+
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -26,18 +26,28 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+    const url = originalRequest?.url || '';
+
+    const isLoginRequest = url.includes('/login');
+    const isLoginAdminRequest = url.includes('/login-admin');
+    const isRefreshRequest = url.includes('/refresh-token');
 
     // Si el error es 401 y la petición original NO ha sido reintentada aún
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      
+    /* Añadimos que si el es login no nos redirigas */
+    if (error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isLoginRequest &&
+      !isLoginAdminRequest &&
+      !isRefreshRequest) {
+
       // Marcamos la petición para no caer en un bucle infinito
-      originalRequest._retry = true; 
+      originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        
+
         if (!refreshToken) {
-            throw new Error("No hay refresh token");
+          throw new Error("No hay refresh token");
         }
 
         // IMPORTANTE: Usamos axios directamente, NO la instancia 'api' para evitar
@@ -49,7 +59,7 @@ api.interceptors.response.use(
         // 1. Guardamos el nuevo access_token (y el nuevo refresh_token si tu API usa rotación)
         localStorage.setItem('token', data.token);
         if (data.refreshToken) {
-            localStorage.setItem('refreshToken', data.refreshToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
         }
 
         // 2. Actualizamos la cabecera de la petición original con el nuevo token
@@ -63,10 +73,10 @@ api.interceptors.response.use(
         // Borramos tokens y redirigimos al login
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
-        
+
         // Redirigir al login (usando window.location o Vue Router)
-        window.location.href = '/login'; 
-        
+        window.location.href = '/login';
+
         return Promise.reject(refreshError);
       }
     }

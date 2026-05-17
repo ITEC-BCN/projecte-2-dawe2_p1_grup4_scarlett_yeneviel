@@ -52,7 +52,10 @@ const handleLogin = async (e) => {
     router.push({ name: 'ofertasRecomendadas', params: { id: userId } })
 
   } catch (err) {
-    error.value = 'Error de conexión con el servidor'
+     error.value = err.response?.data?.error
+    || err.response?.data?.message
+    || err.message
+    || 'Error de conexión con el servidor';
     console.error(err)
   } finally {
     loading.value = false
@@ -241,7 +244,6 @@ box-shadow: 0 0 0 1px #4b5563, 0 6px 16px rgba(0, 0, 0, 0.08);
 
 .btn-submit:disabled {
   opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .signup {

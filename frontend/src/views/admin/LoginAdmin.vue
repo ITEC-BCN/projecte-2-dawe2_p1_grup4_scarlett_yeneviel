@@ -11,12 +11,12 @@ const loading = ref(false)
 const router = useRouter()
 const showPassword = ref(false)
 
-const handleLoginAdmin = async(e) => {
+const handleLoginAdmin = async (e) => {
   e.preventDefault()
   error.value = ''
   loading.value = true
   try {
-    const response = await api.post(`${import.meta.env.VITE_URL_BACK}/login-admin`,{ email: email.value, password: password.value })
+    const response = await api.post(`${import.meta.env.VITE_URL_BACK}/login-admin`, { email: email.value, password: password.value })
     const data = await response.data
     if (!response.data) {
       error.value = data.error || 'Error al iniciar sesión'
@@ -29,7 +29,11 @@ const handleLoginAdmin = async(e) => {
     router.push('/admin/panel')
 
   } catch (err) {
-    error.value = 'Error de conexión con el servidor'
+    error.value = err.response?.data?.error
+      || err.response?.data?.message
+      || err.message
+      || 'Error de conexión con el servidor';
+    console.error(err)
   } finally {
     loading.value = false
   }
@@ -47,38 +51,24 @@ const handleLoginAdmin = async(e) => {
       <!-- Formulario conectado al backend -->
       <form class="login-form" @submit="handleLoginAdmin">
         <label for="email">Correo electrónico</label>
-        <input 
-          id="email" 
-          v-model="email"
-          type="email" 
-          placeholder="tu@ejemplo.com" 
-          required 
-          :disabled="loading"
-        />
+        <input id="email" v-model="email" type="email" placeholder="tu@ejemplo.com" required :disabled="loading" />
 
         <label for="password">Contraseña</label>
         <div class="password-input-wrapper">
-          <input 
-            id="password" 
-            v-model="password"
-            :type="showPassword ? 'text' : 'password'" 
-            placeholder="••••••••" 
-            required 
-            :disabled="loading"
-          />
-          <button
-            type="button"
-            class="toggle-password"
-            @click="showPassword = !showPassword"
-            :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          >
-            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <input id="password" v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
+            required :disabled="loading" />
+          <button type="button" class="toggle-password" @click="showPassword = !showPassword"
+            :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20"
+              height="20">
               <path d="M1 1l22 22" />
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8 1.31-2.51 3.34-4.62 5.76-6.02" />
               <path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5" />
               <path d="M14.47 14.47A3.5 3.5 0 0 1 12 8.5" />
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
               <circle cx="12" cy="12" r="3" />
             </svg>
@@ -297,6 +287,3 @@ input.input-error:focus {
   }
 }
 </style>
-
-
-
